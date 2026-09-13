@@ -1,0 +1,18 @@
+#!/usr/bin/env bash
+# Run with bash scripts/quality-round [audio-directory]. No network or uploads.
+set -euo pipefail
+cd "$(dirname "$0")/.."
+audio_dir="${1:-/home/hyh/Downloads/opencaption}"
+result_dir="$(mktemp -d evaluation/results/quality-XXXXXXXX)"
+# Every model invocation still goes through the mandatory memory-limited wrapper.
+for variant in baseline explicit english; do
+  extra=()
+  if [[ "$variant" == explicit ]]; then extra=(--task-profile explicit); fi
+  if [[ "$variant" == english ]]; then extra=(--task english); fi
+  scripts/run-gemma-eval "$audio_dir/clip_interview_niko.wav" "$audio_dir/clip_match_demo2.wav" \
+    --threads 4 --overlap-ms 0 "${extra[@]}" --output "$result_dir/$variant.jsonl" \
+    > "$result_dir/$variant.log" 2>&1
+done
+python3 evaluation/quality_audit.py "$result_dir/baseline.jsonl" "$result_dir/explicit.jsonl" \
+  "$result_dir/english.jsonl" --output "$result_dir/audit.json"
+echo "Results: $result_dir"

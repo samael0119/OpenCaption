@@ -1,0 +1,56 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+project_root="$(cd "$(dirname "$0")/.." && pwd)"
+flavor="${1:-}"
+build_mode="${OPENCAPTION_BUILD_MODE:-debug}"
+if [[ "$build_mode" != "debug" && "$build_mode" != "release" ]]; then
+  echo 'OPENCAPTION_BUILD_MODE must be debug or release' >&2
+  exit 2
+fi
+if [[ -z "${OPENCAPTION_DIAGNOSTICS+x}" ]]; then
+  diagnostics="$([[ "$build_mode" == "debug" ]] && echo true || echo false)"
+else
+  diagnostics="$OPENCAPTION_DIAGNOSTICS"
+fi
+if [[ "$diagnostics" != "true" && "$diagnostics" != "false" ]]; then
+  echo 'OPENCAPTION_DIAGNOSTICS must be true or false' >&2
+  exit 2
+fi
+case "$flavor" in
+  cascade) apk_stem="app-cascade" ;;
+  gemmaE2E) apk_stem="app-gemmae2e" ;;
+  qwenE2E) apk_stem="app-qwene2e" ;;
+  *) echo "usage: scripts/build-apk {cascade|gemmaE2E|qwenE2E}" >&2; exit 2 ;;
+esac
+apk_name="${apk_stem}-${build_mode}.apk"
+
+# Pin the development signer. Android rejects an APK update before app code
+# can preserve or migrate its private model files, so a wrong signer must
+# fail the build handoff instead of reaching a tester.
+expected_signer="d557c1e4045d0b4dd710803f118da1cf61193fd76ce1348d824c64f8e486c07a"
+java_home="${OPENCAPTION_JAVA_HOME:-/home/hyh/Tools/java/eclipse-temurin-jdk17}"
+export OPENCAPTION_JAVA_HOME="$java_home"
+export ORG_GRADLE_PROJECT_diagnostics="$diagnostics"
+cmake_bin="$project_root/.tools/android-sdk/cmake/3.22.1/bin"
+if [[ -d "$cmake_bin" ]]; then
+  export PATH="$cmake_bin:$PATH"
+fi
+
+"$project_root/scripts/flutterw" build apk "--$build_mode" --flavor "$flavor" \
+  --target-platform android-arm64 --no-pub \
+  --dart-define="OPENCAPTION_DIAGNOSTICS=$diagnostics" \
+  --dart-define="OPENCAPTION_CHANNEL=$([[ "$diagnostics" == "true" ]] && echo test || echo release)"
+
+apk="$project_root/build/app/outputs/flutter-apk/$apk_name"
+apksigner="$project_root/.tools/android-sdk/build-tools/36.0.0/apksigner"
+actual_signer="$($apksigner verify --print-certs "$apk" \
+  | sed -n 's/^Signer #1 certificate SHA-256 digest: //p' \
+  | tr '[:upper:]' '[:lower:]')"
+if [[ "$actual_signer" != "$expected_signer" ]]; then
+  echo "ERROR: APK signer changed: expected $expected_signer, got $actual_signer" >&2
+  echo "Run scripts/flutterw clean and rebuild; do not distribute this APK." >&2
+  exit 1
+fi
+echo "Verified APK signer $actual_signer"
+echo "$apk"

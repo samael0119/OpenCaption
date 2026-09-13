@@ -1,0 +1,2452 @@
+{
+  "schema_version": 1,
+  "id": "cs2-zh-broadcast-base",
+  "domain": "counter-strike-2",
+  "display_name": "Counter-Strike 英文赛事解说 → 中文字幕基础语料",
+  "version": "0.1.0",
+  "language_pair": "en-US -> zh-CN",
+  "provenance": {
+    "provided_file": "cs2_zh_broadcast_corpus_v0.1.json",
+    "sources": {
+      "perfectworld_dictionary": {
+        "title": "CS:GO Dictionary 英文大辞典 A to Z",
+        "url": "https://www.csgo.com.cn/tips/teaching/20161209/198250.shtml",
+        "type": "zh_glossary"
+      },
+      "blast_communication": {
+        "title": "Key terms for communication in Counter-Strike 2",
+        "url": "https://blast.tv/article/key-terms-for-cs2-communication",
+        "type": "modern_cs2_glossary"
+      },
+      "hltv_watch_guide": {
+        "title": "How to watch Counter-Strike",
+        "url": "https://www.hltv.org/news/38480/how-to-watch-counter-strike",
+        "type": "broadcast_glossary"
+      },
+      "csgo_api": {
+        "title": "CSGO-API",
+        "url": "https://github.com/0toierance/csgo-api",
+        "type": "official_name_reference"
+      }
+    },
+    "license_status": "not_declared_in_source_file"
+  },
+  "translation_rules": [
+    {
+      "rule": "term_over_literal",
+      "description": "命中 CS 术语时优先采用赛事习惯译法，不做字面翻译。",
+      "examples": [
+        {
+          "en": "trade",
+          "prefer": "补枪",
+          "avoid": "交易"
+        },
+        {
+          "en": "save",
+          "prefer": "保枪",
+          "avoid": "保存"
+        },
+        {
+          "en": "utility",
+          "prefer": "道具",
+          "avoid": "实用工具"
+        },
+        {
+          "en": "dry peek",
+          "prefer": "干拉",
+          "avoid": "干燥探头"
+        },
+        {
+          "en": "execute",
+          "prefer": "爆弹",
+          "avoid": "执行"
+        }
+      ]
+    },
+    {
+      "rule": "context_sensitive_rotation",
+      "description": "rotate/rotation：T 侧倾向译“转点”，CT 侧倾向译“回防/转防”。"
+    },
+    {
+      "rule": "context_sensitive_spam",
+      "description": "spam：对烟雾射击优先译“混烟”，对墙体穿射优先译“穿射/混墙”。"
+    },
+    {
+      "rule": "role_vs_event",
+      "description": "entry fragger 作为角色译“突破手”；opening kill / entry kill 作为事件译“首杀”。"
+    }
+  ],
+  "terms": [
+    {
+      "id": "cs2-t",
+      "english": "T",
+      "aliases": [
+        "T side",
+        "Ts",
+        "T's",
+        "Terrorists"
+      ],
+      "chinese": "进攻方",
+      "alternatives": [
+        "T方"
+      ],
+      "category": "game_state",
+      "priority": 5,
+      "context": "字幕中通常按语境译为进攻方/T方。",
+      "avoid": [],
+      "preserve": false,
+      "source_refs": [
+        "hltv_watch_guide",
+        "blast_communication"
+      ]
+    },
+    {
+      "id": "cs2-ct",
+      "english": "CT",
+      "aliases": [
+        "CT side",
+        "CTs",
+        "Counter-Terrorists"
+      ],
+      "chinese": "防守方",
+      "alternatives": [
+        "CT方"
+      ],
+      "category": "game_state",
+      "priority": 5,
+      "context": "字幕中通常按语境译为防守方/CT方。",
+      "avoid": [],
+      "preserve": false,
+      "source_refs": [
+        "hltv_watch_guide",
+        "blast_communication"
+      ]
+    },
+    {
+      "id": "cs2-bombsite",
+      "english": "bombsite",
+      "aliases": [
+        "site",
+        "bomb site"
+      ],
+      "chinese": "包点",
+      "alternatives": [
+        "点位"
+      ],
+      "category": "map",
+      "priority": 5,
+      "context": "",
+      "avoid": [],
+      "preserve": false,
+      "source_refs": [
+        "blast_communication",
+        "hltv_watch_guide"
+      ]
+    },
+    {
+      "id": "cs2-pistol-round",
+      "english": "pistol round",
+      "aliases": [
+        "pistol"
+      ],
+      "chinese": "手枪局",
+      "alternatives": [],
+      "category": "economy",
+      "priority": 5,
+      "context": "",
+      "avoid": [],
+      "preserve": false,
+      "source_refs": [
+        "perfectworld_dictionary",
+        "hltv_watch_guide"
+      ]
+    },
+    {
+      "id": "cs2-overtime",
+      "english": "overtime",
+      "aliases": [
+        "OT"
+      ],
+      "chinese": "加时",
+      "alternatives": [],
+      "category": "game_state",
+      "priority": 4,
+      "context": "",
+      "avoid": [],
+      "preserve": false,
+      "source_refs": [
+        "perfectworld_dictionary",
+        "hltv_watch_guide"
+      ]
+    },
+    {
+      "id": "cs2-mr12",
+      "english": "MR12",
+      "aliases": [
+        "maximum rounds 12"
+      ],
+      "chinese": "MR12赛制",
+      "alternatives": [],
+      "category": "game_state",
+      "priority": 3,
+      "context": "半场最多12回合的赛制表述。",
+      "avoid": [],
+      "preserve": false,
+      "source_refs": [
+        "hltv_watch_guide"
+      ]
+    },
+    {
+      "id": "cs2-spawn",
+      "english": "spawn",
+      "aliases": [
+        "T spawn",
+        "CT spawn"
+      ],
+      "chinese": "出生点",
+      "alternatives": [
+        "家"
+      ],
+      "category": "map",
+      "priority": 4,
+      "context": "",
+      "avoid": [],
+      "preserve": false,
+      "source_refs": [
+        "hltv_watch_guide"
+      ]
+    },
+    {
+      "id": "cs2-early-round",
+      "english": "early round",
+      "aliases": [
+        "early-round"
+      ],
+      "chinese": "回合前期",
+      "alternatives": [],
+      "category": "game_state",
+      "priority": 3,
+      "context": "",
+      "avoid": [],
+      "preserve": false,
+      "source_refs": [
+        "hltv_watch_guide"
+      ]
+    },
+    {
+      "id": "cs2-mid-round",
+      "english": "mid-round",
+      "aliases": [
+        "mid round"
+      ],
+      "chinese": "回合中期",
+      "alternatives": [
+        "中期决策"
+      ],
+      "category": "game_state",
+      "priority": 4,
+      "context": "",
+      "avoid": [],
+      "preserve": false,
+      "source_refs": [
+        "hltv_watch_guide"
+      ]
+    },
+    {
+      "id": "cs2-late-round",
+      "english": "late round",
+      "aliases": [
+        "late-round"
+      ],
+      "chinese": "回合残局阶段",
+      "alternatives": [
+        "回合后期"
+      ],
+      "category": "game_state",
+      "priority": 3,
+      "context": "",
+      "avoid": [],
+      "preserve": false,
+      "source_refs": [
+        "hltv_watch_guide"
+      ]
+    },
+    {
+      "id": "cs2-eco",
+      "english": "eco",
+      "aliases": [
+        "eco round",
+        "full eco",
+        "full-eco"
+      ],
+      "chinese": "经济局",
+      "alternatives": [
+        "ECO"
+      ],
+      "category": "economy",
+      "priority": 5,
+      "context": "通常指少买或不买，为后续长枪局存钱。",
+      "avoid": [
+        "生态"
+      ],
+      "preserve": false,
+      "source_refs": [
+        "perfectworld_dictionary",
+        "blast_communication",
+        "hltv_watch_guide"
+      ]
+    },
+    {
+      "id": "cs2-anti-eco",
+      "english": "anti-eco",
+      "aliases": [
+        "anti eco"
+      ],
+      "chinese": "打经济局",
+      "alternatives": [
+        "反ECO"
+      ],
+      "category": "economy",
+      "priority": 5,
+      "context": "指对手经济较差时己方的应对回合。",
+      "avoid": [],
+      "preserve": false,
+      "source_refs": [
+        "perfectworld_dictionary",
+        "blast_communication"
+      ]
+    },
+    {
+      "id": "cs2-force-buy",
+      "correction_sources": ["force buy", "force buying", "forcebuy"],
+      "wrong_targets": ["强制购买", "强行购买"],
+      "english": "force-buy",
+      "aliases": [
+        "force buy",
+        "forcebuy",
+        "force"
+      ],
+      "chinese": "强起",
+      "alternatives": [
+        "强买"
+      ],
+      "category": "economy",
+      "priority": 5,
+      "context": "",
+      "avoid": [
+        "强制购买"
+      ],
+      "preserve": false,
+      "source_refs": [
+        "perfectworld_dictionary",
+        "blast_communication"
+      ]
+    },
+    {
+      "id": "cs2-full-buy",
+      "english": "full buy",
+      "aliases": [
+        "full-buy",
+        "fullbuy"
+      ],
+      "chinese": "全枪全弹",
+      "alternatives": [
+        "长枪局",
+        "满配"
+      ],
+      "category": "economy",
+      "priority": 5,
+      "context": "",
+      "avoid": [],
+      "preserve": false,
+      "source_refs": [
+        "hltv_watch_guide"
+      ]
+    },
+    {
+      "id": "cs2-hero-buy",
+      "english": "hero buy",
+      "aliases": [
+        "hero-AK",
+        "hero AK",
+        "hero rifle"
+      ],
+      "chinese": "英雄枪",
+      "alternatives": [
+        "单英雄枪"
+      ],
+      "category": "economy",
+      "priority": 4,
+      "context": "通常只有一两人起主战武器。",
+      "avoid": [],
+      "preserve": false,
+      "source_refs": [
+        "blast_communication"
+      ]
+    },
+    {
+      "id": "cs2-glass-cannon",
+      "english": "glass cannon",
+      "aliases": [
+        "glass-cannon"
+      ],
+      "chinese": "无甲大狙",
+      "alternatives": [
+        "玻璃大炮"
+      ],
+      "category": "economy",
+      "priority": 4,
+      "context": "通常指买AWP但不配甲。",
+      "avoid": [],
+      "preserve": false,
+      "source_refs": [
+        "perfectworld_dictionary",
+        "blast_communication"
+      ]
+    },
+    {
+      "id": "cs2-save",
+      "correction_sources": ["save", "saving"],
+      "correction_exclude": ["file", "files", "time", "money", "settings", "replay", "life"],
+      "wrong_targets": ["保存武器", "保存", "存枪"],
+      "english": "save",
+      "aliases": [
+        "saving",
+        "save the gun",
+        "save the AWP"
+      ],
+      "chinese": "保枪",
+      "alternatives": [
+        "保"
+      ],
+      "category": "economy",
+      "priority": 5,
+      "context": "局势不利时放弃回合，保留装备到下一局。",
+      "avoid": [
+        "保存"
+      ],
+      "preserve": false,
+      "source_refs": [
+        "perfectworld_dictionary",
+        "blast_communication",
+        "hltv_watch_guide"
+      ]
+    },
+    {
+      "id": "cs2-exit-frag",
+      "english": "exit frag",
+      "aliases": [
+        "exit frags",
+        "get exits"
+      ],
+      "chinese": "抓保枪",
+      "alternatives": [
+        "出口击杀"
+      ],
+      "category": "economy",
+      "priority": 4,
+      "context": "常指回合结束前追杀保枪方或保枪方打经济伤害。",
+      "avoid": [],
+      "preserve": false,
+      "source_refs": [
+        "perfectworld_dictionary",
+        "blast_communication"
+      ]
+    },
+    {
+      "id": "cs2-economic-damage",
+      "english": "economic damage",
+      "aliases": [
+        "economy damage"
+      ],
+      "chinese": "打经济伤害",
+      "alternatives": [
+        "破坏经济"
+      ],
+      "category": "economy",
+      "priority": 4,
+      "context": "",
+      "avoid": [],
+      "preserve": false,
+      "source_refs": [
+        "perfectworld_dictionary"
+      ]
+    },
+    {
+      "id": "cs2-reset",
+      "english": "reset",
+      "aliases": [
+        "economy reset",
+        "reset the economy"
+      ],
+      "chinese": "打崩经济",
+      "alternatives": [
+        "经济重置"
+      ],
+      "category": "economy",
+      "priority": 4,
+      "context": "使对手下一回合难以正常起枪。",
+      "avoid": [],
+      "preserve": false,
+      "source_refs": [
+        "perfectworld_dictionary",
+        "blast_communication"
+      ]
+    },
+    {
+      "id": "cs2-drop",
+      "english": "drop",
+      "aliases": [
+        "dropping",
+        "drop a weapon"
+      ],
+      "chinese": "发枪",
+      "alternatives": [
+        "丢枪给队友"
+      ],
+      "category": "economy",
+      "priority": 4,
+      "context": "",
+      "avoid": [],
+      "preserve": false,
+      "source_refs": [
+        "perfectworld_dictionary",
+        "blast_communication",
+        "hltv_watch_guide"
+      ]
+    },
+    {
+      "id": "cs2-igl",
+      "english": "IGL",
+      "aliases": [
+        "in-game leader",
+        "in game leader"
+      ],
+      "chinese": "指挥",
+      "alternatives": [
+        "队内指挥"
+      ],
+      "category": "role",
+      "priority": 5,
+      "context": "",
+      "avoid": [],
+      "preserve": false,
+      "source_refs": [
+        "perfectworld_dictionary"
+      ]
+    },
+    {
+      "id": "cs2-awper",
+      "english": "AWPer",
+      "aliases": [
+        "primary AWPer",
+        "main AWPer"
+      ],
+      "chinese": "狙击手",
+      "alternatives": [
+        "大狙位"
+      ],
+      "category": "role",
+      "priority": 5,
+      "context": "",
+      "avoid": [],
+      "preserve": false,
+      "source_refs": [
+        "hltv_watch_guide"
+      ]
+    },
+    {
+      "id": "cs2-entry-fragger",
+      "english": "entry fragger",
+      "aliases": [
+        "entry",
+        "entry rifler",
+        "entry-fragger"
+      ],
+      "chinese": "突破手",
+      "alternatives": [
+        "首杀位"
+      ],
+      "category": "role",
+      "priority": 5,
+      "context": "角色名优先译“突破手”；具体击杀事件另见 opening kill。",
+      "avoid": [],
+      "preserve": false,
+      "source_refs": [
+        "perfectworld_dictionary",
+        "blast_communication",
+        "hltv_watch_guide"
+      ]
+    },
+    {
+      "id": "cs2-lurker",
+      "english": "lurker",
+      "aliases": [
+        "lurk",
+        "lurking"
+      ],
+      "chinese": "自由人",
+      "alternatives": [
+        "断后位",
+        "老六位"
+      ],
+      "category": "role",
+      "priority": 5,
+      "context": "职业比赛字幕优先“自由人/断后”；避免机械翻成“潜伏者”。",
+      "avoid": [
+        "潜伏者"
+      ],
+      "preserve": false,
+      "source_refs": [
+        "perfectworld_dictionary",
+        "blast_communication",
+        "hltv_watch_guide"
+      ]
+    },
+    {
+      "id": "cs2-anchor",
+      "english": "anchor",
+      "aliases": [
+        "site anchor",
+        "anchor player"
+      ],
+      "chinese": "包点防守位",
+      "alternatives": [
+        "守点人",
+        "铁板位"
+      ],
+      "category": "role",
+      "priority": 5,
+      "context": "CT侧长期驻守某一包点的角色。",
+      "avoid": [
+        "锚"
+      ],
+      "preserve": false,
+      "source_refs": [
+        "blast_communication",
+        "hltv_watch_guide"
+      ]
+    },
+    {
+      "id": "cs2-rotator",
+      "english": "rotator",
+      "aliases": [
+        "rotation player"
+      ],
+      "chinese": "游走回防位",
+      "alternatives": [
+        "协防位"
+      ],
+      "category": "role",
+      "priority": 4,
+      "context": "",
+      "avoid": [],
+      "preserve": false,
+      "source_refs": [
+        "blast_communication"
+      ]
+    },
+    {
+      "id": "cs2-support-player",
+      "english": "support player",
+      "aliases": [
+        "support"
+      ],
+      "chinese": "辅助位",
+      "alternatives": [
+        "辅助"
+      ],
+      "category": "role",
+      "priority": 4,
+      "context": "",
+      "avoid": [],
+      "preserve": false,
+      "source_refs": [
+        "perfectworld_dictionary",
+        "hltv_watch_guide"
+      ]
+    },
+    {
+      "id": "cs2-pack-rifler",
+      "english": "pack rifler",
+      "aliases": [
+        "pack player"
+      ],
+      "chinese": "抱团步枪手",
+      "alternatives": [
+        "抱团队员"
+      ],
+      "category": "role",
+      "priority": 3,
+      "context": "",
+      "avoid": [],
+      "preserve": false,
+      "source_refs": [
+        "hltv_watch_guide"
+      ]
+    },
+    {
+      "id": "cs2-space-taker",
+      "english": "space taker",
+      "aliases": [
+        "space-taker"
+      ],
+      "chinese": "抢空间的突破手",
+      "alternatives": [
+        "抢空间位"
+      ],
+      "category": "role",
+      "priority": 4,
+      "context": "",
+      "avoid": [],
+      "preserve": false,
+      "source_refs": [
+        "hltv_watch_guide"
+      ]
+    },
+    {
+      "id": "cs2-default",
+      "english": "default",
+      "aliases": [
+        "default setup",
+        "play default"
+      ],
+      "chinese": "默认控图",
+      "alternatives": [
+        "默认战术"
+      ],
+      "category": "tactic",
+      "priority": 5,
+      "context": "T方分散控图、获取信息并保留转点空间。",
+      "avoid": [
+        "默认"
+      ],
+      "preserve": false,
+      "source_refs": [
+        "blast_communication",
+        "hltv_watch_guide"
+      ]
+    },
+    {
+      "id": "cs2-execute",
+      "english": "execute",
+      "aliases": [
+        "site execute",
+        "execute onto site"
+      ],
+      "chinese": "爆弹",
+      "alternatives": [
+        "爆弹进点",
+        "战术执行"
+      ],
+      "category": "tactic",
+      "priority": 5,
+      "context": "有组织地用烟闪火配合进入包点。",
+      "avoid": [
+        "执行"
+      ],
+      "preserve": false,
+      "source_refs": [
+        "perfectworld_dictionary",
+        "blast_communication",
+        "hltv_watch_guide"
+      ]
+    },
+    {
+      "id": "cs2-fake",
+      "english": "fake",
+      "aliases": [
+        "fake execute",
+        "fake site"
+      ],
+      "chinese": "假打",
+      "alternatives": [
+        "佯攻"
+      ],
+      "category": "tactic",
+      "priority": 5,
+      "context": "",
+      "avoid": [],
+      "preserve": false,
+      "source_refs": [
+        "perfectworld_dictionary",
+        "blast_communication"
+      ]
+    },
+    {
+      "id": "cs2-contact",
+      "english": "contact",
+      "aliases": [
+        "contact play"
+      ],
+      "chinese": "静音接触",
+      "alternatives": [
+        "静摸接触"
+      ],
+      "category": "tactic",
+      "priority": 4,
+      "context": "减少提前使用道具和脚步，接触到防守后再提速。",
+      "avoid": [],
+      "preserve": false,
+      "source_refs": [
+        "blast_communication"
+      ]
+    },
+    {
+      "id": "cs2-anti-strat",
+      "english": "anti-strat",
+      "aliases": [
+        "anti strat",
+        "counter-strat",
+        "counter strat"
+      ],
+      "chinese": "针对战术",
+      "alternatives": [
+        "反战术"
+      ],
+      "category": "tactic",
+      "priority": 4,
+      "context": "",
+      "avoid": [],
+      "preserve": false,
+      "source_refs": [
+        "perfectworld_dictionary",
+        "blast_communication"
+      ]
+    },
+    {
+      "id": "cs2-counter-utility",
+      "english": "counter-utility",
+      "aliases": [
+        "counter util",
+        "counter utility"
+      ],
+      "chinese": "反道具",
+      "alternatives": [
+        "道具反制"
+      ],
+      "category": "utility",
+      "priority": 4,
+      "context": "",
+      "avoid": [],
+      "preserve": false,
+      "source_refs": [
+        "blast_communication"
+      ]
+    },
+    {
+      "id": "cs2-rush",
+      "english": "rush",
+      "aliases": [
+        "rushing",
+        "rush A",
+        "rush B"
+      ],
+      "chinese": "提速Rush",
+      "alternatives": [
+        "快攻",
+        "直接冲"
+      ],
+      "category": "tactic",
+      "priority": 5,
+      "context": "",
+      "avoid": [],
+      "preserve": false,
+      "source_refs": [
+        "perfectworld_dictionary",
+        "blast_communication"
+      ]
+    },
+    {
+      "id": "cs2-rotate",
+      "english": "rotate",
+      "aliases": [
+        "rotating",
+        "rotation",
+        "rotate over"
+      ],
+      "chinese": "转点",
+      "alternatives": [
+        "回防"
+      ],
+      "category": "tactic",
+      "priority": 5,
+      "context": "T侧多译转点，CT侧多译回防/转防。",
+      "avoid": [],
+      "preserve": false,
+      "source_refs": [
+        "perfectworld_dictionary",
+        "blast_communication"
+      ]
+    },
+    {
+      "id": "cs2-retake",
+      "english": "retake",
+      "aliases": [
+        "retake setup",
+        "play retake"
+      ],
+      "chinese": "回防",
+      "alternatives": [
+        "回防战术"
+      ],
+      "category": "tactic",
+      "priority": 5,
+      "context": "通常指包点失守或下包后的重新夺回。",
+      "avoid": [],
+      "preserve": false,
+      "source_refs": [
+        "blast_communication"
+      ]
+    },
+    {
+      "id": "cs2-stack",
+      "english": "stack",
+      "aliases": [
+        "stacking",
+        "site stack",
+        "stack A",
+        "stack B"
+      ],
+      "chinese": "重防",
+      "alternatives": [
+        "赌点",
+        "多人重防"
+      ],
+      "category": "tactic",
+      "priority": 5,
+      "context": "根据语境也可译“赌点”。",
+      "avoid": [
+        "堆叠"
+      ],
+      "preserve": false,
+      "source_refs": [
+        "perfectworld_dictionary",
+        "blast_communication",
+        "hltv_watch_guide"
+      ]
+    },
+    {
+      "id": "cs2-gamble-stack",
+      "english": "gamble stack",
+      "aliases": [
+        "gamble",
+        "gamble-stack"
+      ],
+      "chinese": "赌点重防",
+      "alternatives": [
+        "赌点"
+      ],
+      "category": "tactic",
+      "priority": 4,
+      "context": "",
+      "avoid": [],
+      "preserve": false,
+      "source_refs": [
+        "blast_communication",
+        "hltv_watch_guide"
+      ]
+    },
+    {
+      "id": "cs2-split",
+      "english": "split",
+      "aliases": [
+        "split execute",
+        "A split",
+        "B split"
+      ],
+      "chinese": "夹击",
+      "alternatives": [
+        "分路同步进攻"
+      ],
+      "category": "tactic",
+      "priority": 4,
+      "context": "多路同时进入同一目标区域。",
+      "avoid": [],
+      "preserve": false,
+      "source_refs": [
+        "perfectworld_dictionary"
+      ]
+    },
+    {
+      "id": "cs2-flank",
+      "english": "flank",
+      "aliases": [
+        "flanking",
+        "on the flank"
+      ],
+      "chinese": "绕后",
+      "alternatives": [
+        "包抄"
+      ],
+      "category": "tactic",
+      "priority": 5,
+      "context": "",
+      "avoid": [],
+      "preserve": false,
+      "source_refs": [
+        "perfectworld_dictionary"
+      ]
+    },
+    {
+      "id": "cs2-crossfire",
+      "english": "crossfire",
+      "aliases": [
+        "crossfire setup"
+      ],
+      "chinese": "交叉火力",
+      "alternatives": [
+        "双架枪线"
+      ],
+      "category": "tactic",
+      "priority": 4,
+      "context": "",
+      "avoid": [],
+      "preserve": false,
+      "source_refs": [
+        "perfectworld_dictionary",
+        "hltv_watch_guide"
+      ]
+    },
+    {
+      "id": "cs2-map-control",
+      "english": "map control",
+      "aliases": [
+        "take map control",
+        "gain map control"
+      ],
+      "chinese": "地图控制",
+      "alternatives": [
+        "控图"
+      ],
+      "category": "tactic",
+      "priority": 5,
+      "context": "",
+      "avoid": [],
+      "preserve": false,
+      "source_refs": [
+        "hltv_watch_guide"
+      ]
+    },
+    {
+      "id": "cs2-information",
+      "english": "information",
+      "aliases": [
+        "info",
+        "get info",
+        "gather information"
+      ],
+      "chinese": "信息",
+      "alternatives": [
+        "侦查信息"
+      ],
+      "category": "tactic",
+      "priority": 5,
+      "context": "CS解说高频词；通常无需展开。",
+      "avoid": [],
+      "preserve": false,
+      "source_refs": [
+        "hltv_watch_guide"
+      ]
+    },
+    {
+      "id": "cs2-peek",
+      "english": "peek",
+      "aliases": [
+        "peeking",
+        "peek into",
+        "swing"
+      ],
+      "chinese": "拉出去",
+      "alternatives": [
+        "探",
+        "拉身位"
+      ],
+      "category": "combat",
+      "priority": 5,
+      "context": "按语境可译探点/拉出去对枪。",
+      "avoid": [],
+      "preserve": false,
+      "source_refs": [
+        "perfectworld_dictionary"
+      ]
+    },
+    {
+      "id": "cs2-dry-peek",
+      "english": "dry peek",
+      "aliases": [
+        "dry-peek",
+        "dry peeking",
+        "dry swing"
+      ],
+      "chinese": "干拉",
+      "alternatives": [
+        "无道具干拉"
+      ],
+      "category": "combat",
+      "priority": 5,
+      "context": "不靠闪光等辅助道具直接拉出去对枪。",
+      "avoid": [
+        "干燥探头"
+      ],
+      "preserve": false,
+      "source_refs": [
+        "blast_communication"
+      ]
+    },
+    {
+      "id": "cs2-jiggle-peek",
+      "english": "jiggle peek",
+      "aliases": [
+        "jiggle-peek",
+        "shoulder peek",
+        "shoulder-peek",
+        "shoulder peeking"
+      ],
+      "chinese": "小身位晃身",
+      "alternatives": [
+        "小身位骗枪"
+      ],
+      "category": "combat",
+      "priority": 5,
+      "context": "",
+      "avoid": [
+        "肩膀探头"
+      ],
+      "preserve": false,
+      "source_refs": [
+        "perfectworld_dictionary",
+        "blast_communication"
+      ]
+    },
+    {
+      "id": "cs2-wide-swing",
+      "english": "wide swing",
+      "aliases": [
+        "wide peek",
+        "wide-peek"
+      ],
+      "chinese": "大身位拉",
+      "alternatives": [
+        "大拉"
+      ],
+      "category": "combat",
+      "priority": 5,
+      "context": "字幕高频实战表达；与普通peek区分。",
+      "avoid": [],
+      "preserve": false,
+      "source_refs": [
+        "blast_communication"
+      ]
+    },
+    {
+      "id": "cs2-hold",
+      "english": "hold",
+      "aliases": [
+        "holding",
+        "hold the angle",
+        "holding an angle"
+      ],
+      "chinese": "架住",
+      "alternatives": [
+        "架枪"
+      ],
+      "category": "combat",
+      "priority": 5,
+      "context": "",
+      "avoid": [],
+      "preserve": false,
+      "source_refs": [
+        "blast_communication"
+      ]
+    },
+    {
+      "id": "cs2-pre-aim",
+      "english": "pre-aim",
+      "aliases": [
+        "preaim",
+        "pre-aiming"
+      ],
+      "chinese": "预瞄",
+      "alternatives": [],
+      "category": "combat",
+      "priority": 5,
+      "context": "",
+      "avoid": [],
+      "preserve": false,
+      "source_refs": [
+        "perfectworld_dictionary",
+        "blast_communication"
+      ]
+    },
+    {
+      "id": "cs2-pre-fire",
+      "english": "pre-fire",
+      "aliases": [
+        "prefire",
+        "prefiring",
+        "pre-firing"
+      ],
+      "chinese": "提前枪",
+      "alternatives": [
+        "预开枪"
+      ],
+      "category": "combat",
+      "priority": 5,
+      "context": "",
+      "avoid": [],
+      "preserve": false,
+      "source_refs": [
+        "perfectworld_dictionary",
+        "blast_communication"
+      ]
+    },
+    {
+      "id": "cs2-spray",
+      "english": "spray",
+      "aliases": [
+        "spraying"
+      ],
+      "chinese": "扫射",
+      "alternatives": [
+        "压枪扫射"
+      ],
+      "category": "combat",
+      "priority": 4,
+      "context": "",
+      "avoid": [],
+      "preserve": false,
+      "source_refs": [
+        "blast_communication"
+      ]
+    },
+    {
+      "id": "cs2-spam",
+      "english": "spam",
+      "aliases": [
+        "spamming",
+        "spam smoke",
+        "spam the smoke",
+        "spam wall"
+      ],
+      "chinese": "混",
+      "alternatives": [
+        "混烟",
+        "穿射"
+      ],
+      "category": "combat",
+      "priority": 5,
+      "context": "烟后多译“混烟”；墙后多译“穿射”。",
+      "avoid": [
+        "垃圾信息"
+      ],
+      "preserve": false,
+      "source_refs": [
+        "perfectworld_dictionary",
+        "blast_communication"
+      ]
+    },
+    {
+      "id": "cs2-wallbang",
+      "english": "wallbang",
+      "aliases": [
+        "wallbang",
+        "wallbanging",
+        "wall bang"
+      ],
+      "chinese": "穿墙",
+      "alternatives": [
+        "穿射"
+      ],
+      "category": "combat",
+      "priority": 5,
+      "context": "",
+      "avoid": [],
+      "preserve": false,
+      "source_refs": [
+        "perfectworld_dictionary",
+        "blast_communication"
+      ]
+    },
+    {
+      "id": "cs2-flick",
+      "english": "flick",
+      "aliases": [
+        "flickshot",
+        "flick shot"
+      ],
+      "chinese": "甩枪",
+      "alternatives": [
+        "甩狙"
+      ],
+      "category": "combat",
+      "priority": 4,
+      "context": "",
+      "avoid": [],
+      "preserve": false,
+      "source_refs": [
+        "perfectworld_dictionary"
+      ]
+    },
+    {
+      "id": "cs2-quickscope",
+      "english": "quickscope",
+      "aliases": [
+        "quick scope",
+        "quick-scope"
+      ],
+      "chinese": "瞬镜",
+      "alternatives": [],
+      "category": "combat",
+      "priority": 4,
+      "context": "",
+      "avoid": [],
+      "preserve": false,
+      "source_refs": [
+        "perfectworld_dictionary",
+        "blast_communication"
+      ]
+    },
+    {
+      "id": "cs2-no-scope",
+      "english": "no-scope",
+      "aliases": [
+        "noscope",
+        "no scope"
+      ],
+      "chinese": "盲狙",
+      "alternatives": [],
+      "category": "combat",
+      "priority": 5,
+      "context": "",
+      "avoid": [],
+      "preserve": false,
+      "source_refs": [
+        "perfectworld_dictionary",
+        "blast_communication"
+      ]
+    },
+    {
+      "id": "cs2-one-tap",
+      "english": "one-tap",
+      "aliases": [
+        "one tap",
+        "onetap"
+      ],
+      "chinese": "一发头",
+      "alternatives": [
+        "一枪头"
+      ],
+      "category": "combat",
+      "priority": 5,
+      "context": "",
+      "avoid": [],
+      "preserve": false,
+      "source_refs": [
+        "perfectworld_dictionary",
+        "blast_communication"
+      ]
+    },
+    {
+      "id": "cs2-one-deag",
+      "english": "one-deag",
+      "aliases": [
+        "one deag",
+        "Juan Deag"
+      ],
+      "chinese": "沙鹰一发头",
+      "alternatives": [
+        "沙鹰一枪头"
+      ],
+      "category": "combat",
+      "priority": 5,
+      "context": "",
+      "avoid": [],
+      "preserve": false,
+      "source_refs": [
+        "perfectworld_dictionary",
+        "blast_communication"
+      ]
+    },
+    {
+      "id": "cs2-dink",
+      "english": "dink",
+      "aliases": [
+        "dinked"
+      ],
+      "chinese": "爆头打残",
+      "alternatives": [
+        "头甲没打死"
+      ],
+      "category": "combat",
+      "priority": 5,
+      "context": "通常是命中有甲敌人头部但未击杀。",
+      "avoid": [],
+      "preserve": false,
+      "source_refs": [
+        "perfectworld_dictionary",
+        "blast_communication"
+      ]
+    },
+    {
+      "id": "cs2-gush",
+      "english": "gush",
+      "aliases": [
+        "gushed"
+      ],
+      "chinese": "无甲爆头打残",
+      "alternatives": [
+        "爆头未击杀"
+      ],
+      "category": "combat",
+      "priority": 3,
+      "context": "BLAST 将其用于无甲目标爆头未死的语境。",
+      "avoid": [],
+      "preserve": false,
+      "source_refs": [
+        "blast_communication"
+      ]
+    },
+    {
+      "id": "cs2-legged",
+      "english": "legged",
+      "aliases": [
+        "leg shot",
+        "AWP leg"
+      ],
+      "chinese": "大狙打腿",
+      "alternatives": [
+        "狙腿"
+      ],
+      "category": "combat",
+      "priority": 4,
+      "context": "",
+      "avoid": [],
+      "preserve": false,
+      "source_refs": [
+        "perfectworld_dictionary",
+        "blast_communication"
+      ]
+    },
+    {
+      "id": "cs2-lit",
+      "english": "lit",
+      "aliases": [
+        "he's lit",
+        "very lit"
+      ],
+      "chinese": "打残",
+      "alternatives": [
+        "大残"
+      ],
+      "category": "combat",
+      "priority": 5,
+      "context": "",
+      "avoid": [
+        "点亮"
+      ],
+      "preserve": false,
+      "source_refs": [
+        "perfectworld_dictionary",
+        "blast_communication"
+      ]
+    },
+    {
+      "id": "cs2-tag",
+      "english": "tag",
+      "aliases": [
+        "tagged",
+        "tag him"
+      ],
+      "chinese": "打中",
+      "alternatives": [
+        "蹭到",
+        "打残"
+      ],
+      "category": "combat",
+      "priority": 4,
+      "context": "根据上下文伤害程度决定是否翻为“打残”。",
+      "avoid": [
+        "标记"
+      ],
+      "preserve": false,
+      "source_refs": [
+        "perfectworld_dictionary",
+        "blast_communication"
+      ]
+    },
+    {
+      "id": "cs2-whiff",
+      "english": "whiff",
+      "aliases": [
+        "whiffed",
+        "whiffing"
+      ],
+      "chinese": "空枪",
+      "alternatives": [
+        "马枪"
+      ],
+      "category": "combat",
+      "priority": 5,
+      "context": "中文赛事口语可按风格译“空枪/马枪”。",
+      "avoid": [],
+      "preserve": false,
+      "source_refs": [
+        "perfectworld_dictionary",
+        "blast_communication"
+      ]
+    },
+    {
+      "id": "cs2-collateral",
+      "english": "collateral",
+      "aliases": [
+        "collat",
+        "collateral kill"
+      ],
+      "chinese": "一枪双杀",
+      "alternatives": [
+        "穿两个"
+      ],
+      "category": "combat",
+      "priority": 4,
+      "context": "",
+      "avoid": [],
+      "preserve": false,
+      "source_refs": [
+        "perfectworld_dictionary"
+      ]
+    },
+    {
+      "id": "cs2-trade",
+      "english": "trade",
+      "aliases": [
+        "trade frag",
+        "trade kill",
+        "refrag",
+        "traded",
+        "trading"
+      ],
+      "chinese": "补枪",
+      "wrong_targets": ["交易"],
+      "correction_sources": ["no trade available", "trade kill", "trade frag", "refrag"],
+      "correction_exclude": ["skin", "skins", "trade offer", "trade offers"],
+      "alternatives": [
+        "换人头"
+      ],
+      "category": "combat",
+      "priority": 5,
+      "context": "队友阵亡后迅速击杀凶手。赛事字幕优先“补枪”。",
+      "avoid": [
+        "交易"
+      ],
+      "preserve": false,
+      "source_refs": [
+        "perfectworld_dictionary",
+        "blast_communication",
+        "hltv_watch_guide"
+      ]
+    },
+    {
+      "id": "cs2-opening-kill",
+      "english": "opening kill",
+      "aliases": [
+        "opening frag",
+        "opening pick",
+        "first kill"
+      ],
+      "chinese": "首杀",
+      "alternatives": [
+        "开局首杀"
+      ],
+      "category": "combat",
+      "priority": 5,
+      "context": "",
+      "avoid": [],
+      "preserve": false,
+      "source_refs": [
+        "hltv_watch_guide"
+      ]
+    },
+    {
+      "id": "cs2-pick",
+      "english": "pick",
+      "aliases": [
+        "opening pick",
+        "find a pick"
+      ],
+      "chinese": "抓到一个人",
+      "alternatives": [
+        "拿到首杀"
+      ],
+      "category": "combat",
+      "priority": 4,
+      "context": "不要机械译为“选择”。",
+      "avoid": [
+        "选择"
+      ],
+      "preserve": false,
+      "source_refs": [
+        "perfectworld_dictionary"
+      ]
+    },
+    {
+      "id": "cs2-frag",
+      "english": "frag",
+      "aliases": [
+        "frags",
+        "fragging"
+      ],
+      "chinese": "击杀",
+      "alternatives": [
+        "人头"
+      ],
+      "category": "combat",
+      "priority": 4,
+      "context": "",
+      "avoid": [],
+      "preserve": false,
+      "source_refs": [
+        "perfectworld_dictionary"
+      ]
+    },
+    {
+      "id": "cs2-ace",
+      "english": "ace",
+      "aliases": [
+        "aces",
+        "aced"
+      ],
+      "chinese": "五杀灭队",
+      "alternatives": [
+        "ACE",
+        "五杀"
+      ],
+      "category": "combat",
+      "priority": 5,
+      "context": "",
+      "avoid": [],
+      "preserve": false,
+      "source_refs": [
+        "perfectworld_dictionary"
+      ]
+    },
+    {
+      "id": "cs2-clutch",
+      "english": "clutch",
+      "aliases": [
+        "clutched",
+        "clutching",
+        "1vX"
+      ],
+      "chinese": "残局拿下",
+      "alternatives": [
+        "残局翻盘"
+      ],
+      "category": "combat",
+      "priority": 5,
+      "context": "尤其常用于一打多取胜。",
+      "avoid": [],
+      "preserve": false,
+      "source_refs": [
+        "perfectworld_dictionary",
+        "hltv_watch_guide"
+      ]
+    },
+    {
+      "id": "cs2-double-kill",
+      "english": "double kill",
+      "aliases": [
+        "2K",
+        "two kills"
+      ],
+      "chinese": "双杀",
+      "alternatives": [
+        "两杀"
+      ],
+      "category": "combat",
+      "priority": 4,
+      "context": "",
+      "avoid": [],
+      "preserve": false,
+      "source_refs": [
+        "perfectworld_dictionary"
+      ]
+    },
+    {
+      "id": "cs2-quad-kill",
+      "english": "quad kill",
+      "aliases": [
+        "4K",
+        "four kills"
+      ],
+      "chinese": "四杀",
+      "alternatives": [
+        "四杀"
+      ],
+      "category": "combat",
+      "priority": 3,
+      "context": "",
+      "avoid": [],
+      "preserve": false,
+      "source_refs": [
+        "perfectworld_dictionary"
+      ]
+    },
+    {
+      "id": "cs2-utility",
+      "english": "utility",
+      "aliases": [
+        "util",
+        "nades",
+        "grenades"
+      ],
+      "chinese": "道具",
+      "alternatives": [
+        "投掷物"
+      ],
+      "category": "utility",
+      "priority": 5,
+      "context": "通常包括烟、闪、火、雷等。",
+      "avoid": [
+        "实用工具"
+      ],
+      "preserve": false,
+      "source_refs": [
+        "perfectworld_dictionary",
+        "blast_communication",
+        "hltv_watch_guide"
+      ]
+    },
+    {
+      "id": "cs2-flashbang",
+      "english": "flashbang",
+      "aliases": [
+        "flash",
+        "flashes"
+      ],
+      "chinese": "闪光弹",
+      "alternatives": [
+        "闪"
+      ],
+      "category": "utility",
+      "priority": 5,
+      "context": "",
+      "avoid": [],
+      "preserve": false,
+      "source_refs": [
+        "hltv_watch_guide"
+      ]
+    },
+    {
+      "id": "cs2-pop-flash",
+      "english": "pop flash",
+      "aliases": [
+        "pop-flash",
+        "popflash"
+      ],
+      "chinese": "瞬爆闪",
+      "alternatives": [
+        "瞬闪"
+      ],
+      "category": "utility",
+      "priority": 5,
+      "context": "",
+      "avoid": [],
+      "preserve": false,
+      "source_refs": [
+        "perfectworld_dictionary",
+        "blast_communication"
+      ]
+    },
+    {
+      "id": "cs2-anti-flash",
+      "english": "anti-flash",
+      "aliases": [
+        "anti flash",
+        "playing anti-flash"
+      ],
+      "chinese": "背闪",
+      "alternatives": [
+        "躲闪"
+      ],
+      "category": "utility",
+      "priority": 5,
+      "context": "通过背身/看墙等方式减少被闪效果。",
+      "avoid": [
+        "反闪光"
+      ],
+      "preserve": false,
+      "source_refs": [
+        "blast_communication"
+      ]
+    },
+    {
+      "id": "cs2-smoke",
+      "english": "smoke",
+      "aliases": [
+        "smoke grenade",
+        "smokes"
+      ],
+      "chinese": "烟",
+      "alternatives": [
+        "烟雾弹"
+      ],
+      "category": "utility",
+      "priority": 5,
+      "context": "",
+      "avoid": [],
+      "preserve": false,
+      "source_refs": [
+        "hltv_watch_guide"
+      ]
+    },
+    {
+      "id": "cs2-molly",
+      "english": "molly",
+      "aliases": [
+        "Molotov",
+        "incendiary",
+        "incendiary grenade"
+      ],
+      "chinese": "火",
+      "alternatives": [
+        "燃烧弹"
+      ],
+      "category": "utility",
+      "priority": 5,
+      "context": "",
+      "avoid": [],
+      "preserve": false,
+      "source_refs": [
+        "perfectworld_dictionary",
+        "hltv_watch_guide"
+      ]
+    },
+    {
+      "id": "cs2-he-grenade",
+      "english": "HE grenade",
+      "aliases": [
+        "HE",
+        "nade",
+        "HE nade"
+      ],
+      "chinese": "手雷",
+      "alternatives": [
+        "雷"
+      ],
+      "category": "utility",
+      "priority": 5,
+      "context": "",
+      "avoid": [],
+      "preserve": false,
+      "source_refs": [
+        "hltv_watch_guide"
+      ]
+    },
+    {
+      "id": "cs2-smoke-defuse",
+      "english": "smoke defuse",
+      "aliases": [
+        "smoke-defuse",
+        "smoke the bomb and defuse"
+      ],
+      "chinese": "烟中拆包",
+      "alternatives": [
+        "封烟拆包"
+      ],
+      "category": "utility",
+      "priority": 4,
+      "context": "",
+      "avoid": [],
+      "preserve": false,
+      "source_refs": [
+        "blast_communication"
+      ]
+    },
+    {
+      "id": "cs2-plant",
+      "english": "plant",
+      "aliases": [
+        "planting",
+        "plant the bomb",
+        "bomb plant"
+      ],
+      "chinese": "下包",
+      "alternatives": [
+        "埋包"
+      ],
+      "category": "objective",
+      "priority": 5,
+      "context": "",
+      "avoid": [],
+      "preserve": false,
+      "source_refs": [
+        "hltv_watch_guide"
+      ]
+    },
+    {
+      "id": "cs2-defuse",
+      "english": "defuse",
+      "aliases": [
+        "defusing",
+        "defuse the bomb"
+      ],
+      "chinese": "拆包",
+      "alternatives": [],
+      "category": "objective",
+      "priority": 5,
+      "context": "",
+      "avoid": [],
+      "preserve": false,
+      "source_refs": [
+        "hltv_watch_guide"
+      ]
+    },
+    {
+      "id": "cs2-ninja-defuse",
+      "english": "ninja defuse",
+      "aliases": [
+        "ninja",
+        "ninja-defuse"
+      ],
+      "chinese": "偷包",
+      "alternatives": [
+        "偷拆"
+      ],
+      "category": "objective",
+      "priority": 5,
+      "context": "",
+      "avoid": [],
+      "preserve": false,
+      "source_refs": [
+        "perfectworld_dictionary",
+        "blast_communication",
+        "hltv_watch_guide"
+      ]
+    },
+    {
+      "id": "cs2-boost",
+      "english": "boost",
+      "aliases": [
+        "boosting",
+        "boost spot"
+      ],
+      "chinese": "双架",
+      "alternatives": [
+        "架人"
+      ],
+      "category": "movement",
+      "priority": 4,
+      "context": "一名玩家踩在队友身上获取高度。",
+      "avoid": [],
+      "preserve": false,
+      "source_refs": [
+        "perfectworld_dictionary",
+        "blast_communication"
+      ]
+    },
+    {
+      "id": "cs2-runboost",
+      "english": "runboost",
+      "aliases": [
+        "run boost",
+        "run-boost"
+      ],
+      "chinese": "跑跳双架",
+      "alternatives": [
+        "跑双架"
+      ],
+      "category": "movement",
+      "priority": 3,
+      "context": "",
+      "avoid": [],
+      "preserve": false,
+      "source_refs": [
+        "perfectworld_dictionary"
+      ]
+    },
+    {
+      "id": "cs2-bunny-hop",
+      "english": "bunny hop",
+      "aliases": [
+        "bunny hopping",
+        "bhop",
+        "b-hop"
+      ],
+      "chinese": "连跳",
+      "alternatives": [
+        "BHop"
+      ],
+      "category": "movement",
+      "priority": 3,
+      "context": "",
+      "avoid": [],
+      "preserve": false,
+      "source_refs": [
+        "perfectworld_dictionary"
+      ]
+    },
+    {
+      "id": "cs2-crouch-jump",
+      "english": "crouch jump",
+      "aliases": [
+        "crouch-jump"
+      ],
+      "chinese": "蹲跳",
+      "alternatives": [],
+      "category": "movement",
+      "priority": 3,
+      "context": "",
+      "avoid": [],
+      "preserve": false,
+      "source_refs": [
+        "perfectworld_dictionary"
+      ]
+    },
+    {
+      "id": "cs2-jumpthrow",
+      "english": "jumpthrow",
+      "aliases": [
+        "jump throw",
+        "jump-throw"
+      ],
+      "chinese": "跳投",
+      "alternatives": [
+        "跳扔"
+      ],
+      "category": "movement",
+      "priority": 4,
+      "context": "",
+      "avoid": [],
+      "preserve": false,
+      "source_refs": [
+        "perfectworld_dictionary"
+      ]
+    },
+    {
+      "id": "cs2-strafe-jump",
+      "english": "strafe jump",
+      "aliases": [
+        "strafe-jump"
+      ],
+      "chinese": "旋转跳",
+      "alternatives": [],
+      "category": "movement",
+      "priority": 2,
+      "context": "",
+      "avoid": [],
+      "preserve": false,
+      "source_refs": [
+        "perfectworld_dictionary"
+      ]
+    },
+    {
+      "id": "cs2-adr",
+      "english": "ADR",
+      "aliases": [
+        "average damage per round"
+      ],
+      "chinese": "场均每回合伤害",
+      "alternatives": [
+        "回合平均伤害"
+      ],
+      "category": "stats",
+      "priority": 4,
+      "context": "",
+      "avoid": [],
+      "preserve": false,
+      "source_refs": [
+        "perfectworld_dictionary",
+        "blast_communication",
+        "hltv_watch_guide"
+      ]
+    },
+    {
+      "id": "cs2-k-d",
+      "english": "K/D",
+      "aliases": [
+        "KD",
+        "kill-death ratio"
+      ],
+      "chinese": "击杀死亡比",
+      "alternatives": [
+        "K/D"
+      ],
+      "category": "stats",
+      "priority": 3,
+      "context": "",
+      "avoid": [],
+      "preserve": false,
+      "source_refs": [
+        "perfectworld_dictionary"
+      ]
+    },
+    {
+      "id": "cs2-kast",
+      "english": "KAST",
+      "aliases": [
+        "kill assist survive trade"
+      ],
+      "chinese": "KAST",
+      "alternatives": [
+        "击杀/助攻/存活/补枪回合占比"
+      ],
+      "category": "stats",
+      "priority": 3,
+      "context": "",
+      "avoid": [],
+      "preserve": false,
+      "source_refs": [
+        "hltv_watch_guide"
+      ]
+    },
+    {
+      "id": "cs2-rating",
+      "english": "rating",
+      "aliases": [
+        "player rating"
+      ],
+      "chinese": "Rating评分",
+      "alternatives": [
+        "评分"
+      ],
+      "category": "stats",
+      "priority": 3,
+      "context": "",
+      "avoid": [],
+      "preserve": false,
+      "source_refs": [
+        "hltv_watch_guide"
+      ]
+    },
+    {
+      "id": "cs2-demo",
+      "english": "demo",
+      "aliases": [
+        "replay demo",
+        "match demo"
+      ],
+      "chinese": "比赛录像",
+      "alternatives": [
+        "Demo"
+      ],
+      "category": "broadcast",
+      "priority": 3,
+      "context": "",
+      "avoid": [],
+      "preserve": false,
+      "source_refs": [
+        "blast_communication"
+      ]
+    },
+    {
+      "id": "cs2-game-sense",
+      "english": "game sense",
+      "aliases": [
+        "gamesense"
+      ],
+      "chinese": "游戏理解",
+      "alternatives": [
+        "意识"
+      ],
+      "category": "broadcast",
+      "priority": 4,
+      "context": "",
+      "avoid": [
+        "游戏感觉"
+      ],
+      "preserve": false,
+      "source_refs": [
+        "blast_communication"
+      ]
+    },
+    {
+      "id": "cs2-meta",
+      "english": "meta",
+      "aliases": [
+        "the meta"
+      ],
+      "chinese": "版本主流打法",
+      "alternatives": [
+        "环境主流打法"
+      ],
+      "category": "broadcast",
+      "priority": 3,
+      "context": "",
+      "avoid": [
+        "元"
+      ],
+      "preserve": false,
+      "source_refs": [
+        "hltv_watch_guide"
+      ]
+    },
+    {
+      "id": "cs2-awp",
+      "english": "AWP",
+      "aliases": [
+        "AWP sniper",
+        "big green"
+      ],
+      "chinese": "大狙",
+      "alternatives": [
+        "AWP"
+      ],
+      "category": "weapon",
+      "priority": 5,
+      "context": "",
+      "avoid": [],
+      "preserve": false,
+      "source_refs": [
+        "hltv_watch_guide",
+        "csgo_api"
+      ]
+    },
+    {
+      "id": "cs2-ssg-08",
+      "english": "SSG 08",
+      "aliases": [
+        "Scout",
+        "SSG08"
+      ],
+      "chinese": "鸟狙",
+      "alternatives": [
+        "Scout"
+      ],
+      "category": "weapon",
+      "priority": 4,
+      "context": "",
+      "avoid": [],
+      "preserve": false,
+      "source_refs": [
+        "perfectworld_dictionary",
+        "csgo_api"
+      ]
+    },
+    {
+      "id": "cs2-desert-eagle",
+      "english": "Desert Eagle",
+      "aliases": [
+        "Deagle",
+        "Deag"
+      ],
+      "chinese": "沙鹰",
+      "alternatives": [
+        "沙漠之鹰"
+      ],
+      "category": "weapon",
+      "priority": 5,
+      "context": "",
+      "avoid": [],
+      "preserve": false,
+      "source_refs": [
+        "perfectworld_dictionary",
+        "csgo_api"
+      ]
+    },
+    {
+      "id": "cs2-dual-berettas",
+      "english": "Dual Berettas",
+      "aliases": [
+        "Dualies",
+        "Dual Elites"
+      ],
+      "chinese": "双枪",
+      "alternatives": [],
+      "category": "weapon",
+      "priority": 3,
+      "context": "",
+      "avoid": [],
+      "preserve": false,
+      "source_refs": [
+        "perfectworld_dictionary",
+        "csgo_api"
+      ]
+    },
+    {
+      "id": "cs2-sg-553",
+      "english": "SG 553",
+      "aliases": [
+        "Krieg"
+      ],
+      "chinese": "SG553",
+      "alternatives": [
+        "553"
+      ],
+      "category": "weapon",
+      "priority": 3,
+      "context": "",
+      "avoid": [],
+      "preserve": false,
+      "source_refs": [
+        "perfectworld_dictionary",
+        "csgo_api"
+      ]
+    },
+    {
+      "id": "cs2-xm1014",
+      "english": "XM1014",
+      "aliases": [
+        "Autoshotty"
+      ],
+      "chinese": "连喷",
+      "alternatives": [
+        "XM1014"
+      ],
+      "category": "weapon",
+      "priority": 3,
+      "context": "",
+      "avoid": [],
+      "preserve": false,
+      "source_refs": [
+        "perfectworld_dictionary",
+        "csgo_api"
+      ]
+    },
+    {
+      "id": "cs2-g3sg1",
+      "english": "G3SG1",
+      "aliases": [
+        "auto-sniper",
+        "autosniper"
+      ],
+      "chinese": "T连狙",
+      "alternatives": [
+        "连狙"
+      ],
+      "category": "weapon",
+      "priority": 2,
+      "context": "",
+      "avoid": [],
+      "preserve": false,
+      "source_refs": [
+        "perfectworld_dictionary",
+        "csgo_api"
+      ]
+    },
+    {
+      "id": "cs2-scar-20",
+      "english": "SCAR-20",
+      "aliases": [
+        "auto-sniper",
+        "autosniper"
+      ],
+      "chinese": "CT连狙",
+      "alternatives": [
+        "连狙"
+      ],
+      "category": "weapon",
+      "priority": 2,
+      "context": "",
+      "avoid": [],
+      "preserve": false,
+      "source_refs": [
+        "perfectworld_dictionary",
+        "csgo_api"
+      ]
+    },
+    {
+      "id": "cs2-bait",
+      "english": "bait",
+      "aliases": [
+        "baiting",
+        "baited"
+      ],
+      "chinese": "卖队友拉枪线",
+      "alternatives": [
+        "诱饵",
+        "卖"
+      ],
+      "category": "tactic",
+      "priority": 4,
+      "context": "可正面表示主动吸引火力，也可贬义表示只让队友先死。",
+      "avoid": [
+        "诱饵"
+      ],
+      "preserve": false,
+      "source_refs": [
+        "perfectworld_dictionary",
+        "blast_communication",
+        "hltv_watch_guide"
+      ]
+    },
+    {
+      "id": "cs2-choke",
+      "english": "choke",
+      "aliases": [
+        "choking",
+        "choked"
+      ],
+      "chinese": "被翻盘/优势打没",
+      "alternatives": [
+        "痛失好局"
+      ],
+      "category": "broadcast",
+      "priority": 4,
+      "context": "",
+      "avoid": [],
+      "preserve": false,
+      "source_refs": [
+        "perfectworld_dictionary"
+      ]
+    },
+    {
+      "id": "cs2-tilt",
+      "english": "tilt",
+      "aliases": [
+        "tilted",
+        "on tilt"
+      ],
+      "chinese": "心态崩了",
+      "alternatives": [
+        "心态爆炸"
+      ],
+      "category": "broadcast",
+      "priority": 3,
+      "context": "",
+      "avoid": [],
+      "preserve": false,
+      "source_refs": [
+        "perfectworld_dictionary"
+      ]
+    },
+    {
+      "id": "cs2-peeker-s-advantage",
+      "english": "peeker's advantage",
+      "aliases": [
+        "peekers advantage",
+        "peeker advantage"
+      ],
+      "chinese": "先拉优势",
+      "alternatives": [
+        "拉枪优势"
+      ],
+      "category": "mechanic",
+      "priority": 3,
+      "context": "",
+      "avoid": [],
+      "preserve": false,
+      "source_refs": [
+        "blast_communication"
+      ]
+    },
+    {
+      "id": "cs2-one-way-smoke",
+      "english": "one-way smoke",
+      "aliases": [
+        "one way smoke",
+        "one-way"
+      ],
+      "chinese": "单向烟",
+      "alternatives": [],
+      "category": "utility",
+      "priority": 4,
+      "context": "",
+      "avoid": [],
+      "preserve": false,
+      "source_refs": [
+        "perfectworld_dictionary"
+      ]
+    }
+  ]
+}

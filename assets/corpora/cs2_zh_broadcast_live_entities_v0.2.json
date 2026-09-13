@@ -1,0 +1,6706 @@
+{
+  "schema_version": 1,
+  "id": "cs2-zh-broadcast-live-entities",
+  "version": "0.2.0",
+  "display_name": "Counter-Strike 赛事、战队、选手与地图报点语料",
+  "language_pair": "en-US -> zh-CN",
+  "domain": "counter-strike-2",
+  "provenance": {
+    "provided_directory": "counter-strike-zh-broadcast-corpus-pack",
+    "snapshot": "2026-09-09",
+    "source_files": [
+      "events.json",
+      "teams.json",
+      "players.json",
+      "maps_callouts.json"
+    ],
+    "sources": {
+      "iem_cologne_2026": "https://blast.tv/cs/tournaments/iem-cologne-major-2026",
+      "pgl_singapore_2026": "https://www.pglesports.com/cs2/pgl-major-singapore-2026/",
+      "blast_2026_dates": "https://blast.tv/cs/news/BLAST-premier-2026-dates",
+      "cac_2026": "https://cac.pwesports.cn/",
+      "hltv_world_ranking": "https://www.hltv.org/ranking/teams/2026/september/7",
+      "bcgame_hltv": "https://www.hltv.org/team/12878/bcgame",
+      "valve_season5": "https://store.steampowered.com/news/posts/?appids=730",
+      "perfectworld_map_names": "https://www.csgo.com.cn/hd/1610/info/map.html",
+      "perfectworld_legacy_callouts": "https://www.csgo.com.cn/tips/map/20161209/198284.shtml",
+      "csdb_cache": "https://csdb.gg/maps/cache/",
+      "csdb_mirage": "https://csdb.gg/maps/mirage/",
+      "csdb_ancient": "https://csdb.gg/maps/ancient/",
+      "csdb_anubis": "https://csdb.gg/maps/anubis/",
+      "csdb_nuke": "https://csdb.gg/maps/nuke/",
+      "liquipedia_dust2": "https://liquipedia.net/counterstrike/Dust_II/cs2"
+    },
+    "license_status": "not_declared_in_source_files"
+  },
+  "translation_rules": [
+    {
+      "rule": "preserve_entities",
+      "description": "选手 ID 和没有约定中文名的战队保持原始拼写。"
+    },
+    {
+      "rule": "map_sensitive_callouts",
+      "description": "同名报点可能因地图而异，结合 context 中的地图名称选择译法。"
+    }
+  ],
+  "terms": [
+    {
+      "id": "live-event-series-1",
+      "english": "Counter-Strike Major Championship",
+      "aliases": [
+        "CS2 Major",
+        "Major",
+        "Major Championship"
+      ],
+      "chinese": "CS Major / Major锦标赛",
+      "alternatives": [],
+      "category": "event_tier",
+      "priority": 5,
+      "context": "Valve官方最高级别锦标赛；字幕通常直接保留 Major。",
+      "avoid": [],
+      "preserve": false,
+      "source_refs": [
+        "events.json"
+      ]
+    },
+    {
+      "id": "live-event-series-2",
+      "english": "IEM Cologne Major 2026",
+      "aliases": [
+        "Cologne 2026",
+        "Cologne Major",
+        "IEM Cologne 2026"
+      ],
+      "chinese": "IEM 科隆 Major 2026",
+      "alternatives": [],
+      "category": "event_series",
+      "priority": 5,
+      "context": "主办方：ESL / IEM",
+      "avoid": [],
+      "preserve": false,
+      "source_refs": [
+        "events.json"
+      ]
+    },
+    {
+      "id": "live-event-series-3",
+      "english": "PGL Major Singapore 2026",
+      "aliases": [
+        "PGL Singapore Major",
+        "Singapore 2026",
+        "Singapore Major"
+      ],
+      "chinese": "PGL 新加坡 Major 2026",
+      "alternatives": [],
+      "category": "event_series",
+      "priority": 5,
+      "context": "主办方：PGL",
+      "avoid": [],
+      "preserve": false,
+      "source_refs": [
+        "events.json"
+      ]
+    },
+    {
+      "id": "live-event-series-4",
+      "english": "Intel Extreme Masters",
+      "aliases": [
+        "IEM"
+      ],
+      "chinese": "英特尔极限大师赛",
+      "alternatives": [],
+      "category": "series",
+      "priority": 5,
+      "context": "中文赛事字幕通常直接说 IEM。",
+      "avoid": [],
+      "preserve": false,
+      "source_refs": [
+        "events.json"
+      ]
+    },
+    {
+      "id": "live-event-series-5",
+      "english": "ESL Pro League",
+      "aliases": [
+        "EPL"
+      ],
+      "chinese": "ESL职业联赛",
+      "alternatives": [],
+      "category": "series",
+      "priority": 5,
+      "context": "",
+      "avoid": [],
+      "preserve": false,
+      "source_refs": [
+        "events.json"
+      ]
+    },
+    {
+      "id": "live-event-series-6",
+      "english": "ESL Pro League Season 24",
+      "aliases": [
+        "EPL S24",
+        "EPL Season 24",
+        "ESL Pro League S24"
+      ],
+      "chinese": "ESL职业联赛第24赛季",
+      "alternatives": [],
+      "category": "event_series",
+      "priority": 4,
+      "context": "",
+      "avoid": [],
+      "preserve": false,
+      "source_refs": [
+        "events.json"
+      ]
+    },
+    {
+      "id": "live-event-series-7",
+      "english": "BLAST Premier",
+      "aliases": [
+        "BLAST"
+      ],
+      "chinese": "BLAST Premier",
+      "alternatives": [],
+      "category": "series",
+      "priority": 5,
+      "context": "",
+      "avoid": [],
+      "preserve": false,
+      "source_refs": [
+        "events.json"
+      ]
+    },
+    {
+      "id": "live-event-series-8",
+      "english": "BLAST Premier Open",
+      "aliases": [
+        "BLAST Open",
+        "Open"
+      ],
+      "chinese": "BLAST Premier Open",
+      "alternatives": [],
+      "category": "series",
+      "priority": 4,
+      "context": "",
+      "avoid": [],
+      "preserve": false,
+      "source_refs": [
+        "events.json"
+      ]
+    },
+    {
+      "id": "live-event-series-9",
+      "english": "BLAST Premier Bounty",
+      "aliases": [
+        "BLAST Bounty",
+        "Bounty"
+      ],
+      "chinese": "BLAST Premier Bounty",
+      "alternatives": [],
+      "category": "series",
+      "priority": 4,
+      "context": "",
+      "avoid": [],
+      "preserve": false,
+      "source_refs": [
+        "events.json"
+      ]
+    },
+    {
+      "id": "live-event-series-10",
+      "english": "BLAST Premier Rivals",
+      "aliases": [
+        "BLAST Rivals",
+        "Rivals"
+      ],
+      "chinese": "BLAST Premier Rivals",
+      "alternatives": [],
+      "category": "series",
+      "priority": 4,
+      "context": "",
+      "avoid": [],
+      "preserve": false,
+      "source_refs": [
+        "events.json"
+      ]
+    },
+    {
+      "id": "live-event-series-11",
+      "english": "BLAST Premier Open Porto 2026",
+      "aliases": [
+        "BLAST Open Porto",
+        "Open Porto",
+        "Porto"
+      ],
+      "chinese": "BLAST 波尔图公开赛 2026",
+      "alternatives": [],
+      "category": "event_series",
+      "priority": 4,
+      "context": "主办方：BLAST",
+      "avoid": [],
+      "preserve": false,
+      "source_refs": [
+        "events.json"
+      ]
+    },
+    {
+      "id": "live-event-series-12",
+      "english": "PGL",
+      "aliases": [
+        "Professional Gamers League"
+      ],
+      "chinese": "PGL",
+      "alternatives": [],
+      "category": "organizer",
+      "priority": 4,
+      "context": "",
+      "avoid": [],
+      "preserve": false,
+      "source_refs": [
+        "events.json"
+      ]
+    },
+    {
+      "id": "live-event-series-13",
+      "english": "PGL Masters Bucharest",
+      "aliases": [
+        "Bucharest",
+        "PGL Masters"
+      ],
+      "chinese": "PGL 布加勒斯特大师赛",
+      "alternatives": [],
+      "category": "event_series",
+      "priority": 3,
+      "context": "",
+      "avoid": [],
+      "preserve": false,
+      "source_refs": [
+        "events.json"
+      ]
+    },
+    {
+      "id": "live-event-series-14",
+      "english": "Esports World Cup",
+      "aliases": [
+        "EWC"
+      ],
+      "chinese": "电竞世界杯",
+      "alternatives": [],
+      "category": "series",
+      "priority": 5,
+      "context": "",
+      "avoid": [],
+      "preserve": false,
+      "source_refs": [
+        "events.json"
+      ]
+    },
+    {
+      "id": "live-event-series-15",
+      "english": "FISSURE Playground",
+      "aliases": [
+        "FISSURE",
+        "Playground"
+      ],
+      "chinese": "FISSURE Playground",
+      "alternatives": [],
+      "category": "series",
+      "priority": 4,
+      "context": "",
+      "avoid": [],
+      "preserve": false,
+      "source_refs": [
+        "events.json"
+      ]
+    },
+    {
+      "id": "live-event-series-16",
+      "english": "CS Asia Championships",
+      "aliases": [
+        "CAC",
+        "CAC 2026"
+      ],
+      "chinese": "CS亚洲邀请赛",
+      "alternatives": [],
+      "category": "series",
+      "priority": 5,
+      "context": "",
+      "avoid": [],
+      "preserve": false,
+      "source_refs": [
+        "events.json"
+      ]
+    },
+    {
+      "id": "live-event-series-17",
+      "english": "StarLadder StarSeries",
+      "aliases": [
+        "StarLadder",
+        "StarSeries"
+      ],
+      "chinese": "StarLadder StarSeries",
+      "alternatives": [],
+      "category": "series",
+      "priority": 3,
+      "context": "",
+      "avoid": [],
+      "preserve": false,
+      "source_refs": [
+        "events.json"
+      ]
+    },
+    {
+      "id": "live-event-series-18",
+      "english": "Thunderpick World Championship",
+      "aliases": [
+        "Thunderpick",
+        "TWC"
+      ],
+      "chinese": "Thunderpick世界锦标赛",
+      "alternatives": [],
+      "category": "series",
+      "priority": 3,
+      "context": "",
+      "avoid": [],
+      "preserve": false,
+      "source_refs": [
+        "events.json"
+      ]
+    },
+    {
+      "id": "live-event-series-19",
+      "english": "Valve Regional Standings",
+      "aliases": [
+        "Valve Ranking",
+        "Valve standings",
+        "VRS"
+      ],
+      "chinese": "Valve地区排名",
+      "alternatives": [],
+      "category": "ranking",
+      "priority": 5,
+      "context": "",
+      "avoid": [],
+      "preserve": false,
+      "source_refs": [
+        "events.json"
+      ]
+    },
+    {
+      "id": "live-event-series-20",
+      "english": "HLTV World Ranking",
+      "aliases": [
+        "HLTV ranking",
+        "HLTV rankings"
+      ],
+      "chinese": "HLTV世界排名",
+      "alternatives": [],
+      "category": "ranking",
+      "priority": 4,
+      "context": "",
+      "avoid": [],
+      "preserve": false,
+      "source_refs": [
+        "events.json"
+      ]
+    },
+    {
+      "id": "live-competition-term-1",
+      "english": "group stage",
+      "aliases": [
+        "groups"
+      ],
+      "chinese": "小组赛",
+      "alternatives": [],
+      "category": "competition_term",
+      "priority": 5,
+      "context": "",
+      "avoid": [],
+      "preserve": false,
+      "source_refs": [
+        "events.json"
+      ]
+    },
+    {
+      "id": "live-competition-term-2",
+      "english": "playoffs",
+      "aliases": [
+        "playoff stage"
+      ],
+      "chinese": "淘汰赛",
+      "alternatives": [],
+      "category": "competition_term",
+      "priority": 5,
+      "context": "",
+      "avoid": [],
+      "preserve": false,
+      "source_refs": [
+        "events.json"
+      ]
+    },
+    {
+      "id": "live-competition-term-3",
+      "english": "quarter-final",
+      "aliases": [
+        "quarterfinal",
+        "quarters"
+      ],
+      "chinese": "四分之一决赛",
+      "alternatives": [],
+      "category": "competition_term",
+      "priority": 4,
+      "context": "",
+      "avoid": [],
+      "preserve": false,
+      "source_refs": [
+        "events.json"
+      ]
+    },
+    {
+      "id": "live-competition-term-4",
+      "english": "semi-final",
+      "aliases": [
+        "semifinal",
+        "semis"
+      ],
+      "chinese": "半决赛",
+      "alternatives": [],
+      "category": "competition_term",
+      "priority": 5,
+      "context": "",
+      "avoid": [],
+      "preserve": false,
+      "source_refs": [
+        "events.json"
+      ]
+    },
+    {
+      "id": "live-competition-term-5",
+      "english": "grand final",
+      "aliases": [
+        "final"
+      ],
+      "chinese": "总决赛",
+      "alternatives": [],
+      "category": "competition_term",
+      "priority": 5,
+      "context": "",
+      "avoid": [],
+      "preserve": false,
+      "source_refs": [
+        "events.json"
+      ]
+    },
+    {
+      "id": "live-competition-term-6",
+      "english": "upper bracket",
+      "aliases": [
+        "UB",
+        "upper"
+      ],
+      "chinese": "胜者组",
+      "alternatives": [],
+      "category": "competition_term",
+      "priority": 4,
+      "context": "",
+      "avoid": [],
+      "preserve": false,
+      "source_refs": [
+        "events.json"
+      ]
+    },
+    {
+      "id": "live-competition-term-7",
+      "english": "lower bracket",
+      "aliases": [
+        "LB",
+        "lower"
+      ],
+      "chinese": "败者组",
+      "alternatives": [],
+      "category": "competition_term",
+      "priority": 4,
+      "context": "",
+      "avoid": [],
+      "preserve": false,
+      "source_refs": [
+        "events.json"
+      ]
+    },
+    {
+      "id": "live-competition-term-8",
+      "english": "upper bracket final",
+      "aliases": [
+        "UB final"
+      ],
+      "chinese": "胜者组决赛",
+      "alternatives": [],
+      "category": "competition_term",
+      "priority": 3,
+      "context": "",
+      "avoid": [],
+      "preserve": false,
+      "source_refs": [
+        "events.json"
+      ]
+    },
+    {
+      "id": "live-competition-term-9",
+      "english": "lower bracket final",
+      "aliases": [
+        "LB final"
+      ],
+      "chinese": "败者组决赛",
+      "alternatives": [],
+      "category": "competition_term",
+      "priority": 3,
+      "context": "",
+      "avoid": [],
+      "preserve": false,
+      "source_refs": [
+        "events.json"
+      ]
+    },
+    {
+      "id": "live-competition-term-10",
+      "english": "elimination match",
+      "aliases": [
+        "elimination game"
+      ],
+      "chinese": "淘汰战",
+      "alternatives": [],
+      "category": "competition_term",
+      "priority": 4,
+      "context": "",
+      "avoid": [],
+      "preserve": false,
+      "source_refs": [
+        "events.json"
+      ]
+    },
+    {
+      "id": "live-competition-term-11",
+      "english": "decider match",
+      "aliases": [
+        "decider"
+      ],
+      "chinese": "出线决胜战",
+      "alternatives": [],
+      "category": "competition_term",
+      "priority": 4,
+      "context": "",
+      "avoid": [],
+      "preserve": false,
+      "source_refs": [
+        "events.json"
+      ]
+    },
+    {
+      "id": "live-competition-term-12",
+      "english": "Swiss stage",
+      "aliases": [
+        "Swiss",
+        "Swiss system"
+      ],
+      "chinese": "瑞士轮",
+      "alternatives": [],
+      "category": "competition_term",
+      "priority": 4,
+      "context": "",
+      "avoid": [],
+      "preserve": false,
+      "source_refs": [
+        "events.json"
+      ]
+    },
+    {
+      "id": "live-competition-term-13",
+      "english": "best of one",
+      "aliases": [
+        "best-of-one",
+        "BO1"
+      ],
+      "chinese": "BO1",
+      "alternatives": [],
+      "category": "competition_term",
+      "priority": 5,
+      "context": "",
+      "avoid": [],
+      "preserve": false,
+      "source_refs": [
+        "events.json"
+      ]
+    },
+    {
+      "id": "live-competition-term-14",
+      "english": "best of three",
+      "aliases": [
+        "best-of-three",
+        "BO3"
+      ],
+      "chinese": "BO3",
+      "alternatives": [],
+      "category": "competition_term",
+      "priority": 5,
+      "context": "",
+      "avoid": [],
+      "preserve": false,
+      "source_refs": [
+        "events.json"
+      ]
+    },
+    {
+      "id": "live-competition-term-15",
+      "english": "best of five",
+      "aliases": [
+        "best-of-five",
+        "BO5"
+      ],
+      "chinese": "BO5",
+      "alternatives": [],
+      "category": "competition_term",
+      "priority": 5,
+      "context": "",
+      "avoid": [],
+      "preserve": false,
+      "source_refs": [
+        "events.json"
+      ]
+    },
+    {
+      "id": "live-competition-term-16",
+      "english": "veto",
+      "aliases": [
+        "ban-pick",
+        "map veto",
+        "pick-ban"
+      ],
+      "chinese": "地图BP",
+      "alternatives": [],
+      "category": "competition_term",
+      "priority": 5,
+      "context": "",
+      "avoid": [],
+      "preserve": false,
+      "source_refs": [
+        "events.json"
+      ]
+    },
+    {
+      "id": "live-competition-term-17",
+      "english": "map pick",
+      "aliases": [
+        "pick",
+        "team's pick"
+      ],
+      "chinese": "自选图",
+      "alternatives": [],
+      "category": "competition_term",
+      "priority": 5,
+      "context": "",
+      "avoid": [],
+      "preserve": false,
+      "source_refs": [
+        "events.json"
+      ]
+    },
+    {
+      "id": "live-competition-term-18",
+      "english": "decider map",
+      "aliases": [
+        "decider"
+      ],
+      "chinese": "决胜图",
+      "alternatives": [],
+      "category": "competition_term",
+      "priority": 5,
+      "context": "",
+      "avoid": [],
+      "preserve": false,
+      "source_refs": [
+        "events.json"
+      ]
+    },
+    {
+      "id": "live-competition-term-19",
+      "english": "series point",
+      "aliases": [
+        "match point"
+      ],
+      "chinese": "赛点",
+      "alternatives": [],
+      "category": "competition_term",
+      "priority": 4,
+      "context": "",
+      "avoid": [],
+      "preserve": false,
+      "source_refs": [
+        "events.json"
+      ]
+    },
+    {
+      "id": "live-competition-term-20",
+      "english": "map point",
+      "aliases": [],
+      "chinese": "图点",
+      "alternatives": [],
+      "category": "competition_term",
+      "priority": 4,
+      "context": "",
+      "avoid": [],
+      "preserve": false,
+      "source_refs": [
+        "events.json"
+      ]
+    },
+    {
+      "id": "live-competition-term-21",
+      "english": "reverse sweep",
+      "aliases": [
+        "reverse-sweep"
+      ],
+      "chinese": "让二追三 / 逆转系列赛",
+      "alternatives": [],
+      "category": "competition_term",
+      "priority": 3,
+      "context": "",
+      "avoid": [],
+      "preserve": false,
+      "source_refs": [
+        "events.json"
+      ]
+    },
+    {
+      "id": "live-competition-term-22",
+      "english": "upset",
+      "aliases": [
+        "upset win"
+      ],
+      "chinese": "爆冷",
+      "alternatives": [],
+      "category": "competition_term",
+      "priority": 4,
+      "context": "",
+      "avoid": [],
+      "preserve": false,
+      "source_refs": [
+        "events.json"
+      ]
+    },
+    {
+      "id": "live-competition-term-23",
+      "english": "defending champion",
+      "aliases": [
+        "reigning champion"
+      ],
+      "chinese": "卫冕冠军",
+      "alternatives": [],
+      "category": "competition_term",
+      "priority": 4,
+      "context": "",
+      "avoid": [],
+      "preserve": false,
+      "source_refs": [
+        "events.json"
+      ]
+    },
+    {
+      "id": "live-competition-term-24",
+      "english": "runner-up",
+      "aliases": [
+        "runners-up"
+      ],
+      "chinese": "亚军",
+      "alternatives": [],
+      "category": "competition_term",
+      "priority": 4,
+      "context": "",
+      "avoid": [],
+      "preserve": false,
+      "source_refs": [
+        "events.json"
+      ]
+    },
+    {
+      "id": "live-competition-term-25",
+      "english": "title contender",
+      "aliases": [
+        "contender"
+      ],
+      "chinese": "争冠热门",
+      "alternatives": [],
+      "category": "competition_term",
+      "priority": 3,
+      "context": "",
+      "avoid": [],
+      "preserve": false,
+      "source_refs": [
+        "events.json"
+      ]
+    },
+    {
+      "id": "live-competition-term-26",
+      "english": "qualifier",
+      "aliases": [
+        "qualification"
+      ],
+      "chinese": "预选赛",
+      "alternatives": [],
+      "category": "competition_term",
+      "priority": 4,
+      "context": "",
+      "avoid": [],
+      "preserve": false,
+      "source_refs": [
+        "events.json"
+      ]
+    },
+    {
+      "id": "live-competition-term-27",
+      "english": "open qualifier",
+      "aliases": [
+        "open qual"
+      ],
+      "chinese": "公开预选赛",
+      "alternatives": [],
+      "category": "competition_term",
+      "priority": 4,
+      "context": "",
+      "avoid": [],
+      "preserve": false,
+      "source_refs": [
+        "events.json"
+      ]
+    },
+    {
+      "id": "live-competition-term-28",
+      "english": "closed qualifier",
+      "aliases": [
+        "closed qual"
+      ],
+      "chinese": "封闭预选赛",
+      "alternatives": [],
+      "category": "competition_term",
+      "priority": 4,
+      "context": "",
+      "avoid": [],
+      "preserve": false,
+      "source_refs": [
+        "events.json"
+      ]
+    },
+    {
+      "id": "live-competition-term-29",
+      "english": "direct invite",
+      "aliases": [
+        "direct invitation",
+        "invite"
+      ],
+      "chinese": "直邀",
+      "alternatives": [],
+      "category": "competition_term",
+      "priority": 4,
+      "context": "",
+      "avoid": [],
+      "preserve": false,
+      "source_refs": [
+        "events.json"
+      ]
+    },
+    {
+      "id": "live-team-1",
+      "english": "Spirit",
+      "aliases": [
+        "Team Spirit"
+      ],
+      "chinese": "Spirit",
+      "alternatives": [],
+      "category": "team",
+      "priority": 5,
+      "context": "HLTV 排名快照：1",
+      "avoid": [],
+      "preserve": true,
+      "source_refs": [
+        "teams.json"
+      ]
+    },
+    {
+      "id": "live-team-2",
+      "english": "Falcons",
+      "aliases": [
+        "Team Falcons"
+      ],
+      "chinese": "Falcons",
+      "alternatives": [],
+      "category": "team",
+      "priority": 5,
+      "context": "HLTV 排名快照：2",
+      "avoid": [],
+      "preserve": true,
+      "source_refs": [
+        "teams.json"
+      ]
+    },
+    {
+      "id": "live-team-3",
+      "english": "MOUZ",
+      "aliases": [
+        "mousesports"
+      ],
+      "chinese": "MOUZ",
+      "alternatives": [],
+      "category": "team",
+      "priority": 5,
+      "context": "HLTV 排名快照：3",
+      "avoid": [],
+      "preserve": true,
+      "source_refs": [
+        "teams.json"
+      ]
+    },
+    {
+      "id": "live-team-4",
+      "english": "Vitality",
+      "aliases": [
+        "Team Vitality"
+      ],
+      "chinese": "Vitality",
+      "alternatives": [],
+      "category": "team",
+      "priority": 5,
+      "context": "HLTV 排名快照：4",
+      "avoid": [],
+      "preserve": true,
+      "source_refs": [
+        "teams.json"
+      ]
+    },
+    {
+      "id": "live-team-5",
+      "english": "FURIA",
+      "aliases": [
+        "FURIA Esports"
+      ],
+      "chinese": "FURIA",
+      "alternatives": [],
+      "category": "team",
+      "priority": 5,
+      "context": "HLTV 排名快照：5",
+      "avoid": [],
+      "preserve": true,
+      "source_refs": [
+        "teams.json"
+      ]
+    },
+    {
+      "id": "live-team-6",
+      "english": "FUT",
+      "aliases": [
+        "FUT Esports"
+      ],
+      "chinese": "FUT",
+      "alternatives": [],
+      "category": "team",
+      "priority": 5,
+      "context": "HLTV 排名快照：6",
+      "avoid": [],
+      "preserve": true,
+      "source_refs": [
+        "teams.json"
+      ]
+    },
+    {
+      "id": "live-team-7",
+      "english": "G2",
+      "aliases": [
+        "G2 Esports"
+      ],
+      "chinese": "G2",
+      "alternatives": [],
+      "category": "team",
+      "priority": 5,
+      "context": "HLTV 排名快照：7",
+      "avoid": [],
+      "preserve": true,
+      "source_refs": [
+        "teams.json"
+      ]
+    },
+    {
+      "id": "live-team-8",
+      "english": "Legacy",
+      "aliases": [
+        "Legacy Esports"
+      ],
+      "chinese": "Legacy",
+      "alternatives": [],
+      "category": "team",
+      "priority": 5,
+      "context": "HLTV 排名快照：8",
+      "avoid": [],
+      "preserve": true,
+      "source_refs": [
+        "teams.json"
+      ]
+    },
+    {
+      "id": "live-team-9",
+      "english": "Aurora",
+      "aliases": [
+        "Aurora Gaming"
+      ],
+      "chinese": "Aurora",
+      "alternatives": [],
+      "category": "team",
+      "priority": 5,
+      "context": "HLTV 排名快照：9",
+      "avoid": [],
+      "preserve": true,
+      "source_refs": [
+        "teams.json"
+      ]
+    },
+    {
+      "id": "live-team-10",
+      "english": "Natus Vincere",
+      "aliases": [
+        "Na'Vi",
+        "NAVI"
+      ],
+      "chinese": "NAVI",
+      "alternatives": [],
+      "category": "team",
+      "priority": 5,
+      "context": "HLTV 排名快照：10",
+      "avoid": [],
+      "preserve": true,
+      "source_refs": [
+        "teams.json"
+      ]
+    },
+    {
+      "id": "live-team-11",
+      "english": "FaZe",
+      "aliases": [
+        "FaZe Clan"
+      ],
+      "chinese": "FaZe",
+      "alternatives": [],
+      "category": "team",
+      "priority": 5,
+      "context": "HLTV 排名快照：11",
+      "avoid": [],
+      "preserve": true,
+      "source_refs": [
+        "teams.json"
+      ]
+    },
+    {
+      "id": "live-team-12",
+      "english": "Astralis",
+      "aliases": [],
+      "chinese": "Astralis",
+      "alternatives": [],
+      "category": "team",
+      "priority": 5,
+      "context": "HLTV 排名快照：12",
+      "avoid": [],
+      "preserve": true,
+      "source_refs": [
+        "teams.json"
+      ]
+    },
+    {
+      "id": "live-team-13",
+      "english": "9z",
+      "aliases": [
+        "9z Team"
+      ],
+      "chinese": "9z",
+      "alternatives": [],
+      "category": "team",
+      "priority": 5,
+      "context": "HLTV 排名快照：13",
+      "avoid": [],
+      "preserve": true,
+      "source_refs": [
+        "teams.json"
+      ]
+    },
+    {
+      "id": "live-team-14",
+      "english": "The MongolZ",
+      "aliases": [
+        "MGLZ",
+        "MongolZ"
+      ],
+      "chinese": "The MongolZ",
+      "alternatives": [],
+      "category": "team",
+      "priority": 5,
+      "context": "HLTV 排名快照：14",
+      "avoid": [],
+      "preserve": true,
+      "source_refs": [
+        "teams.json"
+      ]
+    },
+    {
+      "id": "live-team-15",
+      "english": "B8",
+      "aliases": [],
+      "chinese": "B8",
+      "alternatives": [],
+      "category": "team",
+      "priority": 5,
+      "context": "HLTV 排名快照：15",
+      "avoid": [],
+      "preserve": true,
+      "source_refs": [
+        "teams.json"
+      ]
+    },
+    {
+      "id": "live-team-16",
+      "english": "BetBoom",
+      "aliases": [
+        "BetBoom Team"
+      ],
+      "chinese": "BetBoom",
+      "alternatives": [],
+      "category": "team",
+      "priority": 4,
+      "context": "HLTV 排名快照：16",
+      "avoid": [],
+      "preserve": true,
+      "source_refs": [
+        "teams.json"
+      ]
+    },
+    {
+      "id": "live-team-17",
+      "english": "PARIVISION",
+      "aliases": [
+        "PV"
+      ],
+      "chinese": "PARIVISION",
+      "alternatives": [],
+      "category": "team",
+      "priority": 4,
+      "context": "HLTV 排名快照：17",
+      "avoid": [],
+      "preserve": true,
+      "source_refs": [
+        "teams.json"
+      ]
+    },
+    {
+      "id": "live-team-18",
+      "english": "magic",
+      "aliases": [],
+      "chinese": "magic",
+      "alternatives": [],
+      "category": "team",
+      "priority": 4,
+      "context": "HLTV 排名快照：18",
+      "avoid": [],
+      "preserve": true,
+      "source_refs": [
+        "teams.json"
+      ]
+    },
+    {
+      "id": "live-team-19",
+      "english": "GamerLegion",
+      "aliases": [
+        "GL"
+      ],
+      "chinese": "GamerLegion",
+      "alternatives": [],
+      "category": "team",
+      "priority": 4,
+      "context": "HLTV 排名快照：19",
+      "avoid": [],
+      "preserve": true,
+      "source_refs": [
+        "teams.json"
+      ]
+    },
+    {
+      "id": "live-team-20",
+      "english": "3DMAX",
+      "aliases": [],
+      "chinese": "3DMAX",
+      "alternatives": [],
+      "category": "team",
+      "priority": 4,
+      "context": "HLTV 排名快照：20",
+      "avoid": [],
+      "preserve": true,
+      "source_refs": [
+        "teams.json"
+      ]
+    },
+    {
+      "id": "live-team-21",
+      "english": "Liquid",
+      "aliases": [
+        "Team Liquid"
+      ],
+      "chinese": "Liquid",
+      "alternatives": [],
+      "category": "team",
+      "priority": 4,
+      "context": "HLTV 排名快照：21",
+      "avoid": [],
+      "preserve": true,
+      "source_refs": [
+        "teams.json"
+      ]
+    },
+    {
+      "id": "live-team-22",
+      "english": "BIG",
+      "aliases": [
+        "Berlin International Gaming"
+      ],
+      "chinese": "BIG",
+      "alternatives": [],
+      "category": "team",
+      "priority": 4,
+      "context": "HLTV 排名快照：24",
+      "avoid": [],
+      "preserve": true,
+      "source_refs": [
+        "teams.json"
+      ]
+    },
+    {
+      "id": "live-team-23",
+      "english": "HEROIC",
+      "aliases": [],
+      "chinese": "HEROIC",
+      "alternatives": [],
+      "category": "team",
+      "priority": 4,
+      "context": "HLTV 排名快照：25",
+      "avoid": [],
+      "preserve": true,
+      "source_refs": [
+        "teams.json"
+      ]
+    },
+    {
+      "id": "live-team-24",
+      "english": "Ninjas in Pyjamas",
+      "aliases": [
+        "NiP"
+      ],
+      "chinese": "NiP",
+      "alternatives": [],
+      "category": "team",
+      "priority": 4,
+      "context": "HLTV 排名快照：26",
+      "avoid": [],
+      "preserve": true,
+      "source_refs": [
+        "teams.json"
+      ]
+    },
+    {
+      "id": "live-team-25",
+      "english": "MIBR",
+      "aliases": [
+        "Made in Brazil"
+      ],
+      "chinese": "MIBR",
+      "alternatives": [],
+      "category": "team",
+      "priority": 4,
+      "context": "HLTV 排名快照：28",
+      "avoid": [],
+      "preserve": true,
+      "source_refs": [
+        "teams.json"
+      ]
+    },
+    {
+      "id": "live-team-26",
+      "english": "Lynn Vision",
+      "aliases": [
+        "LVG",
+        "Lynn Vision Gaming"
+      ],
+      "chinese": "LVG",
+      "alternatives": [],
+      "category": "team",
+      "priority": 4,
+      "context": "HLTV 排名快照：31",
+      "avoid": [],
+      "preserve": true,
+      "source_refs": [
+        "teams.json"
+      ]
+    },
+    {
+      "id": "live-team-27",
+      "english": "100 Thieves",
+      "aliases": [
+        "100T"
+      ],
+      "chinese": "100 Thieves",
+      "alternatives": [],
+      "category": "team",
+      "priority": 4,
+      "context": "HLTV 排名快照：32",
+      "avoid": [],
+      "preserve": true,
+      "source_refs": [
+        "teams.json"
+      ]
+    },
+    {
+      "id": "live-team-28",
+      "english": "TYLOO",
+      "aliases": [],
+      "chinese": "TYLOO",
+      "alternatives": [],
+      "category": "team",
+      "priority": 4,
+      "context": "HLTV 排名快照：33",
+      "avoid": [],
+      "preserve": true,
+      "source_refs": [
+        "teams.json"
+      ]
+    },
+    {
+      "id": "live-team-29",
+      "english": "BC.Game",
+      "aliases": [
+        "BC Game",
+        "BCG"
+      ],
+      "chinese": "BC.Game",
+      "alternatives": [],
+      "category": "team",
+      "priority": 3,
+      "context": "HLTV 排名快照：49",
+      "avoid": [],
+      "preserve": true,
+      "source_refs": [
+        "teams.json"
+      ]
+    },
+    {
+      "id": "live-player-1",
+      "english": "sh1ro",
+      "aliases": [
+        "shiro"
+      ],
+      "chinese": "sh1ro",
+      "alternatives": [],
+      "category": "player",
+      "priority": 5,
+      "context": "战队：Spirit",
+      "avoid": [],
+      "preserve": true,
+      "source_refs": [
+        "players.json"
+      ]
+    },
+    {
+      "id": "live-player-2",
+      "english": "magixx",
+      "aliases": [],
+      "chinese": "magixx",
+      "alternatives": [],
+      "category": "player",
+      "priority": 5,
+      "context": "战队：Spirit",
+      "avoid": [],
+      "preserve": true,
+      "source_refs": [
+        "players.json"
+      ]
+    },
+    {
+      "id": "live-player-3",
+      "english": "tN1R",
+      "aliases": [
+        "teneer",
+        "tnir"
+      ],
+      "chinese": "tN1R",
+      "alternatives": [],
+      "category": "player",
+      "priority": 5,
+      "context": "战队：Spirit",
+      "avoid": [],
+      "preserve": true,
+      "source_refs": [
+        "players.json"
+      ]
+    },
+    {
+      "id": "live-player-4",
+      "english": "zont1x",
+      "aliases": [],
+      "chinese": "zont1x",
+      "alternatives": [],
+      "category": "player",
+      "priority": 5,
+      "context": "战队：Spirit",
+      "avoid": [],
+      "preserve": true,
+      "source_refs": [
+        "players.json"
+      ]
+    },
+    {
+      "id": "live-player-5",
+      "english": "donk",
+      "aliases": [],
+      "chinese": "donk",
+      "alternatives": [],
+      "category": "player",
+      "priority": 5,
+      "context": "战队：Spirit",
+      "avoid": [],
+      "preserve": true,
+      "source_refs": [
+        "players.json"
+      ]
+    },
+    {
+      "id": "live-player-6",
+      "english": "karrigan",
+      "aliases": [],
+      "chinese": "karrigan",
+      "alternatives": [],
+      "category": "player",
+      "priority": 5,
+      "context": "战队：Falcons",
+      "avoid": [],
+      "preserve": true,
+      "source_refs": [
+        "players.json"
+      ]
+    },
+    {
+      "id": "live-player-7",
+      "english": "NiKo",
+      "aliases": [],
+      "chinese": "NiKo",
+      "alternatives": [],
+      "category": "player",
+      "priority": 5,
+      "context": "战队：Falcons",
+      "avoid": [],
+      "preserve": true,
+      "source_refs": [
+        "players.json"
+      ]
+    },
+    {
+      "id": "live-player-8",
+      "english": "TeSeS",
+      "aliases": [],
+      "chinese": "TeSeS",
+      "alternatives": [],
+      "category": "player",
+      "priority": 5,
+      "context": "战队：Falcons",
+      "avoid": [],
+      "preserve": true,
+      "source_refs": [
+        "players.json"
+      ]
+    },
+    {
+      "id": "live-player-9",
+      "english": "m0NESY",
+      "aliases": [
+        "monesy"
+      ],
+      "chinese": "m0NESY",
+      "alternatives": [],
+      "category": "player",
+      "priority": 5,
+      "context": "战队：Falcons",
+      "avoid": [],
+      "preserve": true,
+      "source_refs": [
+        "players.json"
+      ]
+    },
+    {
+      "id": "live-player-10",
+      "english": "kyousuke",
+      "aliases": [],
+      "chinese": "kyousuke",
+      "alternatives": [],
+      "category": "player",
+      "priority": 5,
+      "context": "战队：Falcons",
+      "avoid": [],
+      "preserve": true,
+      "source_refs": [
+        "players.json"
+      ]
+    },
+    {
+      "id": "live-player-11",
+      "english": "torzsi",
+      "aliases": [],
+      "chinese": "torzsi",
+      "alternatives": [],
+      "category": "player",
+      "priority": 5,
+      "context": "战队：MOUZ",
+      "avoid": [],
+      "preserve": true,
+      "source_refs": [
+        "players.json"
+      ]
+    },
+    {
+      "id": "live-player-12",
+      "english": "Spinx",
+      "aliases": [],
+      "chinese": "Spinx",
+      "alternatives": [],
+      "category": "player",
+      "priority": 5,
+      "context": "战队：MOUZ",
+      "avoid": [],
+      "preserve": true,
+      "source_refs": [
+        "players.json"
+      ]
+    },
+    {
+      "id": "live-player-13",
+      "english": "xertioN",
+      "aliases": [],
+      "chinese": "xertioN",
+      "alternatives": [],
+      "category": "player",
+      "priority": 5,
+      "context": "战队：MOUZ",
+      "avoid": [],
+      "preserve": true,
+      "source_refs": [
+        "players.json"
+      ]
+    },
+    {
+      "id": "live-player-14",
+      "english": "PR",
+      "aliases": [],
+      "chinese": "PR",
+      "alternatives": [],
+      "category": "player",
+      "priority": 5,
+      "context": "战队：MOUZ",
+      "avoid": [],
+      "preserve": true,
+      "source_refs": [
+        "players.json"
+      ]
+    },
+    {
+      "id": "live-player-15",
+      "english": "xelex",
+      "aliases": [],
+      "chinese": "xelex",
+      "alternatives": [],
+      "category": "player",
+      "priority": 5,
+      "context": "战队：MOUZ",
+      "avoid": [],
+      "preserve": true,
+      "source_refs": [
+        "players.json"
+      ]
+    },
+    {
+      "id": "live-player-16",
+      "english": "apEX",
+      "aliases": [],
+      "chinese": "apEX",
+      "alternatives": [],
+      "category": "player",
+      "priority": 5,
+      "context": "战队：Vitality",
+      "avoid": [],
+      "preserve": true,
+      "source_refs": [
+        "players.json"
+      ]
+    },
+    {
+      "id": "live-player-17",
+      "english": "ropz",
+      "aliases": [],
+      "chinese": "ropz",
+      "alternatives": [],
+      "category": "player",
+      "priority": 5,
+      "context": "战队：Vitality",
+      "avoid": [],
+      "preserve": true,
+      "source_refs": [
+        "players.json"
+      ]
+    },
+    {
+      "id": "live-player-18",
+      "english": "ZywOo",
+      "aliases": [],
+      "chinese": "ZywOo",
+      "alternatives": [],
+      "category": "player",
+      "priority": 5,
+      "context": "战队：Vitality",
+      "avoid": [],
+      "preserve": true,
+      "source_refs": [
+        "players.json"
+      ]
+    },
+    {
+      "id": "live-player-19",
+      "english": "flameZ",
+      "aliases": [],
+      "chinese": "flameZ",
+      "alternatives": [],
+      "category": "player",
+      "priority": 5,
+      "context": "战队：Vitality",
+      "avoid": [],
+      "preserve": true,
+      "source_refs": [
+        "players.json"
+      ]
+    },
+    {
+      "id": "live-player-20",
+      "english": "mezii",
+      "aliases": [],
+      "chinese": "mezii",
+      "alternatives": [],
+      "category": "player",
+      "priority": 5,
+      "context": "战队：Vitality",
+      "avoid": [],
+      "preserve": true,
+      "source_refs": [
+        "players.json"
+      ]
+    },
+    {
+      "id": "live-player-21",
+      "english": "FalleN",
+      "aliases": [],
+      "chinese": "FalleN",
+      "alternatives": [],
+      "category": "player",
+      "priority": 5,
+      "context": "战队：FURIA",
+      "avoid": [],
+      "preserve": true,
+      "source_refs": [
+        "players.json"
+      ]
+    },
+    {
+      "id": "live-player-22",
+      "english": "yuurih",
+      "aliases": [],
+      "chinese": "yuurih",
+      "alternatives": [],
+      "category": "player",
+      "priority": 5,
+      "context": "战队：FURIA",
+      "avoid": [],
+      "preserve": true,
+      "source_refs": [
+        "players.json"
+      ]
+    },
+    {
+      "id": "live-player-23",
+      "english": "YEKINDAR",
+      "aliases": [],
+      "chinese": "YEKINDAR",
+      "alternatives": [],
+      "category": "player",
+      "priority": 5,
+      "context": "战队：FURIA",
+      "avoid": [],
+      "preserve": true,
+      "source_refs": [
+        "players.json"
+      ]
+    },
+    {
+      "id": "live-player-24",
+      "english": "KSCERATO",
+      "aliases": [],
+      "chinese": "KSCERATO",
+      "alternatives": [],
+      "category": "player",
+      "priority": 5,
+      "context": "战队：FURIA",
+      "avoid": [],
+      "preserve": true,
+      "source_refs": [
+        "players.json"
+      ]
+    },
+    {
+      "id": "live-player-25",
+      "english": "molodoy",
+      "aliases": [],
+      "chinese": "molodoy",
+      "alternatives": [],
+      "category": "player",
+      "priority": 5,
+      "context": "战队：FURIA",
+      "avoid": [],
+      "preserve": true,
+      "source_refs": [
+        "players.json"
+      ]
+    },
+    {
+      "id": "live-player-26",
+      "english": "xfl0ud",
+      "aliases": [
+        "xfloud"
+      ],
+      "chinese": "xfl0ud",
+      "alternatives": [],
+      "category": "player",
+      "priority": 5,
+      "context": "战队：FUT",
+      "avoid": [],
+      "preserve": true,
+      "source_refs": [
+        "players.json"
+      ]
+    },
+    {
+      "id": "live-player-27",
+      "english": "dem0n",
+      "aliases": [],
+      "chinese": "dem0n",
+      "alternatives": [],
+      "category": "player",
+      "priority": 5,
+      "context": "战队：FUT",
+      "avoid": [],
+      "preserve": true,
+      "source_refs": [
+        "players.json"
+      ]
+    },
+    {
+      "id": "live-player-28",
+      "english": "Krabeni",
+      "aliases": [],
+      "chinese": "Krabeni",
+      "alternatives": [],
+      "category": "player",
+      "priority": 5,
+      "context": "战队：FUT",
+      "avoid": [],
+      "preserve": true,
+      "source_refs": [
+        "players.json"
+      ]
+    },
+    {
+      "id": "live-player-29",
+      "english": "cmtry",
+      "aliases": [],
+      "chinese": "cmtry",
+      "alternatives": [],
+      "category": "player",
+      "priority": 5,
+      "context": "战队：FUT",
+      "avoid": [],
+      "preserve": true,
+      "source_refs": [
+        "players.json"
+      ]
+    },
+    {
+      "id": "live-player-30",
+      "english": "dziugss",
+      "aliases": [],
+      "chinese": "dziugss",
+      "alternatives": [],
+      "category": "player",
+      "priority": 5,
+      "context": "战队：FUT",
+      "avoid": [],
+      "preserve": true,
+      "source_refs": [
+        "players.json"
+      ]
+    },
+    {
+      "id": "live-player-31",
+      "english": "huNter-",
+      "aliases": [
+        "hunter"
+      ],
+      "chinese": "huNter-",
+      "alternatives": [],
+      "category": "player",
+      "priority": 5,
+      "context": "战队：G2",
+      "avoid": [],
+      "preserve": true,
+      "source_refs": [
+        "players.json"
+      ]
+    },
+    {
+      "id": "live-player-32",
+      "english": "NertZ",
+      "aliases": [],
+      "chinese": "NertZ",
+      "alternatives": [],
+      "category": "player",
+      "priority": 5,
+      "context": "战队：G2",
+      "avoid": [],
+      "preserve": true,
+      "source_refs": [
+        "players.json"
+      ]
+    },
+    {
+      "id": "live-player-33",
+      "english": "r1nkle",
+      "aliases": [
+        "rinkle"
+      ],
+      "chinese": "r1nkle",
+      "alternatives": [],
+      "category": "player",
+      "priority": 5,
+      "context": "战队：G2",
+      "avoid": [],
+      "preserve": true,
+      "source_refs": [
+        "players.json"
+      ]
+    },
+    {
+      "id": "live-player-34",
+      "english": "HeavyGod",
+      "aliases": [],
+      "chinese": "HeavyGod",
+      "alternatives": [],
+      "category": "player",
+      "priority": 5,
+      "context": "战队：G2",
+      "avoid": [],
+      "preserve": true,
+      "source_refs": [
+        "players.json"
+      ]
+    },
+    {
+      "id": "live-player-35",
+      "english": "MATYS",
+      "aliases": [],
+      "chinese": "MATYS",
+      "alternatives": [],
+      "category": "player",
+      "priority": 5,
+      "context": "战队：G2",
+      "avoid": [],
+      "preserve": true,
+      "source_refs": [
+        "players.json"
+      ]
+    },
+    {
+      "id": "live-player-36",
+      "english": "arT",
+      "aliases": [],
+      "chinese": "arT",
+      "alternatives": [],
+      "category": "player",
+      "priority": 5,
+      "context": "战队：Legacy",
+      "avoid": [],
+      "preserve": true,
+      "source_refs": [
+        "players.json"
+      ]
+    },
+    {
+      "id": "live-player-37",
+      "english": "dumau",
+      "aliases": [],
+      "chinese": "dumau",
+      "alternatives": [],
+      "category": "player",
+      "priority": 5,
+      "context": "战队：Legacy",
+      "avoid": [],
+      "preserve": true,
+      "source_refs": [
+        "players.json"
+      ]
+    },
+    {
+      "id": "live-player-38",
+      "english": "latto",
+      "aliases": [],
+      "chinese": "latto",
+      "alternatives": [],
+      "category": "player",
+      "priority": 5,
+      "context": "战队：Legacy",
+      "avoid": [],
+      "preserve": true,
+      "source_refs": [
+        "players.json"
+      ]
+    },
+    {
+      "id": "live-player-39",
+      "english": "n1ssim",
+      "aliases": [
+        "nissim"
+      ],
+      "chinese": "n1ssim",
+      "alternatives": [],
+      "category": "player",
+      "priority": 5,
+      "context": "战队：Legacy",
+      "avoid": [],
+      "preserve": true,
+      "source_refs": [
+        "players.json"
+      ]
+    },
+    {
+      "id": "live-player-40",
+      "english": "try",
+      "aliases": [],
+      "chinese": "try",
+      "alternatives": [],
+      "category": "player",
+      "priority": 5,
+      "context": "战队：Legacy",
+      "avoid": [],
+      "preserve": true,
+      "source_refs": [
+        "players.json"
+      ]
+    },
+    {
+      "id": "live-player-41",
+      "english": "XANTARES",
+      "aliases": [],
+      "chinese": "XANTARES",
+      "alternatives": [],
+      "category": "player",
+      "priority": 5,
+      "context": "战队：Aurora",
+      "avoid": [],
+      "preserve": true,
+      "source_refs": [
+        "players.json"
+      ]
+    },
+    {
+      "id": "live-player-42",
+      "english": "woxic",
+      "aliases": [],
+      "chinese": "woxic",
+      "alternatives": [],
+      "category": "player",
+      "priority": 5,
+      "context": "战队：Aurora",
+      "avoid": [],
+      "preserve": true,
+      "source_refs": [
+        "players.json"
+      ]
+    },
+    {
+      "id": "live-player-43",
+      "english": "Jimpphat",
+      "aliases": [],
+      "chinese": "Jimpphat",
+      "alternatives": [],
+      "category": "player",
+      "priority": 5,
+      "context": "战队：Aurora",
+      "avoid": [],
+      "preserve": true,
+      "source_refs": [
+        "players.json"
+      ]
+    },
+    {
+      "id": "live-player-44",
+      "english": "kyxsan",
+      "aliases": [],
+      "chinese": "kyxsan",
+      "alternatives": [],
+      "category": "player",
+      "priority": 5,
+      "context": "战队：Aurora",
+      "avoid": [],
+      "preserve": true,
+      "source_refs": [
+        "players.json"
+      ]
+    },
+    {
+      "id": "live-player-45",
+      "english": "Wicadia",
+      "aliases": [],
+      "chinese": "Wicadia",
+      "alternatives": [],
+      "category": "player",
+      "priority": 5,
+      "context": "战队：Aurora",
+      "avoid": [],
+      "preserve": true,
+      "source_refs": [
+        "players.json"
+      ]
+    },
+    {
+      "id": "live-player-46",
+      "english": "Aleksib",
+      "aliases": [],
+      "chinese": "Aleksib",
+      "alternatives": [],
+      "category": "player",
+      "priority": 5,
+      "context": "战队：Natus Vincere",
+      "avoid": [],
+      "preserve": true,
+      "source_refs": [
+        "players.json"
+      ]
+    },
+    {
+      "id": "live-player-47",
+      "english": "iM",
+      "aliases": [],
+      "chinese": "iM",
+      "alternatives": [],
+      "category": "player",
+      "priority": 5,
+      "context": "战队：Natus Vincere",
+      "avoid": [],
+      "preserve": true,
+      "source_refs": [
+        "players.json"
+      ]
+    },
+    {
+      "id": "live-player-48",
+      "english": "b1t",
+      "aliases": [
+        "bit"
+      ],
+      "chinese": "b1t",
+      "alternatives": [],
+      "category": "player",
+      "priority": 5,
+      "context": "战队：Natus Vincere",
+      "avoid": [],
+      "preserve": true,
+      "source_refs": [
+        "players.json"
+      ]
+    },
+    {
+      "id": "live-player-49",
+      "english": "w0nderful",
+      "aliases": [
+        "wonderful"
+      ],
+      "chinese": "w0nderful",
+      "alternatives": [],
+      "category": "player",
+      "priority": 5,
+      "context": "战队：Natus Vincere",
+      "avoid": [],
+      "preserve": true,
+      "source_refs": [
+        "players.json"
+      ]
+    },
+    {
+      "id": "live-player-50",
+      "english": "makazze",
+      "aliases": [],
+      "chinese": "makazze",
+      "alternatives": [],
+      "category": "player",
+      "priority": 5,
+      "context": "战队：Natus Vincere",
+      "avoid": [],
+      "preserve": true,
+      "source_refs": [
+        "players.json"
+      ]
+    },
+    {
+      "id": "live-player-51",
+      "english": "frozen",
+      "aliases": [],
+      "chinese": "frozen",
+      "alternatives": [],
+      "category": "player",
+      "priority": 5,
+      "context": "战队：FaZe",
+      "avoid": [],
+      "preserve": true,
+      "source_refs": [
+        "players.json"
+      ]
+    },
+    {
+      "id": "live-player-52",
+      "english": "Twistzz",
+      "aliases": [],
+      "chinese": "Twistzz",
+      "alternatives": [],
+      "category": "player",
+      "priority": 5,
+      "context": "战队：FaZe",
+      "avoid": [],
+      "preserve": true,
+      "source_refs": [
+        "players.json"
+      ]
+    },
+    {
+      "id": "live-player-53",
+      "english": "Neityu",
+      "aliases": [],
+      "chinese": "Neityu",
+      "alternatives": [],
+      "category": "player",
+      "priority": 5,
+      "context": "战队：FaZe",
+      "avoid": [],
+      "preserve": true,
+      "source_refs": [
+        "players.json"
+      ]
+    },
+    {
+      "id": "live-player-54",
+      "english": "jcobbb",
+      "aliases": [],
+      "chinese": "jcobbb",
+      "alternatives": [],
+      "category": "player",
+      "priority": 5,
+      "context": "战队：FaZe",
+      "avoid": [],
+      "preserve": true,
+      "source_refs": [
+        "players.json"
+      ]
+    },
+    {
+      "id": "live-player-55",
+      "english": "JBOEN",
+      "aliases": [],
+      "chinese": "JBOEN",
+      "alternatives": [],
+      "category": "player",
+      "priority": 5,
+      "context": "战队：FaZe",
+      "avoid": [],
+      "preserve": true,
+      "source_refs": [
+        "players.json"
+      ]
+    },
+    {
+      "id": "live-player-56",
+      "english": "HooXi",
+      "aliases": [],
+      "chinese": "HooXi",
+      "alternatives": [],
+      "category": "player",
+      "priority": 5,
+      "context": "战队：Astralis",
+      "avoid": [],
+      "preserve": true,
+      "source_refs": [
+        "players.json"
+      ]
+    },
+    {
+      "id": "live-player-57",
+      "english": "phzy",
+      "aliases": [],
+      "chinese": "phzy",
+      "alternatives": [],
+      "category": "player",
+      "priority": 5,
+      "context": "战队：Astralis",
+      "avoid": [],
+      "preserve": true,
+      "source_refs": [
+        "players.json"
+      ]
+    },
+    {
+      "id": "live-player-58",
+      "english": "jabbi",
+      "aliases": [],
+      "chinese": "jabbi",
+      "alternatives": [],
+      "category": "player",
+      "priority": 5,
+      "context": "战队：Astralis",
+      "avoid": [],
+      "preserve": true,
+      "source_refs": [
+        "players.json"
+      ]
+    },
+    {
+      "id": "live-player-59",
+      "english": "Staehr",
+      "aliases": [],
+      "chinese": "Staehr",
+      "alternatives": [],
+      "category": "player",
+      "priority": 5,
+      "context": "战队：Astralis",
+      "avoid": [],
+      "preserve": true,
+      "source_refs": [
+        "players.json"
+      ]
+    },
+    {
+      "id": "live-player-60",
+      "english": "ryu",
+      "aliases": [],
+      "chinese": "ryu",
+      "alternatives": [],
+      "category": "player",
+      "priority": 5,
+      "context": "战队：Astralis",
+      "avoid": [],
+      "preserve": true,
+      "source_refs": [
+        "players.json"
+      ]
+    },
+    {
+      "id": "live-player-61",
+      "english": "max",
+      "aliases": [],
+      "chinese": "max",
+      "alternatives": [],
+      "category": "player",
+      "priority": 5,
+      "context": "战队：9z",
+      "avoid": [],
+      "preserve": true,
+      "source_refs": [
+        "players.json"
+      ]
+    },
+    {
+      "id": "live-player-62",
+      "english": "dgt",
+      "aliases": [],
+      "chinese": "dgt",
+      "alternatives": [],
+      "category": "player",
+      "priority": 5,
+      "context": "战队：9z",
+      "avoid": [],
+      "preserve": true,
+      "source_refs": [
+        "players.json"
+      ]
+    },
+    {
+      "id": "live-player-63",
+      "english": "meyern",
+      "aliases": [],
+      "chinese": "meyern",
+      "alternatives": [],
+      "category": "player",
+      "priority": 5,
+      "context": "战队：9z",
+      "avoid": [],
+      "preserve": true,
+      "source_refs": [
+        "players.json"
+      ]
+    },
+    {
+      "id": "live-player-64",
+      "english": "luchov",
+      "aliases": [],
+      "chinese": "luchov",
+      "alternatives": [],
+      "category": "player",
+      "priority": 5,
+      "context": "战队：9z",
+      "avoid": [],
+      "preserve": true,
+      "source_refs": [
+        "players.json"
+      ]
+    },
+    {
+      "id": "live-player-65",
+      "english": "HUASOPEEK",
+      "aliases": [],
+      "chinese": "HUASOPEEK",
+      "alternatives": [],
+      "category": "player",
+      "priority": 5,
+      "context": "战队：9z",
+      "avoid": [],
+      "preserve": true,
+      "source_refs": [
+        "players.json"
+      ]
+    },
+    {
+      "id": "live-player-66",
+      "english": "bLitz",
+      "aliases": [],
+      "chinese": "bLitz",
+      "alternatives": [],
+      "category": "player",
+      "priority": 5,
+      "context": "战队：The MongolZ",
+      "avoid": [],
+      "preserve": true,
+      "source_refs": [
+        "players.json"
+      ]
+    },
+    {
+      "id": "live-player-67",
+      "english": "Techno",
+      "aliases": [],
+      "chinese": "Techno",
+      "alternatives": [],
+      "category": "player",
+      "priority": 5,
+      "context": "战队：The MongolZ",
+      "avoid": [],
+      "preserve": true,
+      "source_refs": [
+        "players.json"
+      ]
+    },
+    {
+      "id": "live-player-68",
+      "english": "910",
+      "aliases": [
+        "nine one zero",
+        "nine ten"
+      ],
+      "chinese": "910",
+      "alternatives": [],
+      "category": "player",
+      "priority": 5,
+      "context": "战队：The MongolZ",
+      "avoid": [],
+      "preserve": true,
+      "source_refs": [
+        "players.json"
+      ]
+    },
+    {
+      "id": "live-player-69",
+      "english": "tikuak",
+      "aliases": [],
+      "chinese": "tikuak",
+      "alternatives": [],
+      "category": "player",
+      "priority": 5,
+      "context": "战队：The MongolZ",
+      "avoid": [],
+      "preserve": true,
+      "source_refs": [
+        "players.json"
+      ]
+    },
+    {
+      "id": "live-player-70",
+      "english": "DarkMeister",
+      "aliases": [],
+      "chinese": "DarkMeister",
+      "alternatives": [],
+      "category": "player",
+      "priority": 5,
+      "context": "战队：The MongolZ",
+      "avoid": [],
+      "preserve": true,
+      "source_refs": [
+        "players.json"
+      ]
+    },
+    {
+      "id": "live-player-71",
+      "english": "alex666",
+      "aliases": [],
+      "chinese": "alex666",
+      "alternatives": [],
+      "category": "player",
+      "priority": 5,
+      "context": "战队：B8",
+      "avoid": [],
+      "preserve": true,
+      "source_refs": [
+        "players.json"
+      ]
+    },
+    {
+      "id": "live-player-72",
+      "english": "npl",
+      "aliases": [],
+      "chinese": "npl",
+      "alternatives": [],
+      "category": "player",
+      "priority": 5,
+      "context": "战队：B8",
+      "avoid": [],
+      "preserve": true,
+      "source_refs": [
+        "players.json"
+      ]
+    },
+    {
+      "id": "live-player-73",
+      "english": "kensizor",
+      "aliases": [],
+      "chinese": "kensizor",
+      "alternatives": [],
+      "category": "player",
+      "priority": 5,
+      "context": "战队：B8",
+      "avoid": [],
+      "preserve": true,
+      "source_refs": [
+        "players.json"
+      ]
+    },
+    {
+      "id": "live-player-74",
+      "english": "esenthial",
+      "aliases": [],
+      "chinese": "esenthial",
+      "alternatives": [],
+      "category": "player",
+      "priority": 5,
+      "context": "战队：B8",
+      "avoid": [],
+      "preserve": true,
+      "source_refs": [
+        "players.json"
+      ]
+    },
+    {
+      "id": "live-player-75",
+      "english": "s1zzi",
+      "aliases": [
+        "sizzi"
+      ],
+      "chinese": "s1zzi",
+      "alternatives": [],
+      "category": "player",
+      "priority": 5,
+      "context": "战队：B8",
+      "avoid": [],
+      "preserve": true,
+      "source_refs": [
+        "players.json"
+      ]
+    },
+    {
+      "id": "live-player-76",
+      "english": "Boombl4",
+      "aliases": [
+        "boomich"
+      ],
+      "chinese": "Boombl4",
+      "alternatives": [],
+      "category": "player",
+      "priority": 4,
+      "context": "战队：BetBoom",
+      "avoid": [],
+      "preserve": true,
+      "source_refs": [
+        "players.json"
+      ]
+    },
+    {
+      "id": "live-player-77",
+      "english": "zorte",
+      "aliases": [],
+      "chinese": "zorte",
+      "alternatives": [],
+      "category": "player",
+      "priority": 4,
+      "context": "战队：BetBoom",
+      "avoid": [],
+      "preserve": true,
+      "source_refs": [
+        "players.json"
+      ]
+    },
+    {
+      "id": "live-player-78",
+      "english": "S1ren",
+      "aliases": [
+        "siren"
+      ],
+      "chinese": "S1ren",
+      "alternatives": [],
+      "category": "player",
+      "priority": 4,
+      "context": "战队：BetBoom",
+      "avoid": [],
+      "preserve": true,
+      "source_refs": [
+        "players.json"
+      ]
+    },
+    {
+      "id": "live-player-79",
+      "english": "d1Ledez",
+      "aliases": [],
+      "chinese": "d1Ledez",
+      "alternatives": [],
+      "category": "player",
+      "priority": 4,
+      "context": "战队：BetBoom",
+      "avoid": [],
+      "preserve": true,
+      "source_refs": [
+        "players.json"
+      ]
+    },
+    {
+      "id": "live-player-80",
+      "english": "Magnojez",
+      "aliases": [],
+      "chinese": "Magnojez",
+      "alternatives": [],
+      "category": "player",
+      "priority": 4,
+      "context": "战队：BetBoom",
+      "avoid": [],
+      "preserve": true,
+      "source_refs": [
+        "players.json"
+      ]
+    },
+    {
+      "id": "live-player-81",
+      "english": "FL1T",
+      "aliases": [
+        "flit"
+      ],
+      "chinese": "FL1T",
+      "alternatives": [],
+      "category": "player",
+      "priority": 4,
+      "context": "战队：PARIVISION",
+      "avoid": [],
+      "preserve": true,
+      "source_refs": [
+        "players.json"
+      ]
+    },
+    {
+      "id": "live-player-82",
+      "english": "Jame",
+      "aliases": [],
+      "chinese": "Jame",
+      "alternatives": [],
+      "category": "player",
+      "priority": 4,
+      "context": "战队：PARIVISION",
+      "avoid": [],
+      "preserve": true,
+      "source_refs": [
+        "players.json"
+      ]
+    },
+    {
+      "id": "live-player-83",
+      "english": "xiELO",
+      "aliases": [],
+      "chinese": "xiELO",
+      "alternatives": [],
+      "category": "player",
+      "priority": 4,
+      "context": "战队：PARIVISION",
+      "avoid": [],
+      "preserve": true,
+      "source_refs": [
+        "players.json"
+      ]
+    },
+    {
+      "id": "live-player-84",
+      "english": "zweih",
+      "aliases": [],
+      "chinese": "zweih",
+      "alternatives": [],
+      "category": "player",
+      "priority": 4,
+      "context": "战队：PARIVISION",
+      "avoid": [],
+      "preserve": true,
+      "source_refs": [
+        "players.json"
+      ]
+    },
+    {
+      "id": "live-player-85",
+      "english": "slaxejezzz",
+      "aliases": [],
+      "chinese": "slaxejezzz",
+      "alternatives": [],
+      "category": "player",
+      "priority": 4,
+      "context": "战队：PARIVISION",
+      "avoid": [],
+      "preserve": true,
+      "source_refs": [
+        "players.json"
+      ]
+    },
+    {
+      "id": "live-player-86",
+      "english": "MaSvAl",
+      "aliases": [],
+      "chinese": "MaSvAl",
+      "alternatives": [],
+      "category": "player",
+      "priority": 4,
+      "context": "战队：magic",
+      "avoid": [],
+      "preserve": true,
+      "source_refs": [
+        "players.json"
+      ]
+    },
+    {
+      "id": "live-player-87",
+      "english": "sFade8",
+      "aliases": [],
+      "chinese": "sFade8",
+      "alternatives": [],
+      "category": "player",
+      "priority": 4,
+      "context": "战队：magic",
+      "avoid": [],
+      "preserve": true,
+      "source_refs": [
+        "players.json"
+      ]
+    },
+    {
+      "id": "live-player-88",
+      "english": "AW",
+      "aliases": [],
+      "chinese": "AW",
+      "alternatives": [],
+      "category": "player",
+      "priority": 4,
+      "context": "战队：magic",
+      "avoid": [],
+      "preserve": true,
+      "source_refs": [
+        "players.json"
+      ]
+    },
+    {
+      "id": "live-player-89",
+      "english": "mo0N",
+      "aliases": [],
+      "chinese": "mo0N",
+      "alternatives": [],
+      "category": "player",
+      "priority": 4,
+      "context": "战队：magic",
+      "avoid": [],
+      "preserve": true,
+      "source_refs": [
+        "players.json"
+      ]
+    },
+    {
+      "id": "live-player-90",
+      "english": "tenzy",
+      "aliases": [],
+      "chinese": "tenzy",
+      "alternatives": [],
+      "category": "player",
+      "priority": 4,
+      "context": "战队：magic",
+      "avoid": [],
+      "preserve": true,
+      "source_refs": [
+        "players.json"
+      ]
+    },
+    {
+      "id": "live-player-91",
+      "english": "Snax",
+      "aliases": [],
+      "chinese": "Snax",
+      "alternatives": [],
+      "category": "player",
+      "priority": 4,
+      "context": "战队：GamerLegion",
+      "avoid": [],
+      "preserve": true,
+      "source_refs": [
+        "players.json"
+      ]
+    },
+    {
+      "id": "live-player-92",
+      "english": "REZ",
+      "aliases": [],
+      "chinese": "REZ",
+      "alternatives": [],
+      "category": "player",
+      "priority": 4,
+      "context": "战队：GamerLegion",
+      "avoid": [],
+      "preserve": true,
+      "source_refs": [
+        "players.json"
+      ]
+    },
+    {
+      "id": "live-player-93",
+      "english": "Tauson",
+      "aliases": [],
+      "chinese": "Tauson",
+      "alternatives": [],
+      "category": "player",
+      "priority": 4,
+      "context": "战队：GamerLegion",
+      "avoid": [],
+      "preserve": true,
+      "source_refs": [
+        "players.json"
+      ]
+    },
+    {
+      "id": "live-player-94",
+      "english": "FL4MUS",
+      "aliases": [
+        "flamus"
+      ],
+      "chinese": "FL4MUS",
+      "alternatives": [],
+      "category": "player",
+      "priority": 4,
+      "context": "战队：GamerLegion",
+      "avoid": [],
+      "preserve": true,
+      "source_refs": [
+        "players.json"
+      ]
+    },
+    {
+      "id": "live-player-95",
+      "english": "hypex",
+      "aliases": [],
+      "chinese": "hypex",
+      "alternatives": [],
+      "category": "player",
+      "priority": 4,
+      "context": "战队：GamerLegion",
+      "avoid": [],
+      "preserve": true,
+      "source_refs": [
+        "players.json"
+      ]
+    },
+    {
+      "id": "live-player-96",
+      "english": "Maka",
+      "aliases": [],
+      "chinese": "Maka",
+      "alternatives": [],
+      "category": "player",
+      "priority": 4,
+      "context": "战队：3DMAX",
+      "avoid": [],
+      "preserve": true,
+      "source_refs": [
+        "players.json"
+      ]
+    },
+    {
+      "id": "live-player-97",
+      "english": "Lucky",
+      "aliases": [],
+      "chinese": "Lucky",
+      "alternatives": [],
+      "category": "player",
+      "priority": 4,
+      "context": "战队：3DMAX",
+      "avoid": [],
+      "preserve": true,
+      "source_refs": [
+        "players.json"
+      ]
+    },
+    {
+      "id": "live-player-98",
+      "english": "misutaaa",
+      "aliases": [],
+      "chinese": "misutaaa",
+      "alternatives": [],
+      "category": "player",
+      "priority": 4,
+      "context": "战队：3DMAX",
+      "avoid": [],
+      "preserve": true,
+      "source_refs": [
+        "players.json"
+      ]
+    },
+    {
+      "id": "live-player-99",
+      "english": "Kursy",
+      "aliases": [],
+      "chinese": "Kursy",
+      "alternatives": [],
+      "category": "player",
+      "priority": 4,
+      "context": "战队：3DMAX",
+      "avoid": [],
+      "preserve": true,
+      "source_refs": [
+        "players.json"
+      ]
+    },
+    {
+      "id": "live-player-100",
+      "english": "Graviti",
+      "aliases": [],
+      "chinese": "Graviti",
+      "alternatives": [],
+      "category": "player",
+      "priority": 4,
+      "context": "战队：3DMAX",
+      "avoid": [],
+      "preserve": true,
+      "source_refs": [
+        "players.json"
+      ]
+    },
+    {
+      "id": "live-player-101",
+      "english": "NAF",
+      "aliases": [],
+      "chinese": "NAF",
+      "alternatives": [],
+      "category": "player",
+      "priority": 4,
+      "context": "战队：Liquid",
+      "avoid": [],
+      "preserve": true,
+      "source_refs": [
+        "players.json"
+      ]
+    },
+    {
+      "id": "live-player-102",
+      "english": "EliGE",
+      "aliases": [],
+      "chinese": "EliGE",
+      "alternatives": [],
+      "category": "player",
+      "priority": 4,
+      "context": "战队：Liquid",
+      "avoid": [],
+      "preserve": true,
+      "source_refs": [
+        "players.json"
+      ]
+    },
+    {
+      "id": "live-player-103",
+      "english": "malbsMd",
+      "aliases": [],
+      "chinese": "malbsMd",
+      "alternatives": [],
+      "category": "player",
+      "priority": 4,
+      "context": "战队：Liquid",
+      "avoid": [],
+      "preserve": true,
+      "source_refs": [
+        "players.json"
+      ]
+    },
+    {
+      "id": "live-player-104",
+      "english": "JT",
+      "aliases": [],
+      "chinese": "JT",
+      "alternatives": [],
+      "category": "player",
+      "priority": 4,
+      "context": "战队：Liquid",
+      "avoid": [],
+      "preserve": true,
+      "source_refs": [
+        "players.json"
+      ]
+    },
+    {
+      "id": "live-player-105",
+      "english": "Jorko",
+      "aliases": [],
+      "chinese": "Jorko",
+      "alternatives": [],
+      "category": "player",
+      "priority": 4,
+      "context": "战队：Liquid",
+      "avoid": [],
+      "preserve": true,
+      "source_refs": [
+        "players.json"
+      ]
+    },
+    {
+      "id": "live-player-106",
+      "english": "tabseN",
+      "aliases": [],
+      "chinese": "tabseN",
+      "alternatives": [],
+      "category": "player",
+      "priority": 4,
+      "context": "战队：BIG",
+      "avoid": [],
+      "preserve": true,
+      "source_refs": [
+        "players.json"
+      ]
+    },
+    {
+      "id": "live-player-107",
+      "english": "JDC",
+      "aliases": [],
+      "chinese": "JDC",
+      "alternatives": [],
+      "category": "player",
+      "priority": 4,
+      "context": "战队：BIG",
+      "avoid": [],
+      "preserve": true,
+      "source_refs": [
+        "players.json"
+      ]
+    },
+    {
+      "id": "live-player-108",
+      "english": "faveN",
+      "aliases": [],
+      "chinese": "faveN",
+      "alternatives": [],
+      "category": "player",
+      "priority": 4,
+      "context": "战队：BIG",
+      "avoid": [],
+      "preserve": true,
+      "source_refs": [
+        "players.json"
+      ]
+    },
+    {
+      "id": "live-player-109",
+      "english": "blameF",
+      "aliases": [],
+      "chinese": "blameF",
+      "alternatives": [],
+      "category": "player",
+      "priority": 4,
+      "context": "战队：BIG",
+      "avoid": [],
+      "preserve": true,
+      "source_refs": [
+        "players.json"
+      ]
+    },
+    {
+      "id": "live-player-110",
+      "english": "gr1ks",
+      "aliases": [
+        "griks"
+      ],
+      "chinese": "gr1ks",
+      "alternatives": [],
+      "category": "player",
+      "priority": 4,
+      "context": "战队：BIG",
+      "avoid": [],
+      "preserve": true,
+      "source_refs": [
+        "players.json"
+      ]
+    },
+    {
+      "id": "live-player-111",
+      "english": "Brollan",
+      "aliases": [],
+      "chinese": "Brollan",
+      "alternatives": [],
+      "category": "player",
+      "priority": 4,
+      "context": "战队：HEROIC",
+      "avoid": [],
+      "preserve": true,
+      "source_refs": [
+        "players.json"
+      ]
+    },
+    {
+      "id": "live-player-112",
+      "english": "nilo",
+      "aliases": [],
+      "chinese": "nilo",
+      "alternatives": [],
+      "category": "player",
+      "priority": 4,
+      "context": "战队：HEROIC",
+      "avoid": [],
+      "preserve": true,
+      "source_refs": [
+        "players.json"
+      ]
+    },
+    {
+      "id": "live-player-113",
+      "english": "susp",
+      "aliases": [],
+      "chinese": "susp",
+      "alternatives": [],
+      "category": "player",
+      "priority": 4,
+      "context": "战队：HEROIC",
+      "avoid": [],
+      "preserve": true,
+      "source_refs": [
+        "players.json"
+      ]
+    },
+    {
+      "id": "live-player-114",
+      "english": "MartinezSa",
+      "aliases": [],
+      "chinese": "MartinezSa",
+      "alternatives": [],
+      "category": "player",
+      "priority": 4,
+      "context": "战队：HEROIC",
+      "avoid": [],
+      "preserve": true,
+      "source_refs": [
+        "players.json"
+      ]
+    },
+    {
+      "id": "live-player-115",
+      "english": "Chr1zN",
+      "aliases": [],
+      "chinese": "Chr1zN",
+      "alternatives": [],
+      "category": "player",
+      "priority": 4,
+      "context": "战队：HEROIC",
+      "avoid": [],
+      "preserve": true,
+      "source_refs": [
+        "players.json"
+      ]
+    },
+    {
+      "id": "live-player-116",
+      "english": "stavn",
+      "aliases": [],
+      "chinese": "stavn",
+      "alternatives": [],
+      "category": "player",
+      "priority": 4,
+      "context": "战队：Ninjas in Pyjamas",
+      "avoid": [],
+      "preserve": true,
+      "source_refs": [
+        "players.json"
+      ]
+    },
+    {
+      "id": "live-player-117",
+      "english": "sjuush",
+      "aliases": [],
+      "chinese": "sjuush",
+      "alternatives": [],
+      "category": "player",
+      "priority": 4,
+      "context": "战队：Ninjas in Pyjamas",
+      "avoid": [],
+      "preserve": true,
+      "source_refs": [
+        "players.json"
+      ]
+    },
+    {
+      "id": "live-player-118",
+      "english": "Krimbo",
+      "aliases": [],
+      "chinese": "Krimbo",
+      "alternatives": [],
+      "category": "player",
+      "priority": 4,
+      "context": "战队：Ninjas in Pyjamas",
+      "avoid": [],
+      "preserve": true,
+      "source_refs": [
+        "players.json"
+      ]
+    },
+    {
+      "id": "live-player-119",
+      "english": "n0te",
+      "aliases": [
+        "note"
+      ],
+      "chinese": "n0te",
+      "alternatives": [],
+      "category": "player",
+      "priority": 4,
+      "context": "战队：Ninjas in Pyjamas",
+      "avoid": [],
+      "preserve": true,
+      "source_refs": [
+        "players.json"
+      ]
+    },
+    {
+      "id": "live-player-120",
+      "english": "xKacpersky",
+      "aliases": [],
+      "chinese": "xKacpersky",
+      "alternatives": [],
+      "category": "player",
+      "priority": 4,
+      "context": "战队：Ninjas in Pyjamas",
+      "avoid": [],
+      "preserve": true,
+      "source_refs": [
+        "players.json"
+      ]
+    },
+    {
+      "id": "live-player-121",
+      "english": "LNZ",
+      "aliases": [],
+      "chinese": "LNZ",
+      "alternatives": [],
+      "category": "player",
+      "priority": 4,
+      "context": "战队：MIBR",
+      "avoid": [],
+      "preserve": true,
+      "source_refs": [
+        "players.json"
+      ]
+    },
+    {
+      "id": "live-player-122",
+      "english": "nqz",
+      "aliases": [],
+      "chinese": "nqz",
+      "alternatives": [],
+      "category": "player",
+      "priority": 4,
+      "context": "战队：MIBR",
+      "avoid": [],
+      "preserve": true,
+      "source_refs": [
+        "players.json"
+      ]
+    },
+    {
+      "id": "live-player-123",
+      "english": "insani",
+      "aliases": [],
+      "chinese": "insani",
+      "alternatives": [],
+      "category": "player",
+      "priority": 4,
+      "context": "战队：MIBR",
+      "avoid": [],
+      "preserve": true,
+      "source_refs": [
+        "players.json"
+      ]
+    },
+    {
+      "id": "live-player-124",
+      "english": "venomzera",
+      "aliases": [],
+      "chinese": "venomzera",
+      "alternatives": [],
+      "category": "player",
+      "priority": 4,
+      "context": "战队：MIBR",
+      "avoid": [],
+      "preserve": true,
+      "source_refs": [
+        "players.json"
+      ]
+    },
+    {
+      "id": "live-player-125",
+      "english": "tomaszin",
+      "aliases": [],
+      "chinese": "tomaszin",
+      "alternatives": [],
+      "category": "player",
+      "priority": 4,
+      "context": "战队：MIBR",
+      "avoid": [],
+      "preserve": true,
+      "source_refs": [
+        "players.json"
+      ]
+    },
+    {
+      "id": "live-player-126",
+      "english": "Westmelon",
+      "aliases": [],
+      "chinese": "Westmelon",
+      "alternatives": [],
+      "category": "player",
+      "priority": 4,
+      "context": "战队：Lynn Vision",
+      "avoid": [],
+      "preserve": true,
+      "source_refs": [
+        "players.json"
+      ]
+    },
+    {
+      "id": "live-player-127",
+      "english": "z4KR",
+      "aliases": [
+        "zakr"
+      ],
+      "chinese": "z4KR",
+      "alternatives": [],
+      "category": "player",
+      "priority": 4,
+      "context": "战队：Lynn Vision",
+      "avoid": [],
+      "preserve": true,
+      "source_refs": [
+        "players.json"
+      ]
+    },
+    {
+      "id": "live-player-128",
+      "english": "Starry",
+      "aliases": [],
+      "chinese": "Starry",
+      "alternatives": [],
+      "category": "player",
+      "priority": 4,
+      "context": "战队：Lynn Vision",
+      "avoid": [],
+      "preserve": true,
+      "source_refs": [
+        "players.json"
+      ]
+    },
+    {
+      "id": "live-player-129",
+      "english": "EmiliaQAQ",
+      "aliases": [],
+      "chinese": "EmiliaQAQ",
+      "alternatives": [],
+      "category": "player",
+      "priority": 4,
+      "context": "战队：Lynn Vision",
+      "avoid": [],
+      "preserve": true,
+      "source_refs": [
+        "players.json"
+      ]
+    },
+    {
+      "id": "live-player-130",
+      "english": "C4LLM3SU3",
+      "aliases": [
+        "call me sue",
+        "callmesue"
+      ],
+      "chinese": "C4LLM3SU3",
+      "alternatives": [],
+      "category": "player",
+      "priority": 4,
+      "context": "战队：Lynn Vision",
+      "avoid": [],
+      "preserve": true,
+      "source_refs": [
+        "players.json"
+      ]
+    },
+    {
+      "id": "live-player-131",
+      "english": "device",
+      "aliases": [],
+      "chinese": "device",
+      "alternatives": [],
+      "category": "player",
+      "priority": 4,
+      "context": "战队：100 Thieves",
+      "avoid": [],
+      "preserve": true,
+      "source_refs": [
+        "players.json"
+      ]
+    },
+    {
+      "id": "live-player-132",
+      "english": "rain",
+      "aliases": [],
+      "chinese": "rain",
+      "alternatives": [],
+      "category": "player",
+      "priority": 4,
+      "context": "战队：100 Thieves",
+      "avoid": [],
+      "preserve": true,
+      "source_refs": [
+        "players.json"
+      ]
+    },
+    {
+      "id": "live-player-133",
+      "english": "Gizmy",
+      "aliases": [],
+      "chinese": "Gizmy",
+      "alternatives": [],
+      "category": "player",
+      "priority": 4,
+      "context": "战队：100 Thieves",
+      "avoid": [],
+      "preserve": true,
+      "source_refs": [
+        "players.json"
+      ]
+    },
+    {
+      "id": "live-player-134",
+      "english": "sirah",
+      "aliases": [],
+      "chinese": "sirah",
+      "alternatives": [],
+      "category": "player",
+      "priority": 4,
+      "context": "战队：100 Thieves",
+      "avoid": [],
+      "preserve": true,
+      "source_refs": [
+        "players.json"
+      ]
+    },
+    {
+      "id": "live-player-135",
+      "english": "poiii",
+      "aliases": [],
+      "chinese": "poiii",
+      "alternatives": [],
+      "category": "player",
+      "priority": 4,
+      "context": "战队：100 Thieves",
+      "avoid": [],
+      "preserve": true,
+      "source_refs": [
+        "players.json"
+      ]
+    },
+    {
+      "id": "live-player-136",
+      "english": "JamYoung",
+      "aliases": [],
+      "chinese": "JamYoung",
+      "alternatives": [],
+      "category": "player",
+      "priority": 4,
+      "context": "战队：TYLOO",
+      "avoid": [],
+      "preserve": true,
+      "source_refs": [
+        "players.json"
+      ]
+    },
+    {
+      "id": "live-player-137",
+      "english": "Jee",
+      "aliases": [],
+      "chinese": "Jee",
+      "alternatives": [],
+      "category": "player",
+      "priority": 4,
+      "context": "战队：TYLOO",
+      "avoid": [],
+      "preserve": true,
+      "source_refs": [
+        "players.json"
+      ]
+    },
+    {
+      "id": "live-player-138",
+      "english": "Mercury",
+      "aliases": [],
+      "chinese": "Mercury",
+      "alternatives": [],
+      "category": "player",
+      "priority": 4,
+      "context": "战队：TYLOO",
+      "avoid": [],
+      "preserve": true,
+      "source_refs": [
+        "players.json"
+      ]
+    },
+    {
+      "id": "live-player-139",
+      "english": "Moseyuh",
+      "aliases": [],
+      "chinese": "Moseyuh",
+      "alternatives": [],
+      "category": "player",
+      "priority": 4,
+      "context": "战队：TYLOO",
+      "avoid": [],
+      "preserve": true,
+      "source_refs": [
+        "players.json"
+      ]
+    },
+    {
+      "id": "live-player-140",
+      "english": "Zero",
+      "aliases": [],
+      "chinese": "Zero",
+      "alternatives": [],
+      "category": "player",
+      "priority": 4,
+      "context": "战队：TYLOO",
+      "avoid": [],
+      "preserve": true,
+      "source_refs": [
+        "players.json"
+      ]
+    },
+    {
+      "id": "live-player-141",
+      "english": "s1mple",
+      "aliases": [
+        "simple"
+      ],
+      "chinese": "s1mple",
+      "alternatives": [],
+      "category": "player",
+      "priority": 3,
+      "context": "战队：BC.Game",
+      "avoid": [],
+      "preserve": true,
+      "source_refs": [
+        "players.json"
+      ]
+    },
+    {
+      "id": "live-player-142",
+      "english": "electroNic",
+      "aliases": [],
+      "chinese": "electroNic",
+      "alternatives": [],
+      "category": "player",
+      "priority": 3,
+      "context": "战队：BC.Game",
+      "avoid": [],
+      "preserve": true,
+      "source_refs": [
+        "players.json"
+      ]
+    },
+    {
+      "id": "live-player-143",
+      "english": "Magisk",
+      "aliases": [],
+      "chinese": "Magisk",
+      "alternatives": [],
+      "category": "player",
+      "priority": 3,
+      "context": "战队：BC.Game",
+      "avoid": [],
+      "preserve": true,
+      "source_refs": [
+        "players.json"
+      ]
+    },
+    {
+      "id": "live-player-144",
+      "english": "Senzu",
+      "aliases": [],
+      "chinese": "Senzu",
+      "alternatives": [],
+      "category": "player",
+      "priority": 3,
+      "context": "战队：BC.Game",
+      "avoid": [],
+      "preserve": true,
+      "source_refs": [
+        "players.json"
+      ]
+    },
+    {
+      "id": "live-player-145",
+      "english": "mzinho",
+      "aliases": [],
+      "chinese": "mzinho",
+      "alternatives": [],
+      "category": "player",
+      "priority": 3,
+      "context": "战队：BC.Game",
+      "avoid": [],
+      "preserve": true,
+      "source_refs": [
+        "players.json"
+      ]
+    },
+    {
+      "id": "live-map-1",
+      "english": "Cache",
+      "aliases": [
+        "de_cache"
+      ],
+      "chinese": "死城之谜",
+      "alternatives": [],
+      "category": "map",
+      "priority": 5,
+      "context": "CS2 地图",
+      "avoid": [],
+      "preserve": false,
+      "source_refs": [
+        "maps_callouts.json"
+      ]
+    },
+    {
+      "id": "live-map-2",
+      "english": "Mirage",
+      "aliases": [
+        "de_mirage"
+      ],
+      "chinese": "荒漠迷城",
+      "alternatives": [],
+      "category": "map",
+      "priority": 5,
+      "context": "CS2 地图",
+      "avoid": [],
+      "preserve": false,
+      "source_refs": [
+        "maps_callouts.json"
+      ]
+    },
+    {
+      "id": "live-map-3",
+      "english": "Inferno",
+      "aliases": [
+        "de_inferno"
+      ],
+      "chinese": "炼狱小镇",
+      "alternatives": [],
+      "category": "map",
+      "priority": 5,
+      "context": "CS2 地图",
+      "avoid": [],
+      "preserve": false,
+      "source_refs": [
+        "maps_callouts.json"
+      ]
+    },
+    {
+      "id": "live-map-4",
+      "english": "Dust II",
+      "aliases": [
+        "de_dust2"
+      ],
+      "chinese": "炙热沙城Ⅱ",
+      "alternatives": [],
+      "category": "map",
+      "priority": 5,
+      "context": "CS2 地图",
+      "avoid": [],
+      "preserve": false,
+      "source_refs": [
+        "maps_callouts.json"
+      ]
+    },
+    {
+      "id": "live-map-5",
+      "english": "Nuke",
+      "aliases": [
+        "de_nuke"
+      ],
+      "chinese": "核子危机",
+      "alternatives": [],
+      "category": "map",
+      "priority": 5,
+      "context": "CS2 地图",
+      "avoid": [],
+      "preserve": false,
+      "source_refs": [
+        "maps_callouts.json"
+      ]
+    },
+    {
+      "id": "live-map-6",
+      "english": "Ancient",
+      "aliases": [
+        "de_ancient"
+      ],
+      "chinese": "远古遗迹",
+      "alternatives": [],
+      "category": "map",
+      "priority": 5,
+      "context": "CS2 地图",
+      "avoid": [],
+      "preserve": false,
+      "source_refs": [
+        "maps_callouts.json"
+      ]
+    },
+    {
+      "id": "live-map-7",
+      "english": "Anubis",
+      "aliases": [
+        "de_anubis"
+      ],
+      "chinese": "阿努比斯",
+      "alternatives": [],
+      "category": "map",
+      "priority": 5,
+      "context": "CS2 地图",
+      "avoid": [],
+      "preserve": false,
+      "source_refs": [
+        "maps_callouts.json"
+      ]
+    },
+    {
+      "id": "live-callout-1-1",
+      "english": "A Site",
+      "aliases": [],
+      "chinese": "A包点",
+      "alternatives": [],
+      "category": "map_callout",
+      "priority": 4,
+      "context": "地图：Cache",
+      "avoid": [],
+      "preserve": false,
+      "source_refs": [
+        "maps_callouts.json"
+      ]
+    },
+    {
+      "id": "live-callout-1-2",
+      "english": "A Main",
+      "aliases": [],
+      "chinese": "A厅",
+      "alternatives": [],
+      "category": "map_callout",
+      "priority": 5,
+      "context": "地图：Cache",
+      "avoid": [],
+      "preserve": false,
+      "source_refs": [
+        "maps_callouts.json"
+      ]
+    },
+    {
+      "id": "live-callout-1-3",
+      "english": "Squeaky",
+      "aliases": [
+        "Squeaky Door"
+      ],
+      "chinese": "铁门",
+      "alternatives": [],
+      "category": "map_callout",
+      "priority": 5,
+      "context": "地图：Cache",
+      "avoid": [],
+      "preserve": false,
+      "source_refs": [
+        "maps_callouts.json"
+      ]
+    },
+    {
+      "id": "live-callout-1-4",
+      "english": "Quad",
+      "aliases": [
+        "Quad Box"
+      ],
+      "chinese": "四箱",
+      "alternatives": [],
+      "category": "map_callout",
+      "priority": 4,
+      "context": "地图：Cache",
+      "avoid": [],
+      "preserve": false,
+      "source_refs": [
+        "maps_callouts.json"
+      ]
+    },
+    {
+      "id": "live-callout-1-5",
+      "english": "Forklift",
+      "aliases": [
+        "Fork"
+      ],
+      "chinese": "叉车",
+      "alternatives": [],
+      "category": "map_callout",
+      "priority": 5,
+      "context": "地图：Cache",
+      "avoid": [],
+      "preserve": false,
+      "source_refs": [
+        "maps_callouts.json"
+      ]
+    },
+    {
+      "id": "live-callout-1-6",
+      "english": "NBK",
+      "aliases": [],
+      "chinese": "NBK位",
+      "alternatives": [],
+      "category": "map_callout",
+      "priority": 3,
+      "context": "地图：Cache",
+      "avoid": [],
+      "preserve": false,
+      "source_refs": [
+        "maps_callouts.json"
+      ]
+    },
+    {
+      "id": "live-callout-1-7",
+      "english": "Truck",
+      "aliases": [
+        "CT Truck"
+      ],
+      "chinese": "卡车",
+      "alternatives": [],
+      "category": "map_callout",
+      "priority": 4,
+      "context": "地图：Cache",
+      "avoid": [],
+      "preserve": false,
+      "source_refs": [
+        "maps_callouts.json"
+      ]
+    },
+    {
+      "id": "live-callout-1-8",
+      "english": "Highway",
+      "aliases": [],
+      "chinese": "高速路",
+      "alternatives": [],
+      "category": "map_callout",
+      "priority": 5,
+      "context": "地图：Cache",
+      "avoid": [],
+      "preserve": false,
+      "source_refs": [
+        "maps_callouts.json"
+      ]
+    },
+    {
+      "id": "live-callout-1-9",
+      "english": "Mid",
+      "aliases": [
+        "Middle"
+      ],
+      "chinese": "中路",
+      "alternatives": [],
+      "category": "map_callout",
+      "priority": 5,
+      "context": "地图：Cache",
+      "avoid": [],
+      "preserve": false,
+      "source_refs": [
+        "maps_callouts.json"
+      ]
+    },
+    {
+      "id": "live-callout-1-10",
+      "english": "White Box",
+      "aliases": [
+        "White"
+      ],
+      "chinese": "白箱",
+      "alternatives": [],
+      "category": "map_callout",
+      "priority": 5,
+      "context": "地图：Cache",
+      "avoid": [],
+      "preserve": false,
+      "source_refs": [
+        "maps_callouts.json"
+      ]
+    },
+    {
+      "id": "live-callout-1-11",
+      "english": "Sandbags",
+      "aliases": [
+        "Bags"
+      ],
+      "chinese": "沙袋",
+      "alternatives": [],
+      "category": "map_callout",
+      "priority": 4,
+      "context": "地图：Cache",
+      "avoid": [],
+      "preserve": false,
+      "source_refs": [
+        "maps_callouts.json"
+      ]
+    },
+    {
+      "id": "live-callout-1-12",
+      "english": "Boost",
+      "aliases": [
+        "Boost Box"
+      ],
+      "chinese": "Boost位",
+      "alternatives": [],
+      "category": "map_callout",
+      "priority": 4,
+      "context": "地图：Cache",
+      "avoid": [],
+      "preserve": false,
+      "source_refs": [
+        "maps_callouts.json"
+      ]
+    },
+    {
+      "id": "live-callout-1-13",
+      "english": "Garage",
+      "aliases": [],
+      "chinese": "车库",
+      "alternatives": [],
+      "category": "map_callout",
+      "priority": 5,
+      "context": "地图：Cache",
+      "avoid": [],
+      "preserve": false,
+      "source_refs": [
+        "maps_callouts.json"
+      ]
+    },
+    {
+      "id": "live-callout-1-14",
+      "english": "Vents",
+      "aliases": [
+        "Vent"
+      ],
+      "chinese": "管道",
+      "alternatives": [],
+      "category": "map_callout",
+      "priority": 5,
+      "context": "地图：Cache",
+      "avoid": [],
+      "preserve": false,
+      "source_refs": [
+        "maps_callouts.json"
+      ]
+    },
+    {
+      "id": "live-callout-1-15",
+      "english": "Connector",
+      "aliases": [
+        "Z Connector"
+      ],
+      "chinese": "连接",
+      "alternatives": [],
+      "category": "map_callout",
+      "priority": 4,
+      "context": "地图：Cache",
+      "avoid": [],
+      "preserve": false,
+      "source_refs": [
+        "maps_callouts.json"
+      ]
+    },
+    {
+      "id": "live-callout-1-16",
+      "english": "B Main",
+      "aliases": [],
+      "chinese": "B厅",
+      "alternatives": [],
+      "category": "map_callout",
+      "priority": 5,
+      "context": "地图：Cache",
+      "avoid": [],
+      "preserve": false,
+      "source_refs": [
+        "maps_callouts.json"
+      ]
+    },
+    {
+      "id": "live-callout-1-17",
+      "english": "Checkers",
+      "aliases": [],
+      "chinese": "棋盘房",
+      "alternatives": [],
+      "category": "map_callout",
+      "priority": 5,
+      "context": "地图：Cache",
+      "avoid": [],
+      "preserve": false,
+      "source_refs": [
+        "maps_callouts.json"
+      ]
+    },
+    {
+      "id": "live-callout-1-18",
+      "english": "B Site",
+      "aliases": [],
+      "chinese": "B包点",
+      "alternatives": [],
+      "category": "map_callout",
+      "priority": 5,
+      "context": "地图：Cache",
+      "avoid": [],
+      "preserve": false,
+      "source_refs": [
+        "maps_callouts.json"
+      ]
+    },
+    {
+      "id": "live-callout-1-19",
+      "english": "Heaven",
+      "aliases": [
+        "B Heaven"
+      ],
+      "chinese": "天堂",
+      "alternatives": [],
+      "category": "map_callout",
+      "priority": 5,
+      "context": "地图：Cache",
+      "avoid": [],
+      "preserve": false,
+      "source_refs": [
+        "maps_callouts.json"
+      ]
+    },
+    {
+      "id": "live-callout-1-20",
+      "english": "Hell",
+      "aliases": [
+        "B Hell"
+      ],
+      "chinese": "天堂下",
+      "alternatives": [],
+      "category": "map_callout",
+      "priority": 4,
+      "context": "地图：Cache",
+      "avoid": [],
+      "preserve": false,
+      "source_refs": [
+        "maps_callouts.json"
+      ]
+    },
+    {
+      "id": "live-callout-1-21",
+      "english": "Headshot",
+      "aliases": [],
+      "chinese": "头皮位",
+      "alternatives": [],
+      "category": "map_callout",
+      "priority": 4,
+      "context": "地图：Cache",
+      "avoid": [],
+      "preserve": false,
+      "source_refs": [
+        "maps_callouts.json"
+      ]
+    },
+    {
+      "id": "live-callout-1-22",
+      "english": "Toxic",
+      "aliases": [],
+      "chinese": "Toxic位",
+      "alternatives": [],
+      "category": "map_callout",
+      "priority": 3,
+      "context": "地图：Cache",
+      "avoid": [],
+      "preserve": false,
+      "source_refs": [
+        "maps_callouts.json"
+      ]
+    },
+    {
+      "id": "live-callout-1-23",
+      "english": "Back Site",
+      "aliases": [
+        "Back B"
+      ],
+      "chinese": "包点后",
+      "alternatives": [],
+      "category": "map_callout",
+      "priority": 4,
+      "context": "地图：Cache",
+      "avoid": [],
+      "preserve": false,
+      "source_refs": [
+        "maps_callouts.json"
+      ]
+    },
+    {
+      "id": "live-callout-1-24",
+      "english": "CT Spawn",
+      "aliases": [
+        "CT"
+      ],
+      "chinese": "警家",
+      "alternatives": [],
+      "category": "map_callout",
+      "priority": 5,
+      "context": "地图：Cache",
+      "avoid": [],
+      "preserve": false,
+      "source_refs": [
+        "maps_callouts.json"
+      ]
+    },
+    {
+      "id": "live-callout-2-1",
+      "english": "A Site",
+      "aliases": [],
+      "chinese": "A包点",
+      "alternatives": [],
+      "category": "map_callout",
+      "priority": 4,
+      "context": "地图：Mirage",
+      "avoid": [],
+      "preserve": false,
+      "source_refs": [
+        "maps_callouts.json"
+      ]
+    },
+    {
+      "id": "live-callout-2-2",
+      "english": "A Ramp",
+      "aliases": [
+        "T Ramp"
+      ],
+      "chinese": "A1",
+      "alternatives": [],
+      "category": "map_callout",
+      "priority": 5,
+      "context": "地图：Mirage",
+      "avoid": [],
+      "preserve": false,
+      "source_refs": [
+        "maps_callouts.json"
+      ]
+    },
+    {
+      "id": "live-callout-2-3",
+      "english": "Palace",
+      "aliases": [
+        "A Palace"
+      ],
+      "chinese": "A2",
+      "alternatives": [],
+      "category": "map_callout",
+      "priority": 5,
+      "context": "地图：Mirage",
+      "avoid": [],
+      "preserve": false,
+      "source_refs": [
+        "maps_callouts.json"
+      ]
+    },
+    {
+      "id": "live-callout-2-4",
+      "english": "Tetris",
+      "aliases": [],
+      "chinese": "俄罗斯方块",
+      "alternatives": [],
+      "category": "map_callout",
+      "priority": 4,
+      "context": "地图：Mirage",
+      "avoid": [],
+      "preserve": false,
+      "source_refs": [
+        "maps_callouts.json"
+      ]
+    },
+    {
+      "id": "live-callout-2-5",
+      "english": "Sandwich",
+      "aliases": [],
+      "chinese": "三明治",
+      "alternatives": [],
+      "category": "map_callout",
+      "priority": 4,
+      "context": "地图：Mirage",
+      "avoid": [],
+      "preserve": false,
+      "source_refs": [
+        "maps_callouts.json"
+      ]
+    },
+    {
+      "id": "live-callout-2-6",
+      "english": "Firebox",
+      "aliases": [
+        "Fire Box"
+      ],
+      "chinese": "死点",
+      "alternatives": [],
+      "category": "map_callout",
+      "priority": 3,
+      "context": "地图：Mirage",
+      "avoid": [],
+      "preserve": false,
+      "source_refs": [
+        "maps_callouts.json"
+      ]
+    },
+    {
+      "id": "live-callout-2-7",
+      "english": "Triple",
+      "aliases": [
+        "Triple Box"
+      ],
+      "chinese": "三箱",
+      "alternatives": [],
+      "category": "map_callout",
+      "priority": 4,
+      "context": "地图：Mirage",
+      "avoid": [],
+      "preserve": false,
+      "source_refs": [
+        "maps_callouts.json"
+      ]
+    },
+    {
+      "id": "live-callout-2-8",
+      "english": "Default",
+      "aliases": [
+        "Default Plant"
+      ],
+      "chinese": "默认包位",
+      "alternatives": [],
+      "category": "map_callout",
+      "priority": 4,
+      "context": "地图：Mirage",
+      "avoid": [],
+      "preserve": false,
+      "source_refs": [
+        "maps_callouts.json"
+      ]
+    },
+    {
+      "id": "live-callout-2-9",
+      "english": "Ticket Booth",
+      "aliases": [
+        "Ticket"
+      ],
+      "chinese": "警亭",
+      "alternatives": [],
+      "category": "map_callout",
+      "priority": 4,
+      "context": "地图：Mirage",
+      "avoid": [],
+      "preserve": false,
+      "source_refs": [
+        "maps_callouts.json"
+      ]
+    },
+    {
+      "id": "live-callout-2-10",
+      "english": "CT Spawn",
+      "aliases": [
+        "CT"
+      ],
+      "chinese": "警家",
+      "alternatives": [],
+      "category": "map_callout",
+      "priority": 5,
+      "context": "地图：Mirage",
+      "avoid": [],
+      "preserve": false,
+      "source_refs": [
+        "maps_callouts.json"
+      ]
+    },
+    {
+      "id": "live-callout-2-11",
+      "english": "Stairs",
+      "aliases": [],
+      "chinese": "楼梯",
+      "alternatives": [],
+      "category": "map_callout",
+      "priority": 5,
+      "context": "地图：Mirage",
+      "avoid": [],
+      "preserve": false,
+      "source_refs": [
+        "maps_callouts.json"
+      ]
+    },
+    {
+      "id": "live-callout-2-12",
+      "english": "Jungle",
+      "aliases": [],
+      "chinese": "Jungle",
+      "alternatives": [],
+      "category": "map_callout",
+      "priority": 4,
+      "context": "地图：Mirage；中文社区叫法不完全统一，字幕保留 Jungle 最稳妥。",
+      "avoid": [],
+      "preserve": false,
+      "source_refs": [
+        "maps_callouts.json"
+      ]
+    },
+    {
+      "id": "live-callout-2-13",
+      "english": "Connector",
+      "aliases": [
+        "Con"
+      ],
+      "chinese": "连接",
+      "alternatives": [],
+      "category": "map_callout",
+      "priority": 5,
+      "context": "地图：Mirage",
+      "avoid": [],
+      "preserve": false,
+      "source_refs": [
+        "maps_callouts.json"
+      ]
+    },
+    {
+      "id": "live-callout-2-14",
+      "english": "Window",
+      "aliases": [
+        "Sniper's Nest"
+      ],
+      "chinese": "VIP",
+      "alternatives": [],
+      "category": "map_callout",
+      "priority": 5,
+      "context": "地图：Mirage",
+      "avoid": [],
+      "preserve": false,
+      "source_refs": [
+        "maps_callouts.json"
+      ]
+    },
+    {
+      "id": "live-callout-2-15",
+      "english": "Underpass",
+      "aliases": [
+        "Under"
+      ],
+      "chinese": "下水道",
+      "alternatives": [],
+      "category": "map_callout",
+      "priority": 5,
+      "context": "地图：Mirage",
+      "avoid": [],
+      "preserve": false,
+      "source_refs": [
+        "maps_callouts.json"
+      ]
+    },
+    {
+      "id": "live-callout-2-16",
+      "english": "Top Mid",
+      "aliases": [
+        "Top of Mid"
+      ],
+      "chinese": "匪中",
+      "alternatives": [],
+      "category": "map_callout",
+      "priority": 4,
+      "context": "地图：Mirage",
+      "avoid": [],
+      "preserve": false,
+      "source_refs": [
+        "maps_callouts.json"
+      ]
+    },
+    {
+      "id": "live-callout-2-17",
+      "english": "Mid",
+      "aliases": [
+        "Middle"
+      ],
+      "chinese": "中路",
+      "alternatives": [],
+      "category": "map_callout",
+      "priority": 5,
+      "context": "地图：Mirage",
+      "avoid": [],
+      "preserve": false,
+      "source_refs": [
+        "maps_callouts.json"
+      ]
+    },
+    {
+      "id": "live-callout-2-18",
+      "english": "Catwalk",
+      "aliases": [
+        "B Short",
+        "Cat",
+        "Short"
+      ],
+      "chinese": "B小",
+      "alternatives": [],
+      "category": "map_callout",
+      "priority": 5,
+      "context": "地图：Mirage",
+      "avoid": [],
+      "preserve": false,
+      "source_refs": [
+        "maps_callouts.json"
+      ]
+    },
+    {
+      "id": "live-callout-2-19",
+      "english": "Ladder Room",
+      "aliases": [
+        "Ladder"
+      ],
+      "chinese": "梯子房",
+      "alternatives": [],
+      "category": "map_callout",
+      "priority": 4,
+      "context": "地图：Mirage",
+      "avoid": [],
+      "preserve": false,
+      "source_refs": [
+        "maps_callouts.json"
+      ]
+    },
+    {
+      "id": "live-callout-2-20",
+      "english": "B Apartments",
+      "aliases": [
+        "Apartments",
+        "Apps",
+        "B Apps"
+      ],
+      "chinese": "B二楼",
+      "alternatives": [],
+      "category": "map_callout",
+      "priority": 5,
+      "context": "地图：Mirage",
+      "avoid": [],
+      "preserve": false,
+      "source_refs": [
+        "maps_callouts.json"
+      ]
+    },
+    {
+      "id": "live-callout-2-21",
+      "english": "Balcony",
+      "aliases": [],
+      "chinese": "B二楼阳台",
+      "alternatives": [],
+      "category": "map_callout",
+      "priority": 4,
+      "context": "地图：Mirage",
+      "avoid": [],
+      "preserve": false,
+      "source_refs": [
+        "maps_callouts.json"
+      ]
+    },
+    {
+      "id": "live-callout-2-22",
+      "english": "Van",
+      "aliases": [],
+      "chinese": "白车",
+      "alternatives": [],
+      "category": "map_callout",
+      "priority": 5,
+      "context": "地图：Mirage",
+      "avoid": [],
+      "preserve": false,
+      "source_refs": [
+        "maps_callouts.json"
+      ]
+    },
+    {
+      "id": "live-callout-2-23",
+      "english": "Bench",
+      "aliases": [],
+      "chinese": "沙发",
+      "alternatives": [],
+      "category": "map_callout",
+      "priority": 4,
+      "context": "地图：Mirage",
+      "avoid": [],
+      "preserve": false,
+      "source_refs": [
+        "maps_callouts.json"
+      ]
+    },
+    {
+      "id": "live-callout-2-24",
+      "english": "Market",
+      "aliases": [
+        "Shop"
+      ],
+      "chinese": "超市",
+      "alternatives": [],
+      "category": "map_callout",
+      "priority": 5,
+      "context": "地图：Mirage",
+      "avoid": [],
+      "preserve": false,
+      "source_refs": [
+        "maps_callouts.json"
+      ]
+    },
+    {
+      "id": "live-callout-2-25",
+      "english": "Kitchen",
+      "aliases": [],
+      "chinese": "厨房",
+      "alternatives": [],
+      "category": "map_callout",
+      "priority": 4,
+      "context": "地图：Mirage",
+      "avoid": [],
+      "preserve": false,
+      "source_refs": [
+        "maps_callouts.json"
+      ]
+    },
+    {
+      "id": "live-callout-2-26",
+      "english": "B Site",
+      "aliases": [],
+      "chinese": "B包点",
+      "alternatives": [],
+      "category": "map_callout",
+      "priority": 5,
+      "context": "地图：Mirage",
+      "avoid": [],
+      "preserve": false,
+      "source_refs": [
+        "maps_callouts.json"
+      ]
+    },
+    {
+      "id": "live-callout-3-1",
+      "english": "Banana",
+      "aliases": [],
+      "chinese": "香蕉道",
+      "alternatives": [],
+      "category": "map_callout",
+      "priority": 5,
+      "context": "地图：Inferno",
+      "avoid": [],
+      "preserve": false,
+      "source_refs": [
+        "maps_callouts.json"
+      ]
+    },
+    {
+      "id": "live-callout-3-2",
+      "english": "Logs",
+      "aliases": [],
+      "chinese": "木板",
+      "alternatives": [],
+      "category": "map_callout",
+      "priority": 4,
+      "context": "地图：Inferno",
+      "avoid": [],
+      "preserve": false,
+      "source_refs": [
+        "maps_callouts.json"
+      ]
+    },
+    {
+      "id": "live-callout-3-3",
+      "english": "Sandbags",
+      "aliases": [],
+      "chinese": "沙袋",
+      "alternatives": [],
+      "category": "map_callout",
+      "priority": 5,
+      "context": "地图：Inferno",
+      "avoid": [],
+      "preserve": false,
+      "source_refs": [
+        "maps_callouts.json"
+      ]
+    },
+    {
+      "id": "live-callout-3-4",
+      "english": "Car",
+      "aliases": [],
+      "chinese": "车位",
+      "alternatives": [],
+      "category": "map_callout",
+      "priority": 5,
+      "context": "地图：Inferno",
+      "avoid": [],
+      "preserve": false,
+      "source_refs": [
+        "maps_callouts.json"
+      ]
+    },
+    {
+      "id": "live-callout-3-5",
+      "english": "Half Wall",
+      "aliases": [
+        "Half-wall"
+      ],
+      "chinese": "半墙",
+      "alternatives": [],
+      "category": "map_callout",
+      "priority": 4,
+      "context": "地图：Inferno",
+      "avoid": [],
+      "preserve": false,
+      "source_refs": [
+        "maps_callouts.json"
+      ]
+    },
+    {
+      "id": "live-callout-3-6",
+      "english": "Top Banana",
+      "aliases": [],
+      "chinese": "香蕉道近点",
+      "alternatives": [],
+      "category": "map_callout",
+      "priority": 4,
+      "context": "地图：Inferno",
+      "avoid": [],
+      "preserve": false,
+      "source_refs": [
+        "maps_callouts.json"
+      ]
+    },
+    {
+      "id": "live-callout-3-7",
+      "english": "B Site",
+      "aliases": [],
+      "chinese": "B包点",
+      "alternatives": [],
+      "category": "map_callout",
+      "priority": 5,
+      "context": "地图：Inferno",
+      "avoid": [],
+      "preserve": false,
+      "source_refs": [
+        "maps_callouts.json"
+      ]
+    },
+    {
+      "id": "live-callout-3-8",
+      "english": "Coffins",
+      "aliases": [
+        "Coffin"
+      ],
+      "chinese": "棺材",
+      "alternatives": [],
+      "category": "map_callout",
+      "priority": 5,
+      "context": "地图：Inferno",
+      "avoid": [],
+      "preserve": false,
+      "source_refs": [
+        "maps_callouts.json"
+      ]
+    },
+    {
+      "id": "live-callout-3-9",
+      "english": "New Box",
+      "aliases": [],
+      "chinese": "新箱",
+      "alternatives": [],
+      "category": "map_callout",
+      "priority": 4,
+      "context": "地图：Inferno",
+      "avoid": [],
+      "preserve": false,
+      "source_refs": [
+        "maps_callouts.json"
+      ]
+    },
+    {
+      "id": "live-callout-3-10",
+      "english": "Dark",
+      "aliases": [],
+      "chinese": "死点",
+      "alternatives": [],
+      "category": "map_callout",
+      "priority": 4,
+      "context": "地图：Inferno",
+      "avoid": [],
+      "preserve": false,
+      "source_refs": [
+        "maps_callouts.json"
+      ]
+    },
+    {
+      "id": "live-callout-3-11",
+      "english": "Construction",
+      "aliases": [
+        "Church"
+      ],
+      "chinese": "建筑区",
+      "alternatives": [],
+      "category": "map_callout",
+      "priority": 4,
+      "context": "地图：Inferno",
+      "avoid": [],
+      "preserve": false,
+      "source_refs": [
+        "maps_callouts.json"
+      ]
+    },
+    {
+      "id": "live-callout-3-12",
+      "english": "Ruins",
+      "aliases": [],
+      "chinese": "废墟",
+      "alternatives": [],
+      "category": "map_callout",
+      "priority": 4,
+      "context": "地图：Inferno",
+      "avoid": [],
+      "preserve": false,
+      "source_refs": [
+        "maps_callouts.json"
+      ]
+    },
+    {
+      "id": "live-callout-3-13",
+      "english": "CT Spawn",
+      "aliases": [
+        "CT"
+      ],
+      "chinese": "警家",
+      "alternatives": [],
+      "category": "map_callout",
+      "priority": 5,
+      "context": "地图：Inferno",
+      "avoid": [],
+      "preserve": false,
+      "source_refs": [
+        "maps_callouts.json"
+      ]
+    },
+    {
+      "id": "live-callout-3-14",
+      "english": "Mid",
+      "aliases": [
+        "Middle"
+      ],
+      "chinese": "中路",
+      "alternatives": [],
+      "category": "map_callout",
+      "priority": 5,
+      "context": "地图：Inferno",
+      "avoid": [],
+      "preserve": false,
+      "source_refs": [
+        "maps_callouts.json"
+      ]
+    },
+    {
+      "id": "live-callout-3-15",
+      "english": "Top Mid",
+      "aliases": [],
+      "chinese": "中路近A",
+      "alternatives": [],
+      "category": "map_callout",
+      "priority": 4,
+      "context": "地图：Inferno",
+      "avoid": [],
+      "preserve": false,
+      "source_refs": [
+        "maps_callouts.json"
+      ]
+    },
+    {
+      "id": "live-callout-3-16",
+      "english": "Second Mid",
+      "aliases": [
+        "Alt Mid"
+      ],
+      "chinese": "侧道",
+      "alternatives": [],
+      "category": "map_callout",
+      "priority": 4,
+      "context": "地图：Inferno",
+      "avoid": [],
+      "preserve": false,
+      "source_refs": [
+        "maps_callouts.json"
+      ]
+    },
+    {
+      "id": "live-callout-3-17",
+      "english": "Apartments",
+      "aliases": [
+        "Apps"
+      ],
+      "chinese": "二楼",
+      "alternatives": [],
+      "category": "map_callout",
+      "priority": 5,
+      "context": "地图：Inferno",
+      "avoid": [],
+      "preserve": false,
+      "source_refs": [
+        "maps_callouts.json"
+      ]
+    },
+    {
+      "id": "live-callout-3-18",
+      "english": "Boiler",
+      "aliases": [],
+      "chinese": "锅炉房",
+      "alternatives": [],
+      "category": "map_callout",
+      "priority": 4,
+      "context": "地图：Inferno",
+      "avoid": [],
+      "preserve": false,
+      "source_refs": [
+        "maps_callouts.json"
+      ]
+    },
+    {
+      "id": "live-callout-3-19",
+      "english": "Balcony",
+      "aliases": [],
+      "chinese": "阳台",
+      "alternatives": [],
+      "category": "map_callout",
+      "priority": 4,
+      "context": "地图：Inferno",
+      "avoid": [],
+      "preserve": false,
+      "source_refs": [
+        "maps_callouts.json"
+      ]
+    },
+    {
+      "id": "live-callout-3-20",
+      "english": "Pit",
+      "aliases": [],
+      "chinese": "大坑",
+      "alternatives": [],
+      "category": "map_callout",
+      "priority": 5,
+      "context": "地图：Inferno",
+      "avoid": [],
+      "preserve": false,
+      "source_refs": [
+        "maps_callouts.json"
+      ]
+    },
+    {
+      "id": "live-callout-3-21",
+      "english": "Mini Pit",
+      "aliases": [],
+      "chinese": "小坑",
+      "alternatives": [],
+      "category": "map_callout",
+      "priority": 4,
+      "context": "地图：Inferno",
+      "avoid": [],
+      "preserve": false,
+      "source_refs": [
+        "maps_callouts.json"
+      ]
+    },
+    {
+      "id": "live-callout-3-22",
+      "english": "Graveyard",
+      "aliases": [],
+      "chinese": "墓地",
+      "alternatives": [],
+      "category": "map_callout",
+      "priority": 4,
+      "context": "地图：Inferno",
+      "avoid": [],
+      "preserve": false,
+      "source_refs": [
+        "maps_callouts.json"
+      ]
+    },
+    {
+      "id": "live-callout-3-23",
+      "english": "Arch",
+      "aliases": [],
+      "chinese": "拱门",
+      "alternatives": [],
+      "category": "map_callout",
+      "priority": 5,
+      "context": "地图：Inferno",
+      "avoid": [],
+      "preserve": false,
+      "source_refs": [
+        "maps_callouts.json"
+      ]
+    },
+    {
+      "id": "live-callout-3-24",
+      "english": "Library",
+      "aliases": [],
+      "chinese": "图书馆",
+      "alternatives": [],
+      "category": "map_callout",
+      "priority": 4,
+      "context": "地图：Inferno",
+      "avoid": [],
+      "preserve": false,
+      "source_refs": [
+        "maps_callouts.json"
+      ]
+    },
+    {
+      "id": "live-callout-3-25",
+      "english": "Long",
+      "aliases": [
+        "A Long"
+      ],
+      "chinese": "A大",
+      "alternatives": [],
+      "category": "map_callout",
+      "priority": 5,
+      "context": "地图：Inferno",
+      "avoid": [],
+      "preserve": false,
+      "source_refs": [
+        "maps_callouts.json"
+      ]
+    },
+    {
+      "id": "live-callout-3-26",
+      "english": "Short",
+      "aliases": [
+        "A Short"
+      ],
+      "chinese": "A小",
+      "alternatives": [],
+      "category": "map_callout",
+      "priority": 5,
+      "context": "地图：Inferno",
+      "avoid": [],
+      "preserve": false,
+      "source_refs": [
+        "maps_callouts.json"
+      ]
+    },
+    {
+      "id": "live-callout-3-27",
+      "english": "Moto",
+      "aliases": [],
+      "chinese": "摩托位",
+      "alternatives": [],
+      "category": "map_callout",
+      "priority": 3,
+      "context": "地图：Inferno",
+      "avoid": [],
+      "preserve": false,
+      "source_refs": [
+        "maps_callouts.json"
+      ]
+    },
+    {
+      "id": "live-callout-3-28",
+      "english": "Porch",
+      "aliases": [],
+      "chinese": "门廊",
+      "alternatives": [],
+      "category": "map_callout",
+      "priority": 3,
+      "context": "地图：Inferno",
+      "avoid": [],
+      "preserve": false,
+      "source_refs": [
+        "maps_callouts.json"
+      ]
+    },
+    {
+      "id": "live-callout-3-29",
+      "english": "A Site",
+      "aliases": [],
+      "chinese": "A包点",
+      "alternatives": [],
+      "category": "map_callout",
+      "priority": 5,
+      "context": "地图：Inferno",
+      "avoid": [],
+      "preserve": false,
+      "source_refs": [
+        "maps_callouts.json"
+      ]
+    },
+    {
+      "id": "live-callout-4-1",
+      "english": "T Spawn",
+      "aliases": [],
+      "chinese": "T家",
+      "alternatives": [],
+      "category": "map_callout",
+      "priority": 4,
+      "context": "地图：Dust II",
+      "avoid": [],
+      "preserve": false,
+      "source_refs": [
+        "maps_callouts.json"
+      ]
+    },
+    {
+      "id": "live-callout-4-2",
+      "english": "Long Doors",
+      "aliases": [],
+      "chinese": "A门",
+      "alternatives": [],
+      "category": "map_callout",
+      "priority": 5,
+      "context": "地图：Dust II",
+      "avoid": [],
+      "preserve": false,
+      "source_refs": [
+        "maps_callouts.json"
+      ]
+    },
+    {
+      "id": "live-callout-4-3",
+      "english": "Long",
+      "aliases": [
+        "A Long",
+        "Long A"
+      ],
+      "chinese": "A大",
+      "alternatives": [],
+      "category": "map_callout",
+      "priority": 5,
+      "context": "地图：Dust II",
+      "avoid": [],
+      "preserve": false,
+      "source_refs": [
+        "maps_callouts.json"
+      ]
+    },
+    {
+      "id": "live-callout-4-4",
+      "english": "Pit",
+      "aliases": [
+        "Long Pit"
+      ],
+      "chinese": "大坑",
+      "alternatives": [],
+      "category": "map_callout",
+      "priority": 5,
+      "context": "地图：Dust II",
+      "avoid": [],
+      "preserve": false,
+      "source_refs": [
+        "maps_callouts.json"
+      ]
+    },
+    {
+      "id": "live-callout-4-5",
+      "english": "Pit Platform",
+      "aliases": [
+        "Pit Plat"
+      ],
+      "chinese": "大坑台",
+      "alternatives": [],
+      "category": "map_callout",
+      "priority": 4,
+      "context": "地图：Dust II",
+      "avoid": [],
+      "preserve": false,
+      "source_refs": [
+        "maps_callouts.json"
+      ]
+    },
+    {
+      "id": "live-callout-4-6",
+      "english": "Blue",
+      "aliases": [
+        "Blue Box"
+      ],
+      "chinese": "蓝箱",
+      "alternatives": [],
+      "category": "map_callout",
+      "priority": 4,
+      "context": "地图：Dust II",
+      "avoid": [],
+      "preserve": false,
+      "source_refs": [
+        "maps_callouts.json"
+      ]
+    },
+    {
+      "id": "live-callout-4-7",
+      "english": "Car",
+      "aliases": [
+        "A Car"
+      ],
+      "chinese": "车位",
+      "alternatives": [],
+      "category": "map_callout",
+      "priority": 4,
+      "context": "地图：Dust II",
+      "avoid": [],
+      "preserve": false,
+      "source_refs": [
+        "maps_callouts.json"
+      ]
+    },
+    {
+      "id": "live-callout-4-8",
+      "english": "A Ramp",
+      "aliases": [
+        "Ramp"
+      ],
+      "chinese": "A斜坡",
+      "alternatives": [],
+      "category": "map_callout",
+      "priority": 4,
+      "context": "地图：Dust II",
+      "avoid": [],
+      "preserve": false,
+      "source_refs": [
+        "maps_callouts.json"
+      ]
+    },
+    {
+      "id": "live-callout-4-9",
+      "english": "A Site",
+      "aliases": [],
+      "chinese": "A包点",
+      "alternatives": [],
+      "category": "map_callout",
+      "priority": 5,
+      "context": "地图：Dust II",
+      "avoid": [],
+      "preserve": false,
+      "source_refs": [
+        "maps_callouts.json"
+      ]
+    },
+    {
+      "id": "live-callout-4-10",
+      "english": "Goose",
+      "aliases": [],
+      "chinese": "鹅位",
+      "alternatives": [],
+      "category": "map_callout",
+      "priority": 4,
+      "context": "地图：Dust II",
+      "avoid": [],
+      "preserve": false,
+      "source_refs": [
+        "maps_callouts.json"
+      ]
+    },
+    {
+      "id": "live-callout-4-11",
+      "english": "Short",
+      "aliases": [
+        "A Short",
+        "Cat",
+        "Catwalk"
+      ],
+      "chinese": "A小",
+      "alternatives": [],
+      "category": "map_callout",
+      "priority": 5,
+      "context": "地图：Dust II",
+      "avoid": [],
+      "preserve": false,
+      "source_refs": [
+        "maps_callouts.json"
+      ]
+    },
+    {
+      "id": "live-callout-4-12",
+      "english": "Xbox",
+      "aliases": [
+        "X Box"
+      ],
+      "chinese": "X箱",
+      "alternatives": [],
+      "category": "map_callout",
+      "priority": 5,
+      "context": "地图：Dust II",
+      "avoid": [],
+      "preserve": false,
+      "source_refs": [
+        "maps_callouts.json"
+      ]
+    },
+    {
+      "id": "live-callout-4-13",
+      "english": "Mid",
+      "aliases": [
+        "Middle"
+      ],
+      "chinese": "中路",
+      "alternatives": [],
+      "category": "map_callout",
+      "priority": 5,
+      "context": "地图：Dust II",
+      "avoid": [],
+      "preserve": false,
+      "source_refs": [
+        "maps_callouts.json"
+      ]
+    },
+    {
+      "id": "live-callout-4-14",
+      "english": "Top Mid",
+      "aliases": [
+        "Top of Mid"
+      ],
+      "chinese": "匪中",
+      "alternatives": [],
+      "category": "map_callout",
+      "priority": 4,
+      "context": "地图：Dust II",
+      "avoid": [],
+      "preserve": false,
+      "source_refs": [
+        "maps_callouts.json"
+      ]
+    },
+    {
+      "id": "live-callout-4-15",
+      "english": "Mid Doors",
+      "aliases": [
+        "Double Doors",
+        "Mid Door"
+      ],
+      "chinese": "中门",
+      "alternatives": [],
+      "category": "map_callout",
+      "priority": 5,
+      "context": "地图：Dust II",
+      "avoid": [],
+      "preserve": false,
+      "source_refs": [
+        "maps_callouts.json"
+      ]
+    },
+    {
+      "id": "live-callout-4-16",
+      "english": "CT Mid",
+      "aliases": [],
+      "chinese": "警中",
+      "alternatives": [],
+      "category": "map_callout",
+      "priority": 4,
+      "context": "地图：Dust II",
+      "avoid": [],
+      "preserve": false,
+      "source_refs": [
+        "maps_callouts.json"
+      ]
+    },
+    {
+      "id": "live-callout-4-17",
+      "english": "CT Spawn",
+      "aliases": [
+        "CT"
+      ],
+      "chinese": "警家",
+      "alternatives": [],
+      "category": "map_callout",
+      "priority": 5,
+      "context": "地图：Dust II",
+      "avoid": [],
+      "preserve": false,
+      "source_refs": [
+        "maps_callouts.json"
+      ]
+    },
+    {
+      "id": "live-callout-4-18",
+      "english": "Lower Tunnels",
+      "aliases": [
+        "Lower",
+        "Lower Dark"
+      ],
+      "chinese": "下层隧道",
+      "alternatives": [],
+      "category": "map_callout",
+      "priority": 4,
+      "context": "地图：Dust II",
+      "avoid": [],
+      "preserve": false,
+      "source_refs": [
+        "maps_callouts.json"
+      ]
+    },
+    {
+      "id": "live-callout-4-19",
+      "english": "Upper Tunnels",
+      "aliases": [
+        "B Tunnels",
+        "Upper",
+        "Upper Dark"
+      ],
+      "chinese": "B洞",
+      "alternatives": [],
+      "category": "map_callout",
+      "priority": 5,
+      "context": "地图：Dust II",
+      "avoid": [],
+      "preserve": false,
+      "source_refs": [
+        "maps_callouts.json"
+      ]
+    },
+    {
+      "id": "live-callout-4-20",
+      "english": "B Site",
+      "aliases": [],
+      "chinese": "B包点",
+      "alternatives": [],
+      "category": "map_callout",
+      "priority": 5,
+      "context": "地图：Dust II",
+      "avoid": [],
+      "preserve": false,
+      "source_refs": [
+        "maps_callouts.json"
+      ]
+    },
+    {
+      "id": "live-callout-4-21",
+      "english": "Back Platform",
+      "aliases": [
+        "Back Plat",
+        "Platform"
+      ],
+      "chinese": "B平台",
+      "alternatives": [],
+      "category": "map_callout",
+      "priority": 4,
+      "context": "地图：Dust II",
+      "avoid": [],
+      "preserve": false,
+      "source_refs": [
+        "maps_callouts.json"
+      ]
+    },
+    {
+      "id": "live-callout-4-22",
+      "english": "B Car",
+      "aliases": [
+        "Car B"
+      ],
+      "chinese": "B车位",
+      "alternatives": [],
+      "category": "map_callout",
+      "priority": 4,
+      "context": "地图：Dust II",
+      "avoid": [],
+      "preserve": false,
+      "source_refs": [
+        "maps_callouts.json"
+      ]
+    },
+    {
+      "id": "live-callout-4-23",
+      "english": "B Window",
+      "aliases": [
+        "Window"
+      ],
+      "chinese": "B窗",
+      "alternatives": [],
+      "category": "map_callout",
+      "priority": 5,
+      "context": "地图：Dust II",
+      "avoid": [],
+      "preserve": false,
+      "source_refs": [
+        "maps_callouts.json"
+      ]
+    },
+    {
+      "id": "live-callout-4-24",
+      "english": "B Doors",
+      "aliases": [
+        "Doors"
+      ],
+      "chinese": "B门",
+      "alternatives": [],
+      "category": "map_callout",
+      "priority": 5,
+      "context": "地图：Dust II",
+      "avoid": [],
+      "preserve": false,
+      "source_refs": [
+        "maps_callouts.json"
+      ]
+    },
+    {
+      "id": "live-callout-4-25",
+      "english": "Outside Long",
+      "aliases": [],
+      "chinese": "A门外",
+      "alternatives": [],
+      "category": "map_callout",
+      "priority": 4,
+      "context": "地图：Dust II",
+      "avoid": [],
+      "preserve": false,
+      "source_refs": [
+        "maps_callouts.json"
+      ]
+    },
+    {
+      "id": "live-callout-5-1",
+      "english": "Outside",
+      "aliases": [
+        "Yard"
+      ],
+      "chinese": "外场",
+      "alternatives": [],
+      "category": "map_callout",
+      "priority": 5,
+      "context": "地图：Nuke",
+      "avoid": [],
+      "preserve": false,
+      "source_refs": [
+        "maps_callouts.json"
+      ]
+    },
+    {
+      "id": "live-callout-5-2",
+      "english": "Garage",
+      "aliases": [],
+      "chinese": "车库",
+      "alternatives": [],
+      "category": "map_callout",
+      "priority": 5,
+      "context": "地图：Nuke",
+      "avoid": [],
+      "preserve": false,
+      "source_refs": [
+        "maps_callouts.json"
+      ]
+    },
+    {
+      "id": "live-callout-5-3",
+      "english": "Secret",
+      "aliases": [],
+      "chinese": "地下通道",
+      "alternatives": [],
+      "category": "map_callout",
+      "priority": 5,
+      "context": "地图：Nuke",
+      "avoid": [],
+      "preserve": false,
+      "source_refs": [
+        "maps_callouts.json"
+      ]
+    },
+    {
+      "id": "live-callout-5-4",
+      "english": "Silo",
+      "aliases": [],
+      "chinese": "筒仓",
+      "alternatives": [],
+      "category": "map_callout",
+      "priority": 4,
+      "context": "地图：Nuke",
+      "avoid": [],
+      "preserve": false,
+      "source_refs": [
+        "maps_callouts.json"
+      ]
+    },
+    {
+      "id": "live-callout-5-5",
+      "english": "T Red",
+      "aliases": [
+        "Red",
+        "Red Box"
+      ],
+      "chinese": "红箱",
+      "alternatives": [],
+      "category": "map_callout",
+      "priority": 4,
+      "context": "地图：Nuke",
+      "avoid": [],
+      "preserve": false,
+      "source_refs": [
+        "maps_callouts.json"
+      ]
+    },
+    {
+      "id": "live-callout-5-6",
+      "english": "CT Red",
+      "aliases": [],
+      "chinese": "警家红箱",
+      "alternatives": [],
+      "category": "map_callout",
+      "priority": 3,
+      "context": "地图：Nuke",
+      "avoid": [],
+      "preserve": false,
+      "source_refs": [
+        "maps_callouts.json"
+      ]
+    },
+    {
+      "id": "live-callout-5-7",
+      "english": "Lobby",
+      "aliases": [],
+      "chinese": "大厅",
+      "alternatives": [],
+      "category": "map_callout",
+      "priority": 5,
+      "context": "地图：Nuke",
+      "avoid": [],
+      "preserve": false,
+      "source_refs": [
+        "maps_callouts.json"
+      ]
+    },
+    {
+      "id": "live-callout-5-8",
+      "english": "Hut",
+      "aliases": [],
+      "chinese": "黄房",
+      "alternatives": [],
+      "category": "map_callout",
+      "priority": 5,
+      "context": "地图：Nuke",
+      "avoid": [],
+      "preserve": false,
+      "source_refs": [
+        "maps_callouts.json"
+      ]
+    },
+    {
+      "id": "live-callout-5-9",
+      "english": "Squeaky",
+      "aliases": [
+        "Squeaky Door"
+      ],
+      "chinese": "铁门",
+      "alternatives": [],
+      "category": "map_callout",
+      "priority": 5,
+      "context": "地图：Nuke",
+      "avoid": [],
+      "preserve": false,
+      "source_refs": [
+        "maps_callouts.json"
+      ]
+    },
+    {
+      "id": "live-callout-5-10",
+      "english": "Mini",
+      "aliases": [],
+      "chinese": "小门",
+      "alternatives": [],
+      "category": "map_callout",
+      "priority": 5,
+      "context": "地图：Nuke",
+      "avoid": [],
+      "preserve": false,
+      "source_refs": [
+        "maps_callouts.json"
+      ]
+    },
+    {
+      "id": "live-callout-5-11",
+      "english": "A Site",
+      "aliases": [
+        "Upper"
+      ],
+      "chinese": "A包点",
+      "alternatives": [],
+      "category": "map_callout",
+      "priority": 5,
+      "context": "地图：Nuke",
+      "avoid": [],
+      "preserve": false,
+      "source_refs": [
+        "maps_callouts.json"
+      ]
+    },
+    {
+      "id": "live-callout-5-12",
+      "english": "Heaven",
+      "aliases": [],
+      "chinese": "天堂",
+      "alternatives": [],
+      "category": "map_callout",
+      "priority": 5,
+      "context": "地图：Nuke",
+      "avoid": [],
+      "preserve": false,
+      "source_refs": [
+        "maps_callouts.json"
+      ]
+    },
+    {
+      "id": "live-callout-5-13",
+      "english": "Hell",
+      "aliases": [],
+      "chinese": "地狱",
+      "alternatives": [],
+      "category": "map_callout",
+      "priority": 4,
+      "context": "地图：Nuke",
+      "avoid": [],
+      "preserve": false,
+      "source_refs": [
+        "maps_callouts.json"
+      ]
+    },
+    {
+      "id": "live-callout-5-14",
+      "english": "Rafters",
+      "aliases": [],
+      "chinese": "二楼梁上",
+      "alternatives": [],
+      "category": "map_callout",
+      "priority": 4,
+      "context": "地图：Nuke",
+      "avoid": [],
+      "preserve": false,
+      "source_refs": [
+        "maps_callouts.json"
+      ]
+    },
+    {
+      "id": "live-callout-5-15",
+      "english": "Vent",
+      "aliases": [
+        "Vents"
+      ],
+      "chinese": "管道",
+      "alternatives": [],
+      "category": "map_callout",
+      "priority": 5,
+      "context": "地图：Nuke",
+      "avoid": [],
+      "preserve": false,
+      "source_refs": [
+        "maps_callouts.json"
+      ]
+    },
+    {
+      "id": "live-callout-5-16",
+      "english": "Ramp",
+      "aliases": [
+        "Ramp Room"
+      ],
+      "chinese": "斜坡",
+      "alternatives": [],
+      "category": "map_callout",
+      "priority": 5,
+      "context": "地图：Nuke",
+      "avoid": [],
+      "preserve": false,
+      "source_refs": [
+        "maps_callouts.json"
+      ]
+    },
+    {
+      "id": "live-callout-5-17",
+      "english": "Headshot",
+      "aliases": [],
+      "chinese": "头皮位",
+      "alternatives": [],
+      "category": "map_callout",
+      "priority": 3,
+      "context": "地图：Nuke",
+      "avoid": [],
+      "preserve": false,
+      "source_refs": [
+        "maps_callouts.json"
+      ]
+    },
+    {
+      "id": "live-callout-5-18",
+      "english": "Trophy",
+      "aliases": [],
+      "chinese": "奖杯房",
+      "alternatives": [],
+      "category": "map_callout",
+      "priority": 4,
+      "context": "地图：Nuke",
+      "avoid": [],
+      "preserve": false,
+      "source_refs": [
+        "maps_callouts.json"
+      ]
+    },
+    {
+      "id": "live-callout-5-19",
+      "english": "Radio",
+      "aliases": [],
+      "chinese": "广播室",
+      "alternatives": [],
+      "category": "map_callout",
+      "priority": 4,
+      "context": "地图：Nuke",
+      "avoid": [],
+      "preserve": false,
+      "source_refs": [
+        "maps_callouts.json"
+      ]
+    },
+    {
+      "id": "live-callout-5-20",
+      "english": "Control",
+      "aliases": [],
+      "chinese": "控制室",
+      "alternatives": [],
+      "category": "map_callout",
+      "priority": 4,
+      "context": "地图：Nuke",
+      "avoid": [],
+      "preserve": false,
+      "source_refs": [
+        "maps_callouts.json"
+      ]
+    },
+    {
+      "id": "live-callout-5-21",
+      "english": "B Site",
+      "aliases": [
+        "Lower"
+      ],
+      "chinese": "B包点",
+      "alternatives": [],
+      "category": "map_callout",
+      "priority": 5,
+      "context": "地图：Nuke",
+      "avoid": [],
+      "preserve": false,
+      "source_refs": [
+        "maps_callouts.json"
+      ]
+    },
+    {
+      "id": "live-callout-5-22",
+      "english": "Decon",
+      "aliases": [
+        "Decontamination"
+      ],
+      "chinese": "净化室",
+      "alternatives": [],
+      "category": "map_callout",
+      "priority": 5,
+      "context": "地图：Nuke",
+      "avoid": [],
+      "preserve": false,
+      "source_refs": [
+        "maps_callouts.json"
+      ]
+    },
+    {
+      "id": "live-callout-5-23",
+      "english": "Toxic",
+      "aliases": [],
+      "chinese": "毒气房",
+      "alternatives": [],
+      "category": "map_callout",
+      "priority": 4,
+      "context": "地图：Nuke",
+      "avoid": [],
+      "preserve": false,
+      "source_refs": [
+        "maps_callouts.json"
+      ]
+    },
+    {
+      "id": "live-callout-5-24",
+      "english": "Double Doors",
+      "aliases": [
+        "Double"
+      ],
+      "chinese": "双门",
+      "alternatives": [],
+      "category": "map_callout",
+      "priority": 4,
+      "context": "地图：Nuke",
+      "avoid": [],
+      "preserve": false,
+      "source_refs": [
+        "maps_callouts.json"
+      ]
+    },
+    {
+      "id": "live-callout-5-25",
+      "english": "Lockers",
+      "aliases": [
+        "Locker Room"
+      ],
+      "chinese": "更衣室",
+      "alternatives": [],
+      "category": "map_callout",
+      "priority": 4,
+      "context": "地图：Nuke",
+      "avoid": [],
+      "preserve": false,
+      "source_refs": [
+        "maps_callouts.json"
+      ]
+    },
+    {
+      "id": "live-callout-5-26",
+      "english": "T Roof",
+      "aliases": [
+        "Roof"
+      ],
+      "chinese": "T家屋顶",
+      "alternatives": [],
+      "category": "map_callout",
+      "priority": 3,
+      "context": "地图：Nuke",
+      "avoid": [],
+      "preserve": false,
+      "source_refs": [
+        "maps_callouts.json"
+      ]
+    },
+    {
+      "id": "live-callout-5-27",
+      "english": "CT Spawn",
+      "aliases": [
+        "CT"
+      ],
+      "chinese": "警家",
+      "alternatives": [],
+      "category": "map_callout",
+      "priority": 5,
+      "context": "地图：Nuke",
+      "avoid": [],
+      "preserve": false,
+      "source_refs": [
+        "maps_callouts.json"
+      ]
+    },
+    {
+      "id": "live-callout-5-28",
+      "english": "Catwalk",
+      "aliases": [],
+      "chinese": "外场高架",
+      "alternatives": [],
+      "category": "map_callout",
+      "priority": 3,
+      "context": "地图：Nuke",
+      "avoid": [],
+      "preserve": false,
+      "source_refs": [
+        "maps_callouts.json"
+      ]
+    },
+    {
+      "id": "live-callout-6-1",
+      "english": "T Spawn",
+      "aliases": [],
+      "chinese": "T家",
+      "alternatives": [],
+      "category": "map_callout",
+      "priority": 4,
+      "context": "地图：Ancient",
+      "avoid": [],
+      "preserve": false,
+      "source_refs": [
+        "maps_callouts.json"
+      ]
+    },
+    {
+      "id": "live-callout-6-2",
+      "english": "A Main",
+      "aliases": [
+        "Main Hall"
+      ],
+      "chinese": "A大",
+      "alternatives": [],
+      "category": "map_callout",
+      "priority": 5,
+      "context": "地图：Ancient",
+      "avoid": [],
+      "preserve": false,
+      "source_refs": [
+        "maps_callouts.json"
+      ]
+    },
+    {
+      "id": "live-callout-6-3",
+      "english": "A Site",
+      "aliases": [],
+      "chinese": "A包点",
+      "alternatives": [],
+      "category": "map_callout",
+      "priority": 5,
+      "context": "地图：Ancient",
+      "avoid": [],
+      "preserve": false,
+      "source_refs": [
+        "maps_callouts.json"
+      ]
+    },
+    {
+      "id": "live-callout-6-4",
+      "english": "Default",
+      "aliases": [],
+      "chinese": "默认包位",
+      "alternatives": [],
+      "category": "map_callout",
+      "priority": 4,
+      "context": "地图：Ancient",
+      "avoid": [],
+      "preserve": false,
+      "source_refs": [
+        "maps_callouts.json"
+      ]
+    },
+    {
+      "id": "live-callout-6-5",
+      "english": "Donut",
+      "aliases": [],
+      "chinese": "甜甜圈",
+      "alternatives": [],
+      "category": "map_callout",
+      "priority": 5,
+      "context": "地图：Ancient",
+      "avoid": [],
+      "preserve": false,
+      "source_refs": [
+        "maps_callouts.json"
+      ]
+    },
+    {
+      "id": "live-callout-6-6",
+      "english": "Temple",
+      "aliases": [],
+      "chinese": "神庙",
+      "alternatives": [],
+      "category": "map_callout",
+      "priority": 5,
+      "context": "地图：Ancient",
+      "avoid": [],
+      "preserve": false,
+      "source_refs": [
+        "maps_callouts.json"
+      ]
+    },
+    {
+      "id": "live-callout-6-7",
+      "english": "CT Spawn",
+      "aliases": [
+        "CT"
+      ],
+      "chinese": "警家",
+      "alternatives": [],
+      "category": "map_callout",
+      "priority": 5,
+      "context": "地图：Ancient",
+      "avoid": [],
+      "preserve": false,
+      "source_refs": [
+        "maps_callouts.json"
+      ]
+    },
+    {
+      "id": "live-callout-6-8",
+      "english": "Mid",
+      "aliases": [
+        "Middle"
+      ],
+      "chinese": "中路",
+      "alternatives": [],
+      "category": "map_callout",
+      "priority": 5,
+      "context": "地图：Ancient",
+      "avoid": [],
+      "preserve": false,
+      "source_refs": [
+        "maps_callouts.json"
+      ]
+    },
+    {
+      "id": "live-callout-6-9",
+      "english": "Top Mid",
+      "aliases": [
+        "Top of Mid"
+      ],
+      "chinese": "匪中",
+      "alternatives": [],
+      "category": "map_callout",
+      "priority": 4,
+      "context": "地图：Ancient",
+      "avoid": [],
+      "preserve": false,
+      "source_refs": [
+        "maps_callouts.json"
+      ]
+    },
+    {
+      "id": "live-callout-6-10",
+      "english": "Red Room",
+      "aliases": [
+        "Red"
+      ],
+      "chinese": "红房",
+      "alternatives": [],
+      "category": "map_callout",
+      "priority": 4,
+      "context": "地图：Ancient",
+      "avoid": [],
+      "preserve": false,
+      "source_refs": [
+        "maps_callouts.json"
+      ]
+    },
+    {
+      "id": "live-callout-6-11",
+      "english": "Elbow",
+      "aliases": [],
+      "chinese": "拐角",
+      "alternatives": [],
+      "category": "map_callout",
+      "priority": 4,
+      "context": "地图：Ancient",
+      "avoid": [],
+      "preserve": false,
+      "source_refs": [
+        "maps_callouts.json"
+      ]
+    },
+    {
+      "id": "live-callout-6-12",
+      "english": "Cubby",
+      "aliases": [],
+      "chinese": "凹槽位",
+      "alternatives": [],
+      "category": "map_callout",
+      "priority": 3,
+      "context": "地图：Ancient",
+      "avoid": [],
+      "preserve": false,
+      "source_refs": [
+        "maps_callouts.json"
+      ]
+    },
+    {
+      "id": "live-callout-6-13",
+      "english": "House",
+      "aliases": [],
+      "chinese": "小房",
+      "alternatives": [],
+      "category": "map_callout",
+      "priority": 5,
+      "context": "地图：Ancient",
+      "avoid": [],
+      "preserve": false,
+      "source_refs": [
+        "maps_callouts.json"
+      ]
+    },
+    {
+      "id": "live-callout-6-14",
+      "english": "B Ramp",
+      "aliases": [
+        "Ramp"
+      ],
+      "chinese": "B坡",
+      "alternatives": [],
+      "category": "map_callout",
+      "priority": 5,
+      "context": "地图：Ancient",
+      "avoid": [],
+      "preserve": false,
+      "source_refs": [
+        "maps_callouts.json"
+      ]
+    },
+    {
+      "id": "live-callout-6-15",
+      "english": "Cave",
+      "aliases": [],
+      "chinese": "山洞",
+      "alternatives": [],
+      "category": "map_callout",
+      "priority": 5,
+      "context": "地图：Ancient",
+      "avoid": [],
+      "preserve": false,
+      "source_refs": [
+        "maps_callouts.json"
+      ]
+    },
+    {
+      "id": "live-callout-6-16",
+      "english": "B Site",
+      "aliases": [],
+      "chinese": "B包点",
+      "alternatives": [],
+      "category": "map_callout",
+      "priority": 5,
+      "context": "地图：Ancient",
+      "avoid": [],
+      "preserve": false,
+      "source_refs": [
+        "maps_callouts.json"
+      ]
+    },
+    {
+      "id": "live-callout-6-17",
+      "english": "Lane",
+      "aliases": [],
+      "chinese": "B通",
+      "alternatives": [],
+      "category": "map_callout",
+      "priority": 5,
+      "context": "地图：Ancient",
+      "avoid": [],
+      "preserve": false,
+      "source_refs": [
+        "maps_callouts.json"
+      ]
+    },
+    {
+      "id": "live-callout-6-18",
+      "english": "Pillar",
+      "aliases": [],
+      "chinese": "柱子",
+      "alternatives": [],
+      "category": "map_callout",
+      "priority": 5,
+      "context": "地图：Ancient",
+      "avoid": [],
+      "preserve": false,
+      "source_refs": [
+        "maps_callouts.json"
+      ]
+    },
+    {
+      "id": "live-callout-6-19",
+      "english": "Back Site",
+      "aliases": [
+        "Back B"
+      ],
+      "chinese": "包点后",
+      "alternatives": [],
+      "category": "map_callout",
+      "priority": 4,
+      "context": "地图：Ancient",
+      "avoid": [],
+      "preserve": false,
+      "source_refs": [
+        "maps_callouts.json"
+      ]
+    },
+    {
+      "id": "live-callout-6-20",
+      "english": "Dark",
+      "aliases": [],
+      "chinese": "黑屋",
+      "alternatives": [],
+      "category": "map_callout",
+      "priority": 4,
+      "context": "地图：Ancient",
+      "avoid": [],
+      "preserve": false,
+      "source_refs": [
+        "maps_callouts.json"
+      ]
+    },
+    {
+      "id": "live-callout-6-21",
+      "english": "Ruins",
+      "aliases": [],
+      "chinese": "废墟",
+      "alternatives": [],
+      "category": "map_callout",
+      "priority": 4,
+      "context": "地图：Ancient",
+      "avoid": [],
+      "preserve": false,
+      "source_refs": [
+        "maps_callouts.json"
+      ]
+    },
+    {
+      "id": "live-callout-6-22",
+      "english": "Water",
+      "aliases": [],
+      "chinese": "水道",
+      "alternatives": [],
+      "category": "map_callout",
+      "priority": 4,
+      "context": "地图：Ancient",
+      "avoid": [],
+      "preserve": false,
+      "source_refs": [
+        "maps_callouts.json"
+      ]
+    },
+    {
+      "id": "live-callout-6-23",
+      "english": "Tunnels",
+      "aliases": [
+        "Tunnel"
+      ],
+      "chinese": "隧道",
+      "alternatives": [],
+      "category": "map_callout",
+      "priority": 4,
+      "context": "地图：Ancient",
+      "avoid": [],
+      "preserve": false,
+      "source_refs": [
+        "maps_callouts.json"
+      ]
+    },
+    {
+      "id": "live-callout-6-24",
+      "english": "Alley",
+      "aliases": [],
+      "chinese": "小巷",
+      "alternatives": [],
+      "category": "map_callout",
+      "priority": 4,
+      "context": "地图：Ancient",
+      "avoid": [],
+      "preserve": false,
+      "source_refs": [
+        "maps_callouts.json"
+      ]
+    },
+    {
+      "id": "live-callout-6-25",
+      "english": "Sniper's Nest",
+      "aliases": [
+        "Sniper",
+        "Snipers Nest"
+      ],
+      "chinese": "狙位",
+      "alternatives": [],
+      "category": "map_callout",
+      "priority": 3,
+      "context": "地图：Ancient",
+      "avoid": [],
+      "preserve": false,
+      "source_refs": [
+        "maps_callouts.json"
+      ]
+    },
+    {
+      "id": "live-callout-7-1",
+      "english": "T Spawn",
+      "aliases": [],
+      "chinese": "T家",
+      "alternatives": [],
+      "category": "map_callout",
+      "priority": 4,
+      "context": "地图：Anubis",
+      "avoid": [],
+      "preserve": false,
+      "source_refs": [
+        "maps_callouts.json"
+      ]
+    },
+    {
+      "id": "live-callout-7-2",
+      "english": "A Main",
+      "aliases": [
+        "Main"
+      ],
+      "chinese": "A大",
+      "alternatives": [],
+      "category": "map_callout",
+      "priority": 5,
+      "context": "地图：Anubis",
+      "avoid": [],
+      "preserve": false,
+      "source_refs": [
+        "maps_callouts.json"
+      ]
+    },
+    {
+      "id": "live-callout-7-3",
+      "english": "A Site",
+      "aliases": [],
+      "chinese": "A包点",
+      "alternatives": [],
+      "category": "map_callout",
+      "priority": 5,
+      "context": "地图：Anubis",
+      "avoid": [],
+      "preserve": false,
+      "source_refs": [
+        "maps_callouts.json"
+      ]
+    },
+    {
+      "id": "live-callout-7-4",
+      "english": "A Connector",
+      "aliases": [
+        "Connector"
+      ],
+      "chinese": "A连接",
+      "alternatives": [],
+      "category": "map_callout",
+      "priority": 5,
+      "context": "地图：Anubis",
+      "avoid": [],
+      "preserve": false,
+      "source_refs": [
+        "maps_callouts.json"
+      ]
+    },
+    {
+      "id": "live-callout-7-5",
+      "english": "Heaven",
+      "aliases": [
+        "A Heaven",
+        "Heaven (Ruins)"
+      ],
+      "chinese": "天堂",
+      "alternatives": [],
+      "category": "map_callout",
+      "priority": 5,
+      "context": "地图：Anubis",
+      "avoid": [],
+      "preserve": false,
+      "source_refs": [
+        "maps_callouts.json"
+      ]
+    },
+    {
+      "id": "live-callout-7-6",
+      "english": "Fountain",
+      "aliases": [],
+      "chinese": "喷泉",
+      "alternatives": [],
+      "category": "map_callout",
+      "priority": 4,
+      "context": "地图：Anubis",
+      "avoid": [],
+      "preserve": false,
+      "source_refs": [
+        "maps_callouts.json"
+      ]
+    },
+    {
+      "id": "live-callout-7-7",
+      "english": "Plateau",
+      "aliases": [
+        "Plat"
+      ],
+      "chinese": "平台",
+      "alternatives": [],
+      "category": "map_callout",
+      "priority": 4,
+      "context": "地图：Anubis",
+      "avoid": [],
+      "preserve": false,
+      "source_refs": [
+        "maps_callouts.json"
+      ]
+    },
+    {
+      "id": "live-callout-7-8",
+      "english": "Tunnel",
+      "aliases": [],
+      "chinese": "隧道",
+      "alternatives": [],
+      "category": "map_callout",
+      "priority": 4,
+      "context": "地图：Anubis",
+      "avoid": [],
+      "preserve": false,
+      "source_refs": [
+        "maps_callouts.json"
+      ]
+    },
+    {
+      "id": "live-callout-7-9",
+      "english": "Water",
+      "aliases": [],
+      "chinese": "水道",
+      "alternatives": [],
+      "category": "map_callout",
+      "priority": 5,
+      "context": "地图：Anubis",
+      "avoid": [],
+      "preserve": false,
+      "source_refs": [
+        "maps_callouts.json"
+      ]
+    },
+    {
+      "id": "live-callout-7-10",
+      "english": "Canal",
+      "aliases": [],
+      "chinese": "运河",
+      "alternatives": [],
+      "category": "map_callout",
+      "priority": 5,
+      "context": "地图：Anubis",
+      "avoid": [],
+      "preserve": false,
+      "source_refs": [
+        "maps_callouts.json"
+      ]
+    },
+    {
+      "id": "live-callout-7-11",
+      "english": "Bridge",
+      "aliases": [],
+      "chinese": "桥",
+      "alternatives": [],
+      "category": "map_callout",
+      "priority": 5,
+      "context": "地图：Anubis",
+      "avoid": [],
+      "preserve": false,
+      "source_refs": [
+        "maps_callouts.json"
+      ]
+    },
+    {
+      "id": "live-callout-7-12",
+      "english": "Mid Doors",
+      "aliases": [
+        "Double Doors"
+      ],
+      "chinese": "中门",
+      "alternatives": [],
+      "category": "map_callout",
+      "priority": 5,
+      "context": "地图：Anubis",
+      "avoid": [],
+      "preserve": false,
+      "source_refs": [
+        "maps_callouts.json"
+      ]
+    },
+    {
+      "id": "live-callout-7-13",
+      "english": "Middle",
+      "aliases": [
+        "Mid"
+      ],
+      "chinese": "中路",
+      "alternatives": [],
+      "category": "map_callout",
+      "priority": 5,
+      "context": "地图：Anubis",
+      "avoid": [],
+      "preserve": false,
+      "source_refs": [
+        "maps_callouts.json"
+      ]
+    },
+    {
+      "id": "live-callout-7-14",
+      "english": "Palace",
+      "aliases": [
+        "Palace Interior"
+      ],
+      "chinese": "宫殿",
+      "alternatives": [],
+      "category": "map_callout",
+      "priority": 5,
+      "context": "地图：Anubis",
+      "avoid": [],
+      "preserve": false,
+      "source_refs": [
+        "maps_callouts.json"
+      ]
+    },
+    {
+      "id": "live-callout-7-15",
+      "english": "Street",
+      "aliases": [],
+      "chinese": "街道",
+      "alternatives": [],
+      "category": "map_callout",
+      "priority": 4,
+      "context": "地图：Anubis",
+      "avoid": [],
+      "preserve": false,
+      "source_refs": [
+        "maps_callouts.json"
+      ]
+    },
+    {
+      "id": "live-callout-7-16",
+      "english": "Sniper",
+      "aliases": [
+        "Snipers Nest"
+      ],
+      "chinese": "狙位",
+      "alternatives": [],
+      "category": "map_callout",
+      "priority": 4,
+      "context": "地图：Anubis",
+      "avoid": [],
+      "preserve": false,
+      "source_refs": [
+        "maps_callouts.json"
+      ]
+    },
+    {
+      "id": "live-callout-7-17",
+      "english": "B Main",
+      "aliases": [
+        "B Long",
+        "Gate"
+      ],
+      "chinese": "B大",
+      "alternatives": [],
+      "category": "map_callout",
+      "priority": 5,
+      "context": "地图：Anubis",
+      "avoid": [],
+      "preserve": false,
+      "source_refs": [
+        "maps_callouts.json"
+      ]
+    },
+    {
+      "id": "live-callout-7-18",
+      "english": "B Site",
+      "aliases": [],
+      "chinese": "B包点",
+      "alternatives": [],
+      "category": "map_callout",
+      "priority": 5,
+      "context": "地图：Anubis",
+      "avoid": [],
+      "preserve": false,
+      "source_refs": [
+        "maps_callouts.json"
+      ]
+    },
+    {
+      "id": "live-callout-7-19",
+      "english": "Back Site",
+      "aliases": [
+        "Back B",
+        "Back of B"
+      ],
+      "chinese": "包点后",
+      "alternatives": [],
+      "category": "map_callout",
+      "priority": 4,
+      "context": "地图：Anubis",
+      "avoid": [],
+      "preserve": false,
+      "source_refs": [
+        "maps_callouts.json"
+      ]
+    },
+    {
+      "id": "live-callout-7-20",
+      "english": "Pillar",
+      "aliases": [
+        "B Pillar"
+      ],
+      "chinese": "柱子",
+      "alternatives": [],
+      "category": "map_callout",
+      "priority": 5,
+      "context": "地图：Anubis",
+      "avoid": [],
+      "preserve": false,
+      "source_refs": [
+        "maps_callouts.json"
+      ]
+    },
+    {
+      "id": "live-callout-7-21",
+      "english": "Ninja",
+      "aliases": [],
+      "chinese": "老六位",
+      "alternatives": [],
+      "category": "map_callout",
+      "priority": 4,
+      "context": "地图：Anubis",
+      "avoid": [],
+      "preserve": false,
+      "source_refs": [
+        "maps_callouts.json"
+      ]
+    },
+    {
+      "id": "live-callout-7-22",
+      "english": "Bricks",
+      "aliases": [],
+      "chinese": "砖堆",
+      "alternatives": [],
+      "category": "map_callout",
+      "priority": 4,
+      "context": "地图：Anubis",
+      "avoid": [],
+      "preserve": false,
+      "source_refs": [
+        "maps_callouts.json"
+      ]
+    },
+    {
+      "id": "live-callout-7-23",
+      "english": "Cave",
+      "aliases": [],
+      "chinese": "山洞",
+      "alternatives": [],
+      "category": "map_callout",
+      "priority": 4,
+      "context": "地图：Anubis",
+      "avoid": [],
+      "preserve": false,
+      "source_refs": [
+        "maps_callouts.json"
+      ]
+    },
+    {
+      "id": "live-callout-7-24",
+      "english": "Ruins",
+      "aliases": [],
+      "chinese": "废墟",
+      "alternatives": [],
+      "category": "map_callout",
+      "priority": 4,
+      "context": "地图：Anubis",
+      "avoid": [],
+      "preserve": false,
+      "source_refs": [
+        "maps_callouts.json"
+      ]
+    },
+    {
+      "id": "live-callout-7-25",
+      "english": "Drop",
+      "aliases": [],
+      "chinese": "跳台下落位",
+      "alternatives": [],
+      "category": "map_callout",
+      "priority": 4,
+      "context": "地图：Anubis",
+      "avoid": [],
+      "preserve": false,
+      "source_refs": [
+        "maps_callouts.json"
+      ]
+    },
+    {
+      "id": "live-callout-7-26",
+      "english": "Boat",
+      "aliases": [],
+      "chinese": "船位",
+      "alternatives": [],
+      "category": "map_callout",
+      "priority": 4,
+      "context": "地图：Anubis",
+      "avoid": [],
+      "preserve": false,
+      "source_refs": [
+        "maps_callouts.json"
+      ]
+    },
+    {
+      "id": "live-callout-7-27",
+      "english": "Alley",
+      "aliases": [],
+      "chinese": "小巷",
+      "alternatives": [],
+      "category": "map_callout",
+      "priority": 4,
+      "context": "地图：Anubis",
+      "avoid": [],
+      "preserve": false,
+      "source_refs": [
+        "maps_callouts.json"
+      ]
+    },
+    {
+      "id": "live-callout-7-28",
+      "english": "E Box",
+      "aliases": [
+        "E-box"
+      ],
+      "chinese": "电箱",
+      "alternatives": [],
+      "category": "map_callout",
+      "priority": 4,
+      "context": "地图：Anubis",
+      "avoid": [],
+      "preserve": false,
+      "source_refs": [
+        "maps_callouts.json"
+      ]
+    }
+  ]
+}

@@ -1,0 +1,16 @@
+{
+  "whisper.cpp": "52a939a2a762224e255d366c1182b2af4dd1a032",
+  "llama.cpp": "5202104b59ada9005db079eea43882a2b7bf5802",
+  "SPIRV-Headers": {
+    "owner": "KhronosGroup",
+    "commit": "01e0577914a75a2569c846778c2f93aa8e6feddd"
+  },
+  "Vulkan-Headers": {
+    "owner": "KhronosGroup",
+    "commit": "19725e4d48082fe78e26622b15d3080ccd54112b"
+  },
+  "MNN": {
+    "owner": "alibaba",
+    "commit": "d407447ed56c4121a11ccbd266dc184ca1ead0c2"
+  }
+}

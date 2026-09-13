@@ -1,0 +1,14 @@
+#!/usr/bin/env bash
+set -euo pipefail
+cd "$(dirname "$0")/.."
+result_dir="evaluation/results/iteration-$(date +%Y%m%d-%H%M%S)"
+mkdir -p "$result_dir"
+for window in 3000 5000 8000; do
+  scripts/run-gemma-eval /home/hyh/Downloads/clip.wav --threads 2 \
+    --window-ms "$window" --overlap-ms 500 \
+    --output "$result_dir/window-$window.jsonl" > "$result_dir/window-$window.log" 2>&1
+done
+# Ten minutes of source audio, one engine, fresh conversation per window.
+scripts/run-gemma-eval /home/hyh/Downloads/clip.wav --threads 2 --repeat 5 \
+  --output "$result_dir/endurance.jsonl" > "$result_dir/endurance.log" 2>&1
+echo "$result_dir"

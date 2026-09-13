@@ -1,0 +1,17 @@
+{
+  "schema_version": 1,
+  "packs": [
+    {
+      "id": "cs2-zh-broadcast-base",
+      "domain": "counter-strike-2",
+      "asset": "assets/corpora/cs2_zh_broadcast_base_v0.1.json",
+      "enabled": true
+    },
+    {
+      "id": "cs2-zh-broadcast-live-entities",
+      "domain": "counter-strike-2",
+      "asset": "assets/corpora/cs2_zh_broadcast_live_entities_v0.2.json",
+      "enabled": true
+    }
+  ]
+}

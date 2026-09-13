@@ -1,0 +1,10 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+cd "$(dirname "$0")/.."
+tools_root="${OPENCAPTION_LITERT_DIR:-/home/hyh/Tools/litert}"
+python3 -m venv "$tools_root/litert-venv"
+"$tools_root/litert-venv/bin/python" -m pip install --upgrade pip
+"$tools_root/litert-venv/bin/python" -m pip install -r evaluation/requirements-gemma.txt
+
+echo "Gemma LiteRT-LM environment is ready: $tools_root/litert-venv/bin/python"

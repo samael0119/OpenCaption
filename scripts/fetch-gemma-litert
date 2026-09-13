@@ -1,0 +1,17 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+tools_root="${OPENCAPTION_LITERT_DIR:-/home/hyh/Tools/litert}"
+model_dir="$tools_root/models"
+model_path="$model_dir/gemma-4-E2B-it.litertlm"
+expected_sha="181938105e0eefd105961417e8da75903eacda102c4fce9ce90f50b97139a63c"
+url="https://hf-mirror.com/litert-community/gemma-4-E2B-it-litert-lm/resolve/b3ca0d2f076785a8f4b2219ddbd2bdb99954eae1/gemma-4-E2B-it.litertlm"
+
+mkdir -p "$model_dir"
+curl --fail --location --continue-at - --output "$model_path" "$url"
+actual_sha="$(sha256sum "$model_path" | cut -d ' ' -f 1)"
+if [[ "$actual_sha" != "$expected_sha" ]]; then
+  echo "Model checksum mismatch: expected $expected_sha, got $actual_sha" >&2
+  exit 1
+fi
+echo "$model_path"

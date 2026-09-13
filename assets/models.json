@@ -1,0 +1,201 @@
+[
+  {
+    "id": "gemma-4-e2b-litert",
+    "file": "gemma-4-E2B-it.litertlm",
+    "label": "Gemma 4 E2B · LiteRT-LM 端到端",
+    "kind": "e2e-gemmaE2E",
+    "size": 2588147712,
+    "sha256": "181938105e0eefd105961417e8da75903eacda102c4fce9ce90f50b97139a63c",
+    "sources": [
+      {
+        "id": "modelscope",
+        "label": "魔搭 LiteRT-LM",
+        "priority": 0,
+        "url": "https://www.modelscope.cn/api/v1/models/litert-community/gemma-4-E2B-it-litert-lm/repo?Revision=master&FilePath=gemma-4-E2B-it.litertlm"
+      },
+      {
+        "id": "hf-mirror",
+        "label": "HF Mirror",
+        "priority": 10,
+        "url": "https://hf-mirror.com/litert-community/gemma-4-E2B-it-litert-lm/resolve/b3ca0d2f076785a8f4b2219ddbd2bdb99954eae1/gemma-4-E2B-it.litertlm"
+      },
+      {
+        "id": "huggingface",
+        "label": "Hugging Face",
+        "priority": 10,
+        "url": "https://huggingface.co/litert-community/gemma-4-E2B-it-litert-lm/resolve/b3ca0d2f076785a8f4b2219ddbd2bdb99954eae1/gemma-4-E2B-it.litertlm"
+      }
+    ],
+    "releaseApproved": false
+  },
+  {
+    "id": "qwen2.5-omni-3b-mnn",
+    "file": "qwen2.5-omni-3b-mnn",
+    "label": "Qwen2.5-Omni-3B · MNN 端到端（Thinker-only）",
+    "kind": "e2e-qwenE2E",
+    "size": 2734266072,
+    "sha256": "00dc2e9131a4bb325b43a47f4210dd6450116687",
+    "sources": [
+      {
+        "id": "modelscope",
+        "label": "魔搭官方 MNN 模型目录",
+        "url": "https://www.modelscope.cn/models/MNN/Qwen2.5-Omni-3B-MNN"
+      },
+      {
+        "id": "huggingface",
+        "label": "Hugging Face 模型目录",
+        "url": "https://huggingface.co/taobao-mnn/Qwen2.5-Omni-3B-MNN/tree/00dc2e9131a4bb325b43a47f4210dd6450116687"
+      }
+    ],
+    "files": [
+      {"file":"config.json","size":586,"sha256":"b026728c73e6d96784cb41ab49ddad3cca52c2784e6ca339c6df307e84496b4e","sources":[{"id":"modelscope","label":"魔搭官方 MNN","url":"https://www.modelscope.cn/api/v1/models/MNN/Qwen2.5-Omni-3B-MNN/repo?Revision=5ccc2ca8706b699f0c6c9a757d29d9cd40a75fc7&FilePath=config.json"},{"id":"huggingface","label":"Hugging Face","url":"https://huggingface.co/taobao-mnn/Qwen2.5-Omni-3B-MNN/resolve/00dc2e9131a4bb325b43a47f4210dd6450116687/config.json"}]},
+      {"file":"llm_config.json","size":2188,"sha256":"d2906baff9493e228835c901838569d9b5b593062a4f085ba01cd799b3cb67d5","sources":[{"id":"modelscope","label":"魔搭官方 MNN","url":"https://www.modelscope.cn/api/v1/models/MNN/Qwen2.5-Omni-3B-MNN/repo?Revision=5ccc2ca8706b699f0c6c9a757d29d9cd40a75fc7&FilePath=llm_config.json"},{"id":"huggingface","label":"Hugging Face","url":"https://huggingface.co/taobao-mnn/Qwen2.5-Omni-3B-MNN/resolve/00dc2e9131a4bb325b43a47f4210dd6450116687/llm_config.json"}]},
+      {"file":"tokenizer.txt","size":3193458,"sha256":"62697a0ab88c413bd256c8e811e2c7bba9e00696e64ba6dc904fe9844e5c9377","sources":[{"id":"modelscope","label":"魔搭官方 MNN","url":"https://www.modelscope.cn/api/v1/models/MNN/Qwen2.5-Omni-3B-MNN/repo?Revision=5ccc2ca8706b699f0c6c9a757d29d9cd40a75fc7&FilePath=tokenizer.txt"},{"id":"huggingface","label":"Hugging Face","url":"https://huggingface.co/taobao-mnn/Qwen2.5-Omni-3B-MNN/resolve/00dc2e9131a4bb325b43a47f4210dd6450116687/tokenizer.txt"}]},
+      {"file":"llm.mnn","size":573936,"sha256":"2438962aa23bde3fceae4ea97df1d8250865c2de5eb4d46f133578e79a73da30","sources":[{"id":"modelscope","label":"魔搭官方 MNN","url":"https://www.modelscope.cn/api/v1/models/MNN/Qwen2.5-Omni-3B-MNN/repo?Revision=5ccc2ca8706b699f0c6c9a757d29d9cd40a75fc7&FilePath=llm.mnn"},{"id":"huggingface","label":"Hugging Face","url":"https://huggingface.co/taobao-mnn/Qwen2.5-Omni-3B-MNN/resolve/00dc2e9131a4bb325b43a47f4210dd6450116687/llm.mnn"}]},
+      {"file":"llm.mnn.json","size":2407046,"sha256":"8b5de0cda16ff48674a48184389f51d8db27c631f77a80f8c4146e08b1078443","sources":[{"id":"modelscope","label":"魔搭官方 MNN","url":"https://www.modelscope.cn/api/v1/models/MNN/Qwen2.5-Omni-3B-MNN/repo?Revision=5ccc2ca8706b699f0c6c9a757d29d9cd40a75fc7&FilePath=llm.mnn.json"},{"id":"huggingface","label":"Hugging Face","url":"https://huggingface.co/taobao-mnn/Qwen2.5-Omni-3B-MNN/resolve/00dc2e9131a4bb325b43a47f4210dd6450116687/llm.mnn.json"}]},
+      {"file":"llm.mnn.weight","size":1737291202,"sha256":"388f6a1e1618b4a32b7cfd9a3789bf5207e5acd6f8b920c6083930ec192fed90","sources":[{"id":"modelscope","label":"魔搭官方 MNN","url":"https://www.modelscope.cn/api/v1/models/MNN/Qwen2.5-Omni-3B-MNN/repo?Revision=5ccc2ca8706b699f0c6c9a757d29d9cd40a75fc7&FilePath=llm.mnn.weight"},{"id":"huggingface","label":"Hugging Face","url":"https://huggingface.co/taobao-mnn/Qwen2.5-Omni-3B-MNN/resolve/00dc2e9131a4bb325b43a47f4210dd6450116687/llm.mnn.weight"}]},
+      {"file":"embeddings_bf16.bin","size":622329856,"sha256":"775356f7eb2711aced9700e45303d33ec2bb3fa89cd344e5db6bd019aeaad6a0","sources":[{"id":"modelscope","label":"魔搭官方 MNN","url":"https://www.modelscope.cn/api/v1/models/MNN/Qwen2.5-Omni-3B-MNN/repo?Revision=5ccc2ca8706b699f0c6c9a757d29d9cd40a75fc7&FilePath=embeddings_bf16.bin"},{"id":"huggingface","label":"Hugging Face","url":"https://huggingface.co/taobao-mnn/Qwen2.5-Omni-3B-MNN/resolve/00dc2e9131a4bb325b43a47f4210dd6450116687/embeddings_bf16.bin"}]},
+      {"file":"audio.mnn","size":440544,"sha256":"efd04e6a57ff4f788903ae78ff742e573d50136b205d0881111785f038c2a72c","sources":[{"id":"modelscope","label":"魔搭官方 MNN","url":"https://www.modelscope.cn/api/v1/models/MNN/Qwen2.5-Omni-3B-MNN/repo?Revision=5ccc2ca8706b699f0c6c9a757d29d9cd40a75fc7&FilePath=audio.mnn"},{"id":"huggingface","label":"Hugging Face","url":"https://huggingface.co/taobao-mnn/Qwen2.5-Omni-3B-MNN/resolve/00dc2e9131a4bb325b43a47f4210dd6450116687/audio.mnn"}]},
+      {"file":"audio.mnn.weight","size":368027842,"sha256":"26d20c23e5ed3c68eacc2bd8b6e64137a38c26d6b6005385f4bc9bcdfff0bdc0","sources":[{"id":"modelscope","label":"魔搭官方 MNN","url":"https://www.modelscope.cn/api/v1/models/MNN/Qwen2.5-Omni-3B-MNN/repo?Revision=5ccc2ca8706b699f0c6c9a757d29d9cd40a75fc7&FilePath=audio.mnn.weight"},{"id":"huggingface","label":"Hugging Face","url":"https://huggingface.co/taobao-mnn/Qwen2.5-Omni-3B-MNN/resolve/00dc2e9131a4bb325b43a47f4210dd6450116687/audio.mnn.weight"}]}
+    ],
+    "releaseApproved": false
+  },
+  {
+    "id": "small.en-q5",
+    "file": "ggml-small.en-q5_1.bin",
+    "label": "英语识别 · small.en Q5（质量优先，推荐）",
+    "kind": "asr",
+    "size": 190098681,
+    "sha256": "bfdff4894dcb76bbf647d56263ea2a96645423f1669176f4844a1bf8e478ad30",
+    "sources": [
+      {
+        "id": "modelscope",
+        "label": "魔搭国内源",
+        "url": "https://www.modelscope.cn/api/v1/models/cjc1887415157/whisper.cpp/repo?Revision=ac12dbec310c2fd6e67398e808c40d80210ce4d0&FilePath=ggml-small.en-q5_1.bin"
+      },
+      {
+        "id": "hf-mirror",
+        "label": "HF Mirror",
+        "url": "https://hf-mirror.com/ggerganov/whisper.cpp/resolve/5359861c739e955e79d9a303bcbc70fb988958b1/ggml-small.en-q5_1.bin"
+      },
+      {
+        "id": "huggingface",
+        "label": "Hugging Face",
+        "url": "https://huggingface.co/ggerganov/whisper.cpp/resolve/5359861c739e955e79d9a303bcbc70fb988958b1/ggml-small.en-q5_1.bin"
+      }
+    ],
+    "releaseApproved": false
+  },
+  {
+    "id": "base.en-q5",
+    "file": "ggml-base.en-q5_1.bin",
+    "label": "英语识别 · base.en Q5（速度对照）",
+    "kind": "asr",
+    "size": 59721011,
+    "sha256": "4baf70dd0d7c4247ba2b81fafd9c01005ac77c2f9ef064e00dcf195d0e2fdd2f",
+    "sources": [
+      {
+        "id": "modelscope",
+        "label": "魔搭国内源",
+        "url": "https://www.modelscope.cn/api/v1/models/cjc1887415157/whisper.cpp/repo?Revision=ac12dbec310c2fd6e67398e808c40d80210ce4d0&FilePath=ggml-base.en-q5_1.bin"
+      },
+      {
+        "id": "hf-mirror",
+        "label": "HF Mirror",
+        "url": "https://hf-mirror.com/ggerganov/whisper.cpp/resolve/5359861c739e955e79d9a303bcbc70fb988958b1/ggml-base.en-q5_1.bin"
+      },
+      {
+        "id": "huggingface",
+        "label": "Hugging Face",
+        "url": "https://huggingface.co/ggerganov/whisper.cpp/resolve/5359861c739e955e79d9a303bcbc70fb988958b1/ggml-base.en-q5_1.bin"
+      }
+    ],
+    "releaseApproved": false
+  },
+  {
+    "id": "qwen2.5-0.5b-q4",
+    "file": "qwen2.5-0.5b-instruct-q4_k_m.gguf",
+    "label": "Qwen2.5 0.5B Q4_K_M",
+    "kind": "translation",
+    "size": 491400032,
+    "sha256": "74a4da8c9fdbcd15bd1f6d01d621410d31c6fc00986f5eb687824e7b93d7a9db",
+    "sources": [
+      {
+        "id": "hf-mirror",
+        "label": "HF Mirror",
+        "url": "https://hf-mirror.com/Qwen/Qwen2.5-0.5B-Instruct-GGUF/resolve/9217f5db79a29953eb74d5343926648285ec7e67/qwen2.5-0.5b-instruct-q4_k_m.gguf"
+      },
+      {
+        "id": "huggingface",
+        "label": "Hugging Face",
+        "url": "https://huggingface.co/Qwen/Qwen2.5-0.5B-Instruct-GGUF/resolve/9217f5db79a29953eb74d5343926648285ec7e67/qwen2.5-0.5b-instruct-q4_k_m.gguf"
+      }
+    ],
+    "releaseApproved": false
+  },
+  {
+    "id": "qwen3.5-0.8b-q4",
+    "file": "Qwen3.5-0.8B-Q4_0.gguf",
+    "label": "Qwen3.5 0.8B Q4_0",
+    "kind": "translation",
+    "size": 563036064,
+    "sha256": "57d1997790d1744fba5b40a7317df71ea5e2acee28c47e78f0cce39c0703f8cf",
+    "sources": [
+      {
+        "id": "hf-mirror",
+        "label": "HF Mirror",
+        "url": "https://hf-mirror.com/ggml-org/Qwen3.5-0.8B-GGUF/resolve/8fea620810c4afa23dd6443f999a48574c1611a3/Qwen3.5-0.8B-Q4_0.gguf"
+      },
+      {
+        "id": "huggingface",
+        "label": "Hugging Face",
+        "url": "https://huggingface.co/ggml-org/Qwen3.5-0.8B-GGUF/resolve/8fea620810c4afa23dd6443f999a48574c1611a3/Qwen3.5-0.8B-Q4_0.gguf"
+      }
+    ],
+    "releaseApproved": false
+  },
+  {
+    "id": "nllb-600m-q4",
+    "file": "nllb-200-distilled-600M-q4_k_m.gguf",
+    "label": "NLLB-200 distilled 600M Q4_K_M",
+    "kind": "translation",
+    "size": 789315200,
+    "sha256": "b4a6de63b5ddffc299e67ab079eb598c60400aa1fca75ad8e3eca2bcf653439e",
+    "sources": [
+      {
+        "id": "huggingface",
+        "label": "Hugging Face",
+        "url": "https://huggingface.co/keisuke-miyako/nllb-200-distilled-600M-gguf-q4_k_m/resolve/c2a05a11c95e3be0ecf99c1ff937edb97b723efa/nllb-200-distilled-600M-q4_k_m.gguf"
+      }
+    ],
+    "runtimeSupported": false,
+    "unavailableReason": "当前 llama.cpp 尚未合入 NLLB encoder-decoder 推理，暂不可下载或选择",
+    "releaseApproved": false
+  },
+  {
+    "id": "silero-v6",
+    "file": "ggml-silero-v6.2.0.bin",
+    "label": "人声检测 · Silero 6.2（兼容问题，暂未启用）",
+    "kind": "vad",
+    "size": 885098,
+    "sha256": "2aa269b785eeb53a82983a20501ddf7c1d9c48e33ab63a41391ac6c9f7fb6987",
+    "sources": [
+      {
+        "id": "modelscope",
+        "label": "魔搭国内源",
+        "url": "https://www.modelscope.cn/api/v1/models/ggml-org/whisper-vad/repo?Revision=a862d97b76bc27d0f6355e16d93bed7dd809d277&FilePath=ggml-silero-v6.2.0.bin"
+      },
+      {
+        "id": "hf-mirror",
+        "label": "HF Mirror",
+        "url": "https://hf-mirror.com/ggml-org/whisper-vad/resolve/9ffd54a1e1ee413ddf265af9913beaf518d1639b/ggml-silero-v6.2.0.bin"
+      },
+      {
+        "id": "huggingface",
+        "label": "Hugging Face",
+        "url": "https://huggingface.co/ggml-org/whisper-vad/resolve/9ffd54a1e1ee413ddf265af9913beaf518d1639b/ggml-silero-v6.2.0.bin"
+      }
+    ],
+    "releaseApproved": false
+  }
+]

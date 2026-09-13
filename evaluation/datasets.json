@@ -1,0 +1,29 @@
+{
+  "root": "/home/hyh/Downloads/opencaption",
+  "context_source": "readme.txt (user supplied; spelling context, not transcript)",
+  "datasets": [
+    {
+      "id": "clip", "audio": "clip.wav", "split": "development",
+      "reference": "clip_gold_bilingual.srt", "reference_status": "user_reviewed_bilingual_srt",
+      "alignment_notes": "clip_gold_alignment_notes.txt",
+      "uncertain_cues": [25],
+      "omitted_final_fragment": "almost in a form of",
+      "hints": "CS2 Dust2. Spirit: donk, sh1ro, zont1x, tN1R, magixx. MOUZ: torzsi, xertioN, Spinx, xelex, PR."
+    },
+    {
+      "id": "interview_niko", "audio": "clip_interview_niko.wav", "split": "development",
+      "reference": null,
+      "hints": "CS2 pre-match interview at BLAST Open Porto. Player: NiKo. Team: Falcons."
+    },
+    {
+      "id": "match_demo2", "audio": "clip_match_demo2.wav", "split": "development",
+      "reference": null,
+      "hints": "CS2 Mirage. FURIA: molodoy, KSCERATO, YEKINDAR, FalleN, yuurih. Falcons: m0NESY, NiKo, kyousuke, TeSeS, karrigan."
+    },
+    {
+      "id": "match_demo3", "audio": "clip_match_demo3.wav", "split": "holdout",
+      "reference": null,
+      "hints": "CS2 Nuke. FaZe: frozen, Twistzz, karrigan, broky, jcobbb. NAVI: w0nderful, Aleksib, iM, b1t, makazze."
+    }
+  ]
+}

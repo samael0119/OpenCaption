@@ -1,0 +1,29 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+cd "$(dirname "$0")/.."
+tools_root="${OPENCAPTION_LITERT_DIR:-/home/hyh/Tools/litert}"
+python_bin="$tools_root/litert-venv/bin/python"
+if [[ ! -x "$python_bin" ]]; then
+  echo "Missing $tools_root/litert-venv; run scripts/setup-gemma-eval first." >&2
+  exit 2
+fi
+memory_max_mb="${OPENCAPTION_MEMORY_MAX_MB:-4096}"
+if ! [[ "$memory_max_mb" =~ ^[0-9]+$ ]] || (( memory_max_mb < 1024 || memory_max_mb > 4096 )); then
+  echo "OPENCAPTION_MEMORY_MAX_MB must be an integer between 1024 and 4096." >&2
+  exit 2
+fi
+memory_high_mb=$((memory_max_mb * 7 / 8))
+timeout_seconds="${OPENCAPTION_EVAL_TIMEOUT_SECONDS:-1800}"
+if ! [[ "$timeout_seconds" =~ ^[0-9]+$ ]] || (( timeout_seconds < 1 )); then
+  echo "OPENCAPTION_EVAL_TIMEOUT_SECONDS must be a positive integer." >&2
+  exit 2
+fi
+# A cgroup limits resident memory while still allowing LiteRT-LM to mmap the
+# read-only model file. MemoryHigh throttles first; MemoryMax is the hard stop.
+exec systemd-run --user --scope --quiet --collect \
+  --property="MemoryHigh=${memory_high_mb}M" \
+  --property="MemoryMax=${memory_max_mb}M" \
+  --property="MemorySwapMax=0" \
+  timeout --signal=TERM --kill-after=10s "${timeout_seconds}s" \
+  "$python_bin" evaluation/gemma_replay.py "$@"
