@@ -3,6 +3,8 @@
     "id": "gemma-4-e2b-litert",
     "file": "gemma-4-E2B-it.litertlm",
     "label": "Gemma 4 E2B · LiteRT-LM 端到端",
+    "description": "实时字幕首选：手机端延迟更低，适合日常对话、视频播放和持续识别。",
+    "recommended": true,
     "kind": "e2e-gemmaE2E",
     "size": 2588147712,
     "sha256": "181938105e0eefd105961417e8da75903eacda102c4fce9ce90f50b97139a63c",
@@ -29,9 +31,40 @@
     "releaseApproved": false
   },
   {
+    "id": "gemma-4-e4b-litert",
+    "file": "gemma-4-E4B-it.litertlm",
+    "label": "Gemma 4 E4B · LiteRT-LM 端到端",
+    "description": "质量优先：适合更看重识别质量的场景；手机端延迟更高，不建议作为实时默认。",
+    "kind": "e2e-gemmaE2E",
+    "size": 3659530240,
+    "sha256": "0b2a8980ce155fd97673d8e820b4d29d9c7d99b8fa6806f425d969b145bd52e0",
+    "sources": [
+      {
+        "id": "modelscope",
+        "label": "魔搭 LiteRT-LM",
+        "priority": 0,
+        "url": "https://www.modelscope.cn/api/v1/models/litert-community/gemma-4-E4B-it-litert-lm/repo?Revision=46feb4dd5a76f4620508e7055ac9f13cecc267d2&FilePath=gemma-4-E4B-it.litertlm"
+      },
+      {
+        "id": "hf-mirror",
+        "label": "HF Mirror",
+        "priority": 10,
+        "url": "https://hf-mirror.com/litert-community/gemma-4-E4B-it-litert-lm/resolve/46feb4dd5a76f4620508e7055ac9f13cecc267d2/gemma-4-E4B-it.litertlm"
+      },
+      {
+        "id": "huggingface",
+        "label": "Hugging Face",
+        "priority": 10,
+        "url": "https://huggingface.co/litert-community/gemma-4-E4B-it-litert-lm/resolve/46feb4dd5a76f4620508e7055ac9f13cecc267d2/gemma-4-E4B-it.litertlm"
+      }
+    ],
+    "releaseApproved": false
+  },
+  {
     "id": "qwen2.5-omni-3b-mnn",
     "file": "qwen2.5-omni-3b-mnn",
     "label": "Qwen2.5-Omni-3B · MNN 端到端（Thinker-only）",
+    "description": "端到端多模态实验模型：仅用于 Qwen E2E 构建的离线探索。",
     "kind": "e2e-qwenE2E",
     "size": 2734266072,
     "sha256": "00dc2e9131a4bb325b43a47f4210dd6450116687",
@@ -64,6 +97,7 @@
     "id": "small.en-q5",
     "file": "ggml-small.en-q5_1.bin",
     "label": "英语识别 · small.en Q5（质量优先，推荐）",
+    "description": "英文专用：英语识别质量优先；不适合中文或多语言输入。",
     "kind": "asr",
     "size": 190098681,
     "sha256": "bfdff4894dcb76bbf647d56263ea2a96645423f1669176f4844a1bf8e478ad30",
@@ -90,6 +124,7 @@
     "id": "base.en-q5",
     "file": "ggml-base.en-q5_1.bin",
     "label": "英语识别 · base.en Q5（速度对照）",
+    "description": "英文专用速度档：模型更小、响应更快，适合性能/延迟对照；质量低于 small.en。",
     "kind": "asr",
     "size": 59721011,
     "sha256": "4baf70dd0d7c4247ba2b81fafd9c01005ac77c2f9ef064e00dcf195d0e2fdd2f",
@@ -116,6 +151,7 @@
     "id": "qwen2.5-0.5b-q4",
     "file": "qwen2.5-0.5b-instruct-q4_k_m.gguf",
     "label": "Qwen2.5 0.5B Q4_K_M",
+    "description": "轻量本地翻译：适合英文→中文日常字幕，内存占用相对低。",
     "kind": "translation",
     "size": 491400032,
     "sha256": "74a4da8c9fdbcd15bd1f6d01d621410d31c6fc00986f5eb687824e7b93d7a9db",
@@ -137,6 +173,7 @@
     "id": "qwen3.5-0.8b-q4",
     "file": "Qwen3.5-0.8B-Q4_0.gguf",
     "label": "Qwen3.5 0.8B Q4_0",
+    "description": "通用本地翻译实验：上下文能力更强，但内存和速度需要按设备评估。",
     "kind": "translation",
     "size": 563036064,
     "sha256": "57d1997790d1744fba5b40a7317df71ea5e2acee28c47e78f0cce39c0703f8cf",
@@ -158,6 +195,7 @@
     "id": "nllb-600m-q4",
     "file": "nllb-200-distilled-600M-q4_k_m.gguf",
     "label": "NLLB-200 distilled 600M Q4_K_M",
+    "description": "多语言翻译候选：覆盖语言更广；当前运行时未支持，暂不可下载。",
     "kind": "translation",
     "size": 789315200,
     "sha256": "b4a6de63b5ddffc299e67ab079eb598c60400aa1fca75ad8e3eca2bcf653439e",
@@ -176,6 +214,7 @@
     "id": "silero-v6",
     "file": "ggml-silero-v6.2.0.bin",
     "label": "人声检测 · Silero 6.2（兼容问题，暂未启用）",
+    "description": "人声检测辅助模型：用于区分语音与静音；当前兼容性问题，暂未启用。",
     "kind": "vad",
     "size": 885098,
     "sha256": "2aa269b785eeb53a82983a20501ddf7c1d9c48e33ab63a41391ac6c9f7fb6987",

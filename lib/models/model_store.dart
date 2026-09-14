@@ -75,7 +75,9 @@ class ModelSpec {
           .toList(growable: false),
       releaseApproved = json['releaseApproved'] == true,
       runtimeSupported = json['runtimeSupported'] != false,
-      unavailableReason = json['unavailableReason'] as String? ?? '' {
+      unavailableReason = json['unavailableReason'] as String? ?? '',
+      description = json['description'] as String? ?? '',
+      recommended = json['recommended'] == true {
     if (sources.isEmpty ||
         sources.map((source) => source.id).toSet().length != sources.length) {
       throw const FormatException('模型必须配置不重复的下载源');
@@ -88,7 +90,8 @@ class ModelSpec {
   final List<ModelPart> parts;
   final bool releaseApproved;
   final bool runtimeSupported;
-  final String unavailableReason;
+  final String unavailableReason, description;
+  final bool recommended;
 }
 
 class _ProbeResult {

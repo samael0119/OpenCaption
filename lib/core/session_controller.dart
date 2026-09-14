@@ -93,7 +93,8 @@ class SessionController extends ChangeNotifier implements EngineEvents {
   String get names => contextHint;
   @Deprecated('Use contextHint')
   set names(String value) => contextHint = value;
-  String theme = 'dark';
+  // Follow the device appearance unless the user explicitly chooses a theme.
+  String theme = 'system';
   Timer? _ticker;
   DateTime? _startedAt;
   Future<void>? _stopping;
@@ -175,7 +176,7 @@ class SessionController extends ChangeNotifier implements EngineEvents {
         }.contains(savedCaptionTask)
         ? savedCaptionTask!
         : 'bilingual';
-    theme = prefs.getString('theme') ?? 'dark';
+    theme = prefs.getString('theme') ?? 'system';
     mode = switch (prefs.getString('translationMode')) {
       'qwen' => TranslationMode.qwen,
       'external' when externalTranslationEnabled => TranslationMode.external,

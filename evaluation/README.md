@@ -1,12 +1,12 @@
 # 实机评测
 
-已有真实比赛/采访音频与手机日志；当前 Gemma 主线质量迭代见 [第四轮指标与实验](round4_quality.md)。不要用单元测试或协议解析通过率替代质量验收。
+已有真实比赛/采访音频与手机日志；当前 Gemma 主线质量、MTP 和 E2B/E4B 对比见 [Gemma 4 加速探索](gemma4_acceleration_exploration.md)。不要用单元测试或协议解析通过率替代质量验收。
 
-快速重复本轮三个诊断配置：`bash scripts/quality-round`。仅本地读取音频，不上传；每次模型运行沿用 4 GiB 硬限制。以下早期发布门槛保留作历史参考，其中级联模型对比不再执行。
+快速重复本轮三个诊断配置：`bash scripts/quality-round`。仅本地读取音频，不上传；当前默认使用 6 GiB cgroup 硬限制，4 GiB 仅作为历史压力对照。以下早期发布门槛保留作历史参考，其中级联模型对比不再执行。
 
 ## Ubuntu 快速回放
 
-Ubuntu 和 Android 都固定使用 `litert-community/gemma-4-E2B-it-litert-lm` 的同一个 `.litertlm` 部署包。Ubuntu 使用 LiteRT-LM Linux CPU，Android 使用 LiteRT-LM Android GPU/CPU；模型与协议一致，但硬件后端不同，所以 Ubuntu 可快速筛选音频分段、提示词和字幕质量，性能与温控仍需 Android 实机验收。
+Ubuntu 和 Android 都固定使用 `litert-community/gemma-4-E2B-it-litert-lm` 的同一个 `.litertlm` 部署包。Ubuntu 使用 LiteRT-LM Linux CPU，Android 使用 LiteRT-LM Android GPU/CPU；两端模型和协议一致，但 Android 主线使用 MTP、768 context、应用磁盘 cache，Ubuntu 的参数必须显式对齐后才可做严格延迟比较。Ubuntu 主要筛选音频分段、提示词和字幕质量，性能与温控仍需 Android 实机验收。
 
 首次准备 CPU 环境并下载模型（约 2.58 GB）。LiteRT-LM 环境和模型分别放在 `/home/hyh/Tools/litert/litert-venv`、`/home/hyh/Tools/litert/models`，不占用仓库目录：
 
@@ -24,7 +24,7 @@ scripts/run-gemma-eval evaluation/private/interview.wav --limit-windows 3
 /home/hyh/Tools/litert/litert-venv/bin/python evaluation/gemma_replay.py evaluation/private/interview.wav --prepare-only
 ```
 
-`scripts/run-gemma-eval` 默认用 systemd cgroup 把实际内存硬限制为 4096 MiB：3584 MiB 开始节流，4096 MiB 强制停止，并禁止该进程使用 swap。不能创建 cgroup 时脚本直接失败，不会无上限运行。可用 `OPENCAPTION_MEMORY_MAX_MB=3584` 进一步收紧。保持逐段串行，不要同时运行 Android 构建或另一份模型；先用 `--threads 2 --limit-windows 1` 冒烟。
+`scripts/run-gemma-eval` 默认用 systemd cgroup 把实际内存硬限制为 6144 MiB：5376 MiB 开始节流，6144 MiB 强制停止，并禁止该进程使用 swap。不能创建 cgroup 时脚本直接失败，不会无上限运行。可用 `OPENCAPTION_MEMORY_MAX_MB=4096` 或更低值做压力对照。保持逐段串行，不要同时运行 Android 构建或另一份模型；先用 `--threads 2 --limit-windows 1` 冒烟。
 
 分析 Android 日志时使用同一口径：
 

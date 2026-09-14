@@ -54,6 +54,24 @@ def arguments() -> argparse.Namespace:
     parser.add_argument("--threads", type=int, default=max(1, min(4, (os.cpu_count() or 2) // 2)))
     parser.add_argument("--limit-windows", type=int, default=0)
     parser.add_argument("--repeat", type=int, default=1, help="repeat inputs within one resident Engine")
+    parser.add_argument(
+        "--speculative-decoding",
+        choices=("default", "true", "false"),
+        default="default",
+        help="LiteRT-LM MTP/speculative decoding override",
+    )
+    parser.add_argument(
+        "--cache-mode",
+        choices=("disk", "memory", "no"),
+        default="disk",
+        help="compiled artifact cache: disk, memory (:memory), or no (:nocache)",
+    )
+    parser.add_argument(
+        "--warmup",
+        type=int,
+        default=0,
+        help="run and discard this many windows before measured timing",
+    )
     parser.add_argument("--realtime", action="store_true", help="paced PCM capture with one pending segment")
     parser.add_argument("--adaptive-cut", action="store_true", help="seek a quieter boundary within +/-300ms; realtime only")
     parser.add_argument(
@@ -75,6 +93,10 @@ def arguments() -> argparse.Namespace:
         parser.error("English-only diagnostics currently support serial replay only")
     if args.repeat < 1:
         parser.error('--repeat must be positive')
+    if args.warmup < 0:
+        parser.error('--warmup must be non-negative')
+    if args.prepare_only and args.warmup:
+        parser.error('--warmup requires model inference')
     if args.overlap_ms < 0 or args.overlap_ms >= args.window_ms:
         parser.error("--overlap-ms must be >= 0 and smaller than --window-ms")
     if args.min_tail_ms < 0 or args.min_tail_ms > args.window_ms:
@@ -173,13 +195,24 @@ class LiteRtRuntime:
             self.system_message = f"Transcribe audible Chinese faithfully. {MAINLAND_SIMPLIFIED_RULE} Do not translate or explain. " + self.hints
         cache_dir = TOOLS_ROOT / "cache"
         cache_dir.mkdir(parents=True, exist_ok=True)
+        cache_path = {
+            "disk": str(cache_dir),
+            "memory": ":memory",
+            "no": ":nocache",
+        }[args.cache_mode]
+        speculative_decoding = {
+            "default": None,
+            "true": True,
+            "false": False,
+        }[args.speculative_decoding]
         cpu = litert_lm.Backend.CPU(thread_count=args.threads)
         self.engine = litert_lm.Engine(
             str(args.model.resolve()),
             backend=cpu,
             audio_backend=litert_lm.Backend.CPU(thread_count=args.threads),
             max_num_tokens=args.max_context_tokens,
-            cache_dir=str(cache_dir),
+            cache_dir=cache_path,
+            enable_speculative_decoding=speculative_decoding,
         )
 
     def infer(self, chunk_path: Path) -> str:
@@ -247,6 +280,9 @@ def main() -> int:
     terminology = Terminology()
     totals = {"windows": 0, "subtitle": 0, "transcription": 0, "no_speech": 0, "invalid": 0, "error": 0}
     started = time.monotonic()
+    measured_started = None
+    warmup_elapsed_ms = 0
+    warmup_remaining = args.warmup
 
     with output_path.open("w", encoding="utf-8") as report, tempfile.TemporaryDirectory(prefix="opencaption-eval-") as temp:
         temp_dir = Path(temp)
@@ -258,6 +294,27 @@ def main() -> int:
             ):
                 if args.limit_windows and totals["windows"] >= args.limit_windows:
                     break
+                chunk = temp_dir / "chunk.wav"
+                if not args.prepare_only:
+                    write_chunk(chunk, pcm)
+                if warmup_remaining:
+                    warmup_started = time.monotonic()
+                    try:
+                        runtime.infer(chunk)
+                    except Exception as error:
+                        raise RuntimeError(
+                            f"warmup failed at window {index}: {type(error).__name__}: {error}"
+                        ) from error
+                    warmup_inference_ms = round((time.monotonic() - warmup_started) * 1000)
+                    warmup_elapsed_ms += warmup_inference_ms
+                    warmup_remaining -= 1
+                    print(json.dumps({
+                        "type": "warmup", "source": str(source), "index": index,
+                        "start_ms": start_ms, "end_ms": end_ms,
+                        "inference_ms": warmup_inference_ms,
+                    }, ensure_ascii=False), flush=True)
+                if measured_started is None:
+                    measured_started = time.monotonic()
                 totals["windows"] += 1
                 record = {
                     "type": "window", "source": str(source), "index": index,
@@ -267,12 +324,14 @@ def main() -> int:
                     "system_profile": args.system_profile, "hints": args.hints[:240],
                     "threads": args.threads, "model": str(args.model),
                     "window_ms": args.window_ms, "overlap_ms": args.overlap_ms, "quiet_cut_ms": args.quiet_cut_ms,
+                    "max_context_tokens": args.max_context_tokens,
+                    "cache_mode": args.cache_mode,
+                    "speculative_decoding": args.speculative_decoding,
+                    "warmup": args.warmup,
                 }
                 if args.prepare_only:
                     record["status"] = "prepared"
                 else:
-                    chunk = temp_dir / "chunk.wav"
-                    write_chunk(chunk, pcm)
                     inference_started = time.monotonic()
                     try:
                         raw = runtime.infer(chunk)
@@ -313,6 +372,15 @@ def main() -> int:
             "window_ms": args.window_ms, "overlap_ms": args.overlap_ms,
             "quiet_cut_ms": args.quiet_cut_ms,
             "threads": args.threads, "repeat": args.repeat, "hints": args.hints,
+            "max_context_tokens": args.max_context_tokens,
+            "cache_mode": args.cache_mode,
+            "speculative_decoding": args.speculative_decoding,
+            "warmup": args.warmup,
+            "warmup_elapsed_ms": warmup_elapsed_ms,
+            "measured_elapsed_ms": (
+                round((time.monotonic() - measured_started) * 1000)
+                if measured_started is not None else 0
+            ),
             "system_profile": args.system_profile,
             "task": args.task, "task_profile": args.task_profile,
             "elapsed_ms": round((time.monotonic() - started) * 1000), **totals,

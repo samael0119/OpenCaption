@@ -7,6 +7,8 @@ import com.google.ai.edge.litertlm.ConversationConfig
 import com.google.ai.edge.litertlm.Conversation
 import com.google.ai.edge.litertlm.Engine
 import com.google.ai.edge.litertlm.EngineConfig
+import com.google.ai.edge.litertlm.ExperimentalApi
+import com.google.ai.edge.litertlm.ExperimentalFlags
 import com.google.ai.edge.litertlm.SamplerConfig
 import com.google.ai.edge.litertlm.ThinkingConfig
 import java.nio.ByteBuffer
@@ -17,6 +19,7 @@ object FlavorBackendFactory {
 }
 
 private const val GEMMA_MAX_OUTPUT_TOKENS = 128
+private const val GEMMA_MAX_CONTEXT_TOKENS = 768
 private const val MAINLAND_SIMPLIFIED_RULE =
     "Use Mainland China Simplified Chinese (简体中文, zh-CN). " +
         "Do NOT output Traditional Chinese (繁體中文). "
@@ -47,30 +50,49 @@ private class GemmaBackend(private val activity: MainActivity) : EndToEndBackend
     override fun setHints(hints: String) { this.hints = sanitizeHints(hints) }
     @Volatile private var activeConversation: Conversation? = null
 
+    @OptIn(ExperimentalApi::class)
     override fun load(modelPath: String, threadCount: Int) {
         close()
         val threads = threadCount.takeIf { it == 2 || it == 4 || it == 6 || it == 8 } ?: 4
-        val audioThreads = minOf(2, threads)
-        val gpu = Engine(EngineConfig(modelPath = modelPath, backend = Backend.GPU(), audioBackend = Backend.CPU(threadCount = audioThreads), cacheDir = activity.cacheDir.path))
+        val audioThreads = threads
+        val modelName = modelPath.substringAfterLast('/')
+        val enableSpeculativeDecoding =
+            modelName.contains("gemma-4-E2B", ignoreCase = true) ||
+                modelName.contains("gemma-4-E4B", ignoreCase = true)
+        val maxContextTokens = if (enableSpeculativeDecoding) GEMMA_MAX_CONTEXT_TOKENS else null
+        // This is a process-wide experimental flag in LiteRT-LM 0.17. Set it
+        // before Engine.initialize(), including the CPU fallback path, then
+        // clear it so a later non-Gemma engine is not affected.
+        ExperimentalFlags.enableSpeculativeDecoding = enableSpeculativeDecoding
+        fun config(backend: Backend) = EngineConfig(
+            modelPath = modelPath,
+            backend = backend,
+            audioBackend = Backend.CPU(threadCount = audioThreads),
+            maxNumTokens = maxContextTokens,
+            cacheDir = activity.cacheDir.path,
+        )
+        val gpu = Engine(config(Backend.GPU()))
         engine = try {
             gpu.initialize()
-            runtime = "model_backend=gpu audio_backend=cpu audio_threads=$audioThreads fallback=false max_output_tokens=$GEMMA_MAX_OUTPUT_TOKENS thinking=false"
+            runtime = "model_backend=gpu audio_backend=cpu audio_threads=$audioThreads fallback=false speculative_decoding=$enableSpeculativeDecoding max_context_tokens=${maxContextTokens ?: "default"} max_output_tokens=$GEMMA_MAX_OUTPUT_TOKENS thinking=false cache=disk"
             gpu
         } catch (gpuError: Exception) {
             // A failed accelerator may retain native buffers. Release it before
             // allocating a second copy of this multi-GB model on CPU. Do not
             // catch OutOfMemoryError and attempt another allocation.
             runCatching { gpu.close() }
-            val cpuEngine = Engine(EngineConfig(modelPath = modelPath, backend = Backend.CPU(threadCount = threads), audioBackend = Backend.CPU(threadCount = audioThreads), cacheDir = activity.cacheDir.path))
+            val cpuEngine = Engine(config(Backend.CPU(threadCount = threads)))
             try {
                 cpuEngine.initialize()
                 val detail = gpuError.message.orEmpty().replace(Regex("[\\r\\n]+"), " ").take(160)
-                runtime = "model_backend=cpu model_threads=$threads audio_backend=cpu audio_threads=$audioThreads fallback=true max_output_tokens=$GEMMA_MAX_OUTPUT_TOKENS thinking=false gpu_error=${gpuError.javaClass.simpleName}:$detail"
+                runtime = "model_backend=cpu model_threads=$threads audio_backend=cpu audio_threads=$audioThreads fallback=true speculative_decoding=$enableSpeculativeDecoding max_context_tokens=${maxContextTokens ?: "default"} max_output_tokens=$GEMMA_MAX_OUTPUT_TOKENS thinking=false cache=disk gpu_error=${gpuError.javaClass.simpleName}:$detail"
                 cpuEngine
             } catch (cpuError: Exception) {
                 runCatching { cpuEngine.close() }
                 throw cpuError
             }
+        } finally {
+            ExperimentalFlags.enableSpeculativeDecoding = false
         }
     }
 

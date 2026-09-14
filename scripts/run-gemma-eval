@@ -8,9 +8,9 @@ if [[ ! -x "$python_bin" ]]; then
   echo "Missing $tools_root/litert-venv; run scripts/setup-gemma-eval first." >&2
   exit 2
 fi
-memory_max_mb="${OPENCAPTION_MEMORY_MAX_MB:-4096}"
-if ! [[ "$memory_max_mb" =~ ^[0-9]+$ ]] || (( memory_max_mb < 1024 || memory_max_mb > 4096 )); then
-  echo "OPENCAPTION_MEMORY_MAX_MB must be an integer between 1024 and 4096." >&2
+memory_max_mb="${OPENCAPTION_MEMORY_MAX_MB:-6144}"
+if ! [[ "$memory_max_mb" =~ ^[0-9]+$ ]] || (( memory_max_mb < 1024 || memory_max_mb > 6144 )); then
+  echo "OPENCAPTION_MEMORY_MAX_MB must be an integer between 1024 and 6144." >&2
   exit 2
 fi
 memory_high_mb=$((memory_max_mb * 7 / 8))

@@ -1167,7 +1167,7 @@ class _ModelsPageState extends State<ModelsPage> {
         children: [
           Text(
             c.endToEnd
-                ? '模型准备好后可断网运行。Gemma 优先使用魔搭国内源；不可用时自动切换到备用源。'
+                ? '模型准备好后可断网运行。实时字幕优先选择 Gemma 4 E2B；E4B 更偏向质量优先。下载优先使用魔搭国内源，不可用时自动切换备用源。'
                 : '模型准备好后可断网运行。下载源会按优先级测速，并自动切换可用备用源。',
           ),
           const SizedBox(height: 16),
@@ -1176,7 +1176,12 @@ class _ModelsPageState extends State<ModelsPage> {
             decoration: const InputDecoration(labelText: '本地识别候选'),
             items: c.models.catalog
                 .where((m) => m.kind == c.requiredModelKind)
-                .map((m) => DropdownMenuItem(value: m.id, child: Text(m.label)))
+                .map(
+                  (m) => DropdownMenuItem(
+                    value: m.id,
+                    child: Text(m.recommended ? '${m.label} · 推荐' : m.label),
+                  ),
+                )
                 .toList(),
             onChanged: (v) async {
               setState(() => c.asrId = v!);
@@ -1210,6 +1215,11 @@ class _ModelsPageState extends State<ModelsPage> {
                         Text(
                           '${(m.size / 1000000).toStringAsFixed(1)} MB · ${ready ? '已准备' : '未准备'}',
                         ),
+                        if (m.description.isNotEmpty)
+                          Text(
+                            m.description,
+                            style: Theme.of(context).textTheme.bodyMedium,
+                          ),
                         if (!m.runtimeSupported)
                           Text(
                             m.unavailableReason,
@@ -1217,6 +1227,8 @@ class _ModelsPageState extends State<ModelsPage> {
                               color: Theme.of(context).colorScheme.error,
                             ),
                           ),
+                        if (m.recommended)
+                          const Chip(label: Text('优先推荐 · 实时首选')),
                         if (selected)
                           Chip(
                             label: Text(m.kind == 'asr' ? '当前识别模型' : '当前翻译模型'),
@@ -1445,7 +1457,13 @@ class _SettingsPageState extends State<SettingsPage> {
             DropdownMenuItem(value: 'light', child: Text('浅色')),
             DropdownMenuItem(value: 'system', child: Text('跟随系统')),
           ],
-          onChanged: (v) => setState(() => c.theme = v!),
+          onChanged: (v) {
+            if (v == null) return;
+            setState(() => c.theme = v);
+            // savePreferences notifies OpenCaptionApp after persisting, so the
+            // root MaterialApp applies the new theme immediately.
+            unawaited(c.savePreferences());
+          },
         ),
         const SizedBox(height: 12),
         DropdownButtonFormField<CorpusProfile>(
@@ -1512,7 +1530,7 @@ class _SettingsPageState extends State<SettingsPage> {
                   ? 'CPU 推理线程（评测）'
                   : 'CPU 推理线程',
               helperText: c.backendFlavor == 'gemmaE2E'
-                  ? '主模型 CPU 回退上限；音频编码固定最多 2 线程。4 默认，6 为性能档'
+                  ? 'GPU 优先；CPU 回退与音频编码使用相同线程数。4 默认，6 为性能档'
                   : isTestBuild
                   ? '4 默认；6 预留约 2 核余量；8 仅建议短时使用'
                   : '4 默认；6 预留约 2 核余量；8 适合短时高负载',
