@@ -1,74 +1,103 @@
+<p align="center">
+  <img src="assets/branding/opencaption-logo.png" alt="OpenCaption logo" width="144">
+</p>
+
 # OpenCaption
 
-本地优先的 Android 实时字幕应用。主线使用 Flutter 界面、Kotlin 音频与任务调度，以及 LiteRT Community 的 Gemma 4 LiteRT-LM 端到端模型。主要场景是电脑、电视或手机播放英文采访时，在手机上实时显示英文原文和简体中文字幕；应用也保留中文转写、自动语言识别和旧级联路线用于验证。
+[简体中文](README.zh-CN.md) · [Documentation](docs/README.md) · [License](LICENSE)
 
-当前是开发评测版，模型质量、长时间稳定性、功耗和不同 Android 设备兼容性尚未完成发布验收。Release mode APK 仍使用本地开发签名，适合测试安装，不是应用商店发布包。
+OpenCaption is a local-first Android app for real-time captions. Its main path combines a Flutter UI, Kotlin audio capture and scheduling, and Gemma 4 through LiteRT-LM to produce English transcripts and Simplified Chinese captions directly on the device.
 
-## 当前推荐
+> [!WARNING]
+> OpenCaption is a development and evaluation preview. Model quality, long-run stability, power consumption, and device compatibility have not passed the release gates. Current release-mode APKs use a local development signature and are not store-ready packages.
 
-`gemmaE2E` 是下一步 Android 方向，默认和优先推荐 Gemma 4 E2B：
+## Screenshots
 
-- LiteRT-LM Android `0.17.0`，模型来自 `litert-community` 的 `.litertlm` 包。
-- Android 优先使用 GPU，失败后回退 CPU；音频编码使用 CPU。
-- E2B/E4B 均启用 LiteRT-LM MTP/speculative decoding，`maxNumTokens=768`，最大输出 128 token，使用应用 cache 目录。
-- CPU 辅助线程默认 4，可选 2、4、6、8；GPU 和 CPU 回退使用同一组应用线程设置。
-- 手机实测：E2B 推理约 600 ms～1.6 s，适合实时字幕；E4B 约 2.6 s～6 s，作为质量优先的手动选项，不作为实时默认。
+<table>
+  <tr>
+    <td align="center"><img src="docs/images/home.jpg" alt="OpenCaption home screen" width="260"></td>
+    <td align="center"><img src="docs/images/models.jpg" alt="Offline model management" width="260"></td>
+    <td align="center"><img src="docs/images/captions.jpg" alt="Live bilingual captions and diagnostics" width="260"></td>
+  </tr>
+  <tr>
+    <td align="center">Session setup</td>
+    <td align="center">Offline models</td>
+    <td align="center">Live captions</td>
+  </tr>
+</table>
 
-上述手机延迟是当前设备上的观察范围，不是跨设备保证；应同时记录模型准备时间、队列等待、RTF、内存、温度和丢段情况。
+## What it does
 
-## 构建变体与模型路线
+- Runs speech understanding and caption generation locally after model setup; audio is not uploaded by the default path.
+- Supports microphone input and Android 10+ playback capture with a movable caption overlay, subject to the source app's audio-sharing policy.
+- Offers English-to-bilingual captions, automatic-language-to-Chinese plus source text, English-only transcription, and Chinese-only transcription.
+- Downloads or imports models with expected-size and SHA-256 verification, resumable downloads, and multiple configured sources.
+- Provides optional scene/name context, a CS2 terminology profile, theme and caption styling, and bounded runtime diagnostics.
+- Keeps captions in the current session only. Returning to the home screen clears the transcript.
 
-| 变体 | 当前定位 | 实现 | 建议 |
+## Recommended path
+
+`gemmaE2E` is the current mainline flavor. Gemma 4 E2B is the default and recommended real-time model:
+
+- LiteRT-LM Android `0.17.0` with `.litertlm` packages from `litert-community`.
+- GPU-first initialization with CPU fallback; audio encoding runs on the CPU.
+- E2B and E4B both use MTP/speculative decoding, `maxNumTokens=768`, a maximum output of 128 tokens, and the app cache directory.
+- Configurable CPU support threads: 2, 4, 6, or 8; the default is 4.
+- Observed latency on the current test phone is roughly 0.6–1.6 seconds for E2B and 2.6–6 seconds for E4B. These figures are observations, not cross-device guarantees.
+
+| Flavor | Role | Implementation | Recommendation |
 | --- | --- | --- | --- |
-| `gemmaE2E` | 主线 | LiteRT-LM Gemma 4 E2B/E4B，单模型完成语音理解、转写和中文输出 | 默认使用 |
-| `cascade` | 兼容／历史评测 | whisper.cpp 识别，再接 ML Kit 或 GGUF 本地翻译 | 不作为下一步主线 |
-| `qwenE2E` | 实验路线 | Qwen Omni MNN 端到端 | 仅在专门实验时使用 |
+| `gemmaE2E` | Mainline | Gemma 4 E2B/E4B through LiteRT-LM; one model handles speech understanding, transcription, and Chinese output | Default |
+| `cascade` | Compatibility and historical evaluation | whisper.cpp followed by ML Kit or local GGUF translation | Not a future mainline |
+| `qwenE2E` | Experimental | Qwen Omni through MNN | Dedicated experiments only |
 
-仓库仍保留 cascade 的 whisper.cpp／llama.cpp 原生代码和 Qwen GGUF 清单，以便兼容旧 APK 与历史对照；新模型和下一步主线不再扩展 llama.cpp 路线。Gemma 主线不加载 Whisper、Silero 或独立翻译模型。
+The repository retains the older whisper.cpp/llama.cpp path and Qwen manifests for reproducibility and compatibility. The Gemma flavor does not load Whisper, Silero, or a separate translation model.
 
-### 模型用途
+## Models
 
-模型准备页会显示用途文案、大小、就绪状态、当前来源、推荐标识和校验状态。当前目录包括：
+The model manager shows purpose, size, readiness, source, recommendation, and integrity status. Current entries include:
 
-- Gemma 4 E2B（约 2.59 GB）：实时字幕首选，默认模型。
-- Gemma 4 E4B（约 3.66 GB）：质量优先，手机延迟更高。
-- Whisper `small.en`／`base.en`：英文专用的旧级联识别候选，不适合中文或通用多语言输入。
-- Qwen2.5 0.5B、Qwen3.5 0.8B：旧级联本地翻译实验；Qwen3.5 在本机真实 cgroup 限制下出现内存问题，暂不作为下一方向。
-- Qwen Omni 3B MNN：旧的端到端实验变体。
-- NLLB-200：当前运行时不支持 encoder-decoder，禁止下载和选择。
+- Gemma 4 E2B (~2.59 GB): default real-time caption model.
+- Gemma 4 E4B (~3.66 GB): quality-oriented option with higher mobile latency.
+- Whisper `small.en` and `base.en`: English-only legacy cascade candidates.
+- Qwen2.5 0.5B and Qwen3.5 0.8B: legacy local-translation experiments; Qwen3.5 did not fit the current real cgroup memory constraints reliably.
+- Qwen Omni 3B MNN: earlier end-to-end experimental flavor.
+- NLLB-200: unavailable because the current runtime does not support its encoder-decoder architecture.
 
-TranslateGemma 4B 当前没有进入目录：官方 LiteRT Community 文件是面向 MediaPipe Web 的 `.task`，不是 LiteRT-LM 可加载的 `.litertlm` 包，不能与 Gemma E2E 直接替换。
+TranslateGemma 4B is not listed because the published LiteRT Community artifact is a MediaPipe Web `.task`, not a LiteRT-LM-loadable `.litertlm` package.
 
-## 当前使用方式
+Models are downloaded separately and remain subject to their providers' licenses and terms. They are not covered by this repository's license.
 
-1. 安装对应 flavor 的 APK，进入“准备与管理模型”。下载或导入模型时会检查文件大小和 SHA-256；下载失败会保留断点并切换预置来源。
-2. Gemma E2E 默认选择 E2B。首页可选择语音任务：英文→中英字幕、自动识别语言→中文＋原文、仅英文转写、仅中文转写。
-3. 输入方式可选：
-   - 麦克风：手机靠近电脑或电视外放，耳机内声音无法通过麦克风获取。
-   - 本设备音频：Gemma flavor 支持 Android 10+ 播放音频捕获和悬浮字幕，需要系统授权、悬浮窗权限及目标 App 允许共享音频；不录制画面，部分 DRM、通话或目标 App 会禁止采集。
-4. 可填写不超过 240 字符的场景／专名上下文。内容会经过控制字符和提示注入过滤，只作为不可信数据提供给模型。
-5. 术语库默认是“通用（无术语库）”；选择 CS2 后才启用 CS2 术语，动态提示最多取少量近期已确认内容，不会把整张词表送入模型。
-6. 设置支持浅色、深色和跟随系统，默认跟随系统；可调字幕字号、原文／译文颜色、悬浮字幕透明度和 CPU 辅助线程。
+## Using the app
 
-Gemma 端到端路径使用固定 5 秒音频窗口、无重叠、串行推理；窗口积压时会替换尚未开始的旧窗口，避免延迟无限增长。暂停、结束、切后台、温度过高、内存压力或音频授权被撤销时，应用会停止或中止当前任务并显示状态。
+1. Install the APK for the required flavor and open **Prepare and manage models**. Downloads and imports are checked against the catalog size and SHA-256 digest.
+2. For Gemma E2E, keep E2B selected unless quality is more important than latency. Choose the speech task on the home screen.
+3. Choose an input:
+   - **Microphone** captures ambient sound. Audio playing only in headphones cannot reach the microphone.
+   - **This-device audio** uses Android 10+ playback capture and a foreground overlay. It requires system and overlay permission, and the source app must allow audio sharing. Calls, DRM content, and some apps may block capture. OpenCaption does not record the screen.
+4. Optionally provide up to 240 characters of scene or proper-name context. It is filtered and treated as untrusted data, not as a second instruction channel.
+5. The default terminology profile is general and injects no glossary. Select the CS2 profile explicitly to use its terminology.
+6. Adjust theme, font size, source/translation colors, overlay opacity, and CPU support threads in settings.
 
-## 隐私与已知边界
+Gemma uses fixed five-second, non-overlapping audio windows and serial inference. If work backs up, an old window that has not started may be replaced so latency cannot grow without bound. Pause, stop, background transitions, serious thermal conditions, memory pressure, or revoked audio permission stop or cancel the relevant task.
 
-- 默认识别和字幕处理都在设备内完成，不上传音频；字幕只保留在当前会话，返回首页后清除。
-- 当前产品构建默认隐藏外部文本翻译入口。代码保留未来启用的 Chat Completions 兼容协议、HTTPS 默认和安全存储配置，但不能把它当作当前可用功能。
-- 模型首次下载需要网络；ML Kit 语言包由 Google SDK 管理，应用不能替换其下载源。离线测试应在模型准备完成后开启飞行模式。
-- Debug 测试包默认开启诊断面板，并在 Android 公共 `Downloads` 写入时间命名日志；Release mode 默认关闭诊断和日志。日志不记录音频、字幕、API Key 或完整模型路径。
-- 当前 APK 尚未完成 3×60 分钟无崩溃、功耗、温升、保留集质量和多机兼容验收；不要把单次金标结果或手机延迟范围当作发布承诺。
+## Privacy and limitations
 
-## 开发环境
+- Default recognition and caption generation run on-device. Raw audio is kept in native memory and is not persisted or uploaded.
+- The external Chat Completions-compatible text translation code path is hidden in current product builds. A custom build that enables it sends text to the configured service.
+- The first model download requires a network connection. The legacy ML Kit path may also download language packs through Google's SDK.
+- Debug builds can expose diagnostics and write timestamped logs to Android public Downloads. Release mode disables that behavior by default. Review logs before sharing them.
+- No current APK has completed the required 3 × 60-minute stability run, power and thermal evaluation, held-out quality evaluation, and multi-device validation.
 
-项目约定的非仓库路径：
+## Development
 
-- JDK 17：`~/Tools/java/eclipse-temurin-jdk17`
-- LiteRT-LM 公共环境和模型：`~/Tools/litert`
-- 音频、金标和运行日志：`~/Downloads/opencaption`
+The local development convention uses:
 
-项目自带 Flutter wrapper 使用 `.tools/flutter` 和隔离的 `.pub-cache`／Gradle cache。当前工具链为 Flutter 3.47.2、Dart 3.13.2、JDK 17、Android SDK 36、NDK 28.2.13676358、CMake 3.22.1；最低 Android API 28，仅构建 `arm64-v8a`。
+- JDK 17: `~/Tools/java/eclipse-temurin-jdk17`
+- shared LiteRT/LiteRT-LM tools and models: `~/Tools/litert`
+- test audio, references, and logs: `~/Downloads/opencaption`
+
+The project wrapper isolates Flutter, Pub, and Gradle state under the repository. The current toolchain is Flutter 3.47.2, Dart 3.13.2, JDK 17, Android SDK 36, NDK 28.2.13676358, and CMake 3.22.1. The minimum Android API is 28, and only `arm64-v8a` is built.
 
 ```bash
 export OPENCAPTION_JAVA_HOME="$HOME/Tools/java/eclipse-temurin-jdk17"
@@ -78,38 +107,39 @@ scripts/flutterw analyze --no-pub
 scripts/flutterw test --no-pub
 ```
 
-原生引擎版本固定在 `native.lock.json`；修改 `pigeons/engine.dart` 后重新生成桥接代码：
+Native revisions are pinned in `native.lock.json`. After changing `pigeons/engine.dart`, regenerate the bridge:
 
 ```bash
 PUB_CACHE="$PWD/.pub-cache" .tools/flutter/bin/dart --suppress-analytics \
   run pigeon --input pigeons/engine.dart
 ```
 
-## 构建 APK
+## Building an APK
 
-构建脚本强制 arm64，并校验固定签名指纹，避免覆盖安装时因签名变化丢失应用私有模型：
+The build script enforces arm64 and verifies the configured signing fingerprint so test APK upgrades retain app-private model files:
 
 ```bash
-# Debug：默认开启诊断指标和测试日志
+# Debug test APK with diagnostics enabled by default
 scripts/build-apk gemmaE2E
 
-# Release mode：关闭诊断；仍是本地测试签名，不是商店发布包
+# Release-mode test APK; still not a store-signed package
 OPENCAPTION_BUILD_MODE=release \
 OPENCAPTION_DIAGNOSTICS=false \
 scripts/build-apk gemmaE2E
 ```
 
-也可以构建 `cascade` 或 `qwenE2E`。输出位于 `build/app/outputs/flutter-apk/`。release 暂不启用 R8／资源缩减，因为 LiteRT-LM 的反射和原生绑定仍需先补齐 keep 规则并实机验证。测试和构建请串行执行；不要同时加载多个大型模型。
+`cascade` and `qwenE2E` can be built in the same way. Output is written under `build/app/outputs/flutter-apk/`. Release builds currently leave R8 and resource shrinking disabled until LiteRT-LM reflection and native binding keep rules are complete and device-tested.
 
-## LiteRT-LM 本机评测
+Run tests and builds serially. Do not load multiple large models concurrently.
 
-本机评测使用 LiteRT-LM Linux CPU，环境和模型统一放在 `~/Tools/litert`，音频和金标统一放在 `~/Downloads/opencaption`：
+## LiteRT-LM evaluation
+
+Linux CPU evaluation uses the shared LiteRT-LM environment and an explicit cgroup memory limit:
 
 ```bash
 scripts/setup-gemma-eval
 scripts/fetch-gemma-litert
 
-# 5 秒窗口、MTP、768 context、memory cache、1 个 warmup 的示例
 OPENCAPTION_MEMORY_MAX_MB=6144 scripts/run-gemma-eval \
   "$HOME/Downloads/opencaption/clip.wav" \
   --model "$HOME/Tools/litert/models/gemma-4-E2B-it.litertlm" \
@@ -119,17 +149,18 @@ OPENCAPTION_MEMORY_MAX_MB=6144 scripts/run-gemma-eval \
   --max-context-tokens=768
 ```
 
-`scripts/run-gemma-eval` 使用 systemd cgroup 的 `MemoryHigh`／`MemoryMax` 限制实际内存并禁用 swap，默认上限为 6 GiB，允许通过 `OPENCAPTION_MEMORY_MAX_MB` 调低。不要用 `ulimit -v` 代替实际内存限制；mmap 地址空间和进程常驻内存不是同一个指标。评测脚本会记录每窗口原始输出、解析状态、推理时间、RTF 和峰值 RSS。
+The runner uses systemd `MemoryHigh`/`MemoryMax` with swap disabled. Do not replace the real memory limit with `ulimit -v`; mapped address space is not resident memory. Results include raw model output, parser status, per-window inference time, RTF, and peak RSS.
 
-当前实验报告：
+## Documentation
 
-- [Gemma 4 加速探索](evaluation/gemma4_acceleration_exploration.md)
-- [Gemma 4 E2B/E4B 对比](evaluation/gemma4_e4b_exploration.md)
-- [Qwen 与 TranslateGemma 可行性](evaluation/translate_gemma4b_exploration.md)
+- [Design overview](docs/design.md)
 
-## 项目文档
+## Contributing and security
 
-- [当前 PRD](docs/实时字幕_PRD.md)
-- [开发计划（目标与历史基线）](docs/开发计划.md)
-- [实施记录](docs/实施记录.md)
-- [实机评测指南](evaluation/README.md)
+See [CONTRIBUTING.md](CONTRIBUTING.md) before opening a pull request. Report sensitive vulnerabilities according to [SECURITY.md](SECURITY.md), not through a public issue.
+
+## License
+
+Original project material is available under the [PolyForm Noncommercial License 1.0.0](LICENSE). Commercial use is not permitted by that license.
+
+This is a **source-available** license, not an OSI-approved open-source license. Third-party software, models, and data retain their own terms; see [THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md).

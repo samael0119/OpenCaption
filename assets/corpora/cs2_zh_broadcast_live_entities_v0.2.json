@@ -31,7 +31,10 @@
       "csdb_nuke": "https://csdb.gg/maps/nuke/",
       "liquipedia_dust2": "https://liquipedia.net/counterstrike/Dust_II/cs2"
     },
-    "license_status": "not_declared_in_source_files"
+    "creation_method": "AI-assisted compilation and normalization from public reference links supplied by the project maintainer; reviewed and adopted by the maintainer.",
+    "source_license_status": "No redistribution license was identified on the referenced pages; the links are factual references, not incorporated license grants.",
+    "project_material_license": "PolyForm-Noncommercial-1.0.0",
+    "license_scope": "The project license applies only to project-contributed selection, structure, translations, annotations, and other original expression. Facts, names, trademarks, and any third-party material remain subject to their respective rights."
   },
   "translation_rules": [
     {
