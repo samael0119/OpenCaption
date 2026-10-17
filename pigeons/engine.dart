@@ -17,14 +17,17 @@ class EngineConfig {
     required this.mode,
     required this.threads,
     required this.names,
+    this.automaticAssist,
   });
   String asrPath;
   String vadPath;
   String translationPath;
   String mode;
   int threads;
+
   /// Bounded user scene/context hint or glossary data; never an instruction.
   String names;
+  bool? automaticAssist;
 }
 
 class RecognitionEvent {
@@ -54,6 +57,7 @@ class BilingualEvent {
     required this.endMs,
     required this.english,
     required this.chinese,
+    this.appliedHints,
   });
   int epoch;
   int window;
@@ -61,6 +65,9 @@ class BilingualEvent {
   int endMs;
   String english;
   String chinese;
+
+  /// Exact bounded hint data used for this inference, for causal evidence filtering.
+  String? appliedHints;
 }
 
 @HostApi()
@@ -76,7 +83,7 @@ abstract class EngineHost {
   void cancel();
 
   /// Replace the bounded E2E hint string between audio windows.
-  void updateHints(String hints);
+  void updateHints(String hints, bool automaticAssist);
   @async
   void release();
   @async

@@ -11,13 +11,14 @@ import 'appearance.dart';
 import 'build_config.dart';
 import 'captions.dart';
 import 'corpus.dart';
+import 'scene_assistant.dart';
 import 'translation.dart';
 
 class _RecentEnglish {
-  _RecentEnglish(this.text, this.at);
+  _RecentEnglish(this.text, this.startMs, this.endMs);
 
   final String text;
-  final DateTime at;
+  final int startMs, endMs;
 }
 
 class SessionController extends ChangeNotifier implements EngineEvents {
@@ -25,8 +26,109 @@ class SessionController extends ChangeNotifier implements EngineEvents {
   bool playbackAudio = false;
   String captionTask = 'bilingual';
   bool showChinese = true;
-  CorpusProfile corpusProfile = CorpusProfile.none;
-  bool autoTermHints = false;
+  CorpusProfile _corpusProfile = CorpusProfile.none;
+  bool _autoTermHints = false;
+  bool _corpusLoadFailed = false;
+  static const _corpusFailureNotice = '词库暂不可用，已切换到通用字幕';
+  bool get corpusLoadFailed => _corpusLoadFailed;
+  final scene = SceneAssistant();
+  final _hintedConcepts = <String>{};
+  int _assistanceFloorMs = 0;
+  int _recentClockMs = 0, _recentFloorMs = 0;
+  String? _manualMap, _manualTeam1, _manualTeam2;
+  String? get manualMap => _manualMap;
+  String? get manualTeam1 => _manualTeam1;
+  String? get manualTeam2 => _manualTeam2;
+  bool get hasManualTeams => _manualTeam1 != null && _manualTeam2 != null;
+  bool get hasSceneCorrection =>
+      _manualMap != null || _manualTeam1 != null || _manualTeam2 != null;
+  // The native flag controls automatic domain-only verification windows.
+  // Explicit corrections remain in every window; Dart automatic assistance
+  // and actual-hint provenance stay enabled, including scene conflict checks.
+  bool get _nativeAutomaticAssist =>
+      autoTermHints && _manualMap == null && !hasManualTeams;
+  bool get canCorrectScene =>
+      initialized &&
+      endToEnd &&
+      autoTermHints &&
+      (running || phase == SessionPhase.paused);
+  String? get assistanceMap => autoTermHints ? _manualMap ?? scene.map : null;
+  List<String> get assistanceTeams => !autoTermHints
+      ? const []
+      : hasManualTeams
+      ? List.unmodifiable([_manualTeam1!, _manualTeam2!])
+      : scene.teams;
+  bool get sceneCorrectionConflict =>
+      autoTermHints &&
+      ((_manualMap != null && scene.map != null && _manualMap != scene.map) ||
+          (hasManualTeams &&
+              scene.teams.length == 2 &&
+              !scene.teams.toSet().containsAll([
+                _manualTeam1!,
+                _manualTeam2!,
+              ])));
+
+  void _clearManualScene() {
+    _manualMap = _manualTeam1 = _manualTeam2 = null;
+  }
+
+  void correctScene({String? map, String? team1, String? team2}) {
+    if (!canCorrectScene) throw StateError('Scene correction unavailable');
+    if (map != null && !corpus.sceneChoices('map').contains(map)) {
+      throw ArgumentError.value(map, 'map', 'Unknown map');
+    }
+    final first = team1 == null ? null : corpus.canonicalTeam(team1);
+    final second = team2 == null ? null : corpus.canonicalTeam(team2);
+    if ((team1 != null && first == null) ||
+        (team2 != null && second == null) ||
+        (first != null && first == second)) {
+      throw ArgumentError('Choose two different known teams');
+    }
+    _manualMap = map;
+    _manualTeam1 = first;
+    _manualTeam2 = second;
+    _resetAssistance(
+      clearInjected: false,
+      floorMs: max(_audioMs, _recentClockMs),
+    );
+    _updateEndToEndHints();
+    notifyListeners();
+  }
+
+  void restoreAutomaticScene() {
+    if (!canCorrectScene) throw StateError('Scene correction unavailable');
+    correctScene();
+  }
+
+  CorpusProfile get corpusProfile =>
+      _corpusLoadFailed ? CorpusProfile.none : _corpusProfile;
+  set corpusProfile(CorpusProfile value) {
+    _corpusProfile = value;
+    _clearManualScene();
+    // Selecting a library is the opt-in; no second required switch.
+    _autoTermHints = value != CorpusProfile.none;
+    _resetAssistance(floorMs: running ? max(_audioMs, _recentClockMs) : 0);
+    if (initialized) _updateEndToEndHints();
+  }
+
+  bool get autoTermHints => _autoTermHints && !_corpusLoadFailed;
+  set autoTermHints(bool value) {
+    _autoTermHints = value && _corpusProfile != CorpusProfile.none;
+    _clearManualScene();
+    _resetAssistance(floorMs: running ? max(_audioMs, _recentClockMs) : 0);
+    if (initialized) _updateEndToEndHints();
+  }
+
+  void _resetAssistance({bool clearInjected = true, int floorMs = 0}) {
+    _assistanceFloorMs = floorMs;
+    _recentEnglish.clear();
+    _recentClockMs = _recentFloorMs = floorMs;
+    if (clearInjected) {
+      _hintedConcepts.clear();
+    }
+    scene.reset(epoch);
+  }
+
   double overlayBackgroundOpacity = .86;
   SubtitleColor sourceSubtitleColor = SubtitleColor.yellow;
   SubtitleColor translationSubtitleColor = SubtitleColor.green;
@@ -147,14 +249,17 @@ class SessionController extends ChangeNotifier implements EngineEvents {
   Future<void> _initialize() async {
     EngineEvents.setUp(this);
     await models.initialize();
-    corpus = await CorpusIndex.load(rootBundle);
+    await loadCorpusAssets(rootBundle);
     final prefs = await SharedPreferences.getInstance();
     fontSize = (prefs.getDouble('fontSize') ?? 24).clamp(20, 36);
     showEnglish = prefs.getBool('showEnglish') ?? true;
     showChinese = prefs.getBool('showChinese') ?? true;
     if (!showEnglish && !showChinese) showChinese = true;
     corpusProfile = CorpusProfile.fromId(prefs.getString('corpusProfile'));
-    autoTermHints = prefs.getBool('autoTermHints') ?? false;
+    // Legacy false was the old default, not evidence of an explicit opt-out.
+    if (prefs.getBool('auxiliaryV020Initialized') == true) {
+      autoTermHints = prefs.getBool('autoTermHints') ?? true;
+    }
     overlayBackgroundOpacity =
         (prefs.getDouble('overlayBackgroundOpacity') ?? .86).clamp(.2, 1.0);
     final savedSourceColor = prefs.getString('sourceSubtitleColor');
@@ -232,6 +337,11 @@ class SessionController extends ChangeNotifier implements EngineEvents {
       message = '原生服务不可用，请在 Android 实机运行';
     }
     initialized = true;
+    if (_corpusLoadFailed && !message.contains(_corpusFailureNotice)) {
+      message = message.isEmpty
+          ? _corpusFailureNotice
+          : '$_corpusFailureNotice；$message';
+    }
     _ticker = Timer.periodic(const Duration(milliseconds: 200), (_) => tick());
     notifyListeners();
   }
@@ -241,8 +351,11 @@ class SessionController extends ChangeNotifier implements EngineEvents {
     await p.setDouble('fontSize', fontSize);
     await p.setBool('showEnglish', showEnglish);
     await p.setBool('showChinese', showChinese);
-    await p.setString('corpusProfile', corpusProfile.id);
-    await p.setBool('autoTermHints', autoTermHints);
+    // A transient bad asset is not a user opt-out. Persist their requested
+    // selection so a repaired bundle can restore it without another prompt.
+    await p.setString('corpusProfile', _corpusProfile.id);
+    await p.setBool('autoTermHints', _autoTermHints);
+    await p.setBool('auxiliaryV020Initialized', true);
     await p.setDouble('overlayBackgroundOpacity', overlayBackgroundOpacity);
     await p.setString('sourceSubtitleColor', sourceSubtitleColor.id);
     await p.setString('translationSubtitleColor', translationSubtitleColor.id);
@@ -265,6 +378,32 @@ class SessionController extends ChangeNotifier implements EngineEvents {
     await p.setBool('localHttp', service.allowLocalHttp);
     await p.setInt('tokenBudget', service.tokenBudget);
     await storage.write(key: 'external_api_key', value: service.apiKey);
+    notifyListeners();
+  }
+
+  /// Load packaged data while idle; failed data must not block plain captions.
+  /// Accepting a bundle keeps the same recovery path testable without devices.
+  Future<void> loadCorpusAssets(AssetBundle bundle) async {
+    if (!canConfigure) {
+      throw StateError('cannot reload corpus during an active session');
+    }
+    try {
+      corpus = await CorpusIndex.load(bundle);
+      _corpusLoadFailed = false;
+      if (message == _corpusFailureNotice) {
+        message = '';
+      } else if (message.startsWith('$_corpusFailureNotice；')) {
+        message = message.substring(_corpusFailureNotice.length + 1);
+      }
+    } catch (_) {
+      corpus = CorpusIndex.fromPacks(const []);
+      _corpusLoadFailed = true;
+      metrics['corpus_load_errors'] = (metrics['corpus_load_errors'] ?? 0) + 1;
+      message = _corpusFailureNotice;
+    }
+    _resetAssistance(floorMs: _audioMs);
+    _clearManualScene();
+    if (initialized) _updateEndToEndHints();
     notifyListeners();
   }
 
@@ -291,6 +430,8 @@ class SessionController extends ChangeNotifier implements EngineEvents {
     phase = SessionPhase.preparing;
     message = '准备模型…';
     final e = ++epoch;
+    _clearManualScene();
+    _resetAssistance();
     notifyListeners();
     try {
       if (!await host.requestMicrophone()) {
@@ -318,8 +459,9 @@ class SessionController extends ChangeNotifier implements EngineEvents {
               : '',
           mode: endToEnd ? 'e2e' : mode.name,
           threads: threads,
+          automaticAssist: _nativeAutomaticAssist,
           names: endToEnd
-              ? corpus.e2eHints(contextHint, profile: corpusProfile)
+              ? _preparedHints()
               : corpus.asrPrompt(contextHint, profile: corpusProfile),
         ),
       );
@@ -401,10 +543,10 @@ class SessionController extends ChangeNotifier implements EngineEvents {
     final e = ++epoch;
     phase = SessionPhase.preparing;
     notifyListeners();
-    _lastVoice = 0;
+    _lastVoice = _audioMs = 0;
     _revisions.clear();
     _closedWindows.clear();
-    _recentEnglish.clear();
+    _resetAssistance();
     stable.reset();
     context.clear();
     ledger.gap(epoch, '暂停间隔 · 从当前声音继续', DateTime.now());
@@ -423,8 +565,9 @@ class SessionController extends ChangeNotifier implements EngineEvents {
                 : '',
             mode: endToEnd ? 'e2e' : mode.name,
             threads: threads,
+            automaticAssist: _nativeAutomaticAssist,
             names: endToEnd
-                ? corpus.e2eHints(contextHint, profile: corpusProfile)
+                ? _preparedHints()
                 : corpus.asrPrompt(contextHint, profile: corpusProfile),
           ),
         );
@@ -434,6 +577,10 @@ class SessionController extends ChangeNotifier implements EngineEvents {
       }
       if (e != epoch) return;
       if (backendFlavor == 'gemmaE2E') await _configureAudio();
+      if (e != epoch) return;
+      if (endToEnd) {
+        await host.updateHints(_preparedHints(), _nativeAutomaticAssist);
+      }
       if (e != epoch) return;
       await host.start(e);
       if (e != epoch) return;
@@ -489,7 +636,8 @@ class SessionController extends ChangeNotifier implements EngineEvents {
     ledger.clear();
     _translationPayloads.clear();
     _translationQueue.clear();
-    _recentEnglish.clear();
+    _clearManualScene();
+    _resetAssistance();
     phase = SessionPhase.idle;
     contextHint = '';
     message = '';
@@ -578,6 +726,7 @@ class SessionController extends ChangeNotifier implements EngineEvents {
     );
     if (event.finalResult) _closedWindows.add(event.window);
     if (stable.conflict) message = '识别结果发生冲突，已确认字幕保持不变';
+    final assistanceChanged = _advanceAssistanceClock(event.endMs);
     if (english.isNotEmpty) {
       final id = '$sessionId-$epoch-${_segment++}';
       final item = ledger.append(
@@ -592,10 +741,12 @@ class SessionController extends ChangeNotifier implements EngineEvents {
       final related = corpus.match(english, profile: corpusProfile);
       final payload = context.payload(english, related, contextHint);
       _translationPayloads[item.id] = payload;
-      _rememberRecentEnglish(english);
+      _rememberRecentEnglish(english, event.startMs, event.endMs);
       _updateEndToEndHints();
       if (running) context.add(english);
       _enqueueTranslation(item.id);
+    } else if (assistanceChanged) {
+      _updateEndToEndHints();
     }
     notifyListeners();
   }
@@ -607,6 +758,33 @@ class SessionController extends ChangeNotifier implements EngineEvents {
         !(running || phase == SessionPhase.pausing)) {
       return;
     }
+    if (!_closedWindows.add(event.window)) return;
+    _trimRecognitionState(event.window);
+    final eligibleEvidence = event.startMs >= _assistanceFloorMs;
+    final previousMap = scene.map;
+    if (eligibleEvidence &&
+        autoTermHints &&
+        corpusProfile != CorpusProfile.none) {
+      final injected = event.appliedHints == null
+          ? _hintedConcepts
+          : corpus
+                .match(
+                  event.appliedHints!,
+                  limit: corpus.termCount,
+                  profile: corpusProfile,
+                )
+                .map(corpus.sceneConceptFor)
+                .toSet();
+      scene.observe(
+        corpus,
+        event.english,
+        epoch: epoch,
+        window: event.window,
+        endMs: event.endMs,
+        injectedConcepts: injected,
+      );
+    }
+    final mapChanged = _clearRecentForMapChange(previousMap, event.startMs);
     final id = '$sessionId-$epoch-${_segment++}';
     final item = ledger.append(
       id: id,
@@ -618,14 +796,16 @@ class SessionController extends ChangeNotifier implements EngineEvents {
     );
     _pruneTranslationState();
     if (item != null) {
-      if (event.english.trim().isNotEmpty) {
-        _rememberRecentEnglish(event.english);
+      if (eligibleEvidence &&
+          !(mapChanged && scene.map == null) &&
+          event.english.trim().isNotEmpty) {
+        _rememberRecentEnglish(event.english, event.startMs, event.endMs);
       }
       _updateEndToEndHints();
       String corrected = '';
       if (captionTask == 'chinese') {
         try {
-          corrected = parseTranslationText(event.chinese);
+          corrected = _parseCaptionChinese(event);
         } on TranslationFailure {
           corrected = translationUnavailableText;
         }
@@ -633,8 +813,9 @@ class SessionController extends ChangeNotifier implements EngineEvents {
         try {
           corrected = corpus.correctChinese(
             event.english,
-            parseTranslationText(event.chinese),
+            _parseCaptionChinese(event),
             profile: corpusProfile,
+            map: assistanceMap,
           );
         } on TranslationFailure {
           corrected = translationUnavailableText;
@@ -773,8 +954,10 @@ class SessionController extends ChangeNotifier implements EngineEvents {
   @override
   void activity(int epoch, double level, bool speech, int audioMs) {
     if (epoch != this.epoch || !running) return;
+    if (audioMs < _audioMs) return;
     this.level = level;
     _audioMs = audioMs;
+    if (_advanceAssistanceClock(audioMs)) _updateEndToEndHints();
     if (speech) _lastVoice = audioMs;
     phase = audioMs - _lastVoice >= 8000
         ? SessionPhase.waiting
@@ -802,10 +985,17 @@ class SessionController extends ChangeNotifier implements EngineEvents {
     if (epoch != this.epoch || !(running || phase == SessionPhase.pausing)) {
       return;
     }
+    _resetAssistance(
+      clearInjected: false,
+      floorMs: max(_assistanceFloorMs, endMs),
+    );
+    _updateEndToEndHints();
     ledger.gap(
       epoch,
       '此处收音未完成（${(startMs / 1000).toStringAsFixed(1)}–${(endMs / 1000).toStringAsFixed(1)} 秒）',
       DateTime.now(),
+      startMs: startMs,
+      endMs: endMs,
     );
     _pruneTranslationState();
     metrics['gaps'] = (metrics['gaps'] ?? 0) + 1;
@@ -836,32 +1026,115 @@ class SessionController extends ChangeNotifier implements EngineEvents {
     }
   }
 
-  void _rememberRecentEnglish(String text) {
+  String _parseCaptionChinese(BilingualEvent event) {
+    String identity(String value) =>
+        value.trim().replaceFirst(RegExp(r'[.!。！]+$'), '').toLowerCase();
+    final sameName = identity(event.english) == identity(event.chinese);
+    return parseTranslationText(
+      event.chinese,
+      allowNumeric: true,
+      preservedIdentifiers: captionTask == 'chinese' || sameName
+          ? corpus.preservedIdentifiers(profile: corpusProfile)
+          : const {},
+    );
+  }
+
+  bool _pruneRecentEnglish(int audioMs) {
+    _recentClockMs = max(_recentClockMs, max(_audioMs, audioMs));
+    final before = _recentEnglish.length;
+    _recentEnglish.removeWhere(
+      (entry) =>
+          _recentClockMs - entry.endMs > 60000 ||
+          entry.startMs < _recentFloorMs,
+    );
+    final removed = before - _recentEnglish.length;
+    if (removed > 0) {
+      metrics['recent_context_expired'] =
+          (metrics['recent_context_expired'] ?? 0) + removed;
+    }
+    metrics['recent_context_entries'] = _recentEnglish.length;
+    return removed > 0;
+  }
+
+  bool _clearRecentForMapChange(String? previousMap, int floorMs) {
+    if (_manualMap != null) return false;
+    if (previousMap == null || previousMap == scene.map) return false;
+    _recentEnglish.clear();
+    _recentFloorMs = max(_recentFloorMs, floorMs);
+    metrics['recent_context_entries'] = 0;
+    metrics['recent_context_scope_clears'] =
+        (metrics['recent_context_scope_clears'] ?? 0) + 1;
+    return true;
+  }
+
+  bool _advanceAssistanceClock(int audioMs) {
+    if (!autoTermHints) return false;
+    final previousMap = scene.map;
+    final sceneChanged = scene.advanceClock(audioMs);
+    final expired = _pruneRecentEnglish(audioMs);
+    final scopeChanged = _clearRecentForMapChange(previousMap, audioMs);
+    return sceneChanged || expired || scopeChanged;
+  }
+
+  void _rememberRecentEnglish(String text, int startMs, int endMs) {
     if (!autoTermHints || corpusProfile == CorpusProfile.none) return;
-    final clean = text.replaceAll(RegExp(r'[\r\n]+'), ' ').trim();
-    if (clean.isEmpty) return;
-    final now = DateTime.now();
-    _recentEnglish.addLast(_RecentEnglish(clean, now));
-    while (_recentEnglish.isNotEmpty &&
-        now.difference(_recentEnglish.first.at) > const Duration(minutes: 1)) {
+    _pruneRecentEnglish(endMs);
+    if (startMs < _recentFloorMs || _recentClockMs - endMs > 60000) return;
+    final clean = CorpusIndex.sanitizeContext(text);
+    if (clean.isEmpty || _recentEnglish.any((entry) => entry.text == clean)) {
+      return;
+    }
+    _recentEnglish.addLast(_RecentEnglish(clean, startMs, endMs));
+    while (_recentEnglish.length > 6) {
       _recentEnglish.removeFirst();
     }
-    while (_recentEnglish.length > 12) {
-      _recentEnglish.removeFirst();
+    metrics['recent_context_entries'] = _recentEnglish.length;
+  }
+
+  String _preparedHints() {
+    final hints = corpus.e2eHints(
+      contextHint,
+      profile: corpusProfile,
+      map: assistanceMap,
+      teams: assistanceTeams,
+      mapIsManual: _manualMap != null,
+      teamsAreManual: hasManualTeams,
+    );
+    _registerHints(hints);
+    return hints;
+  }
+
+  void _registerHints(String hints) {
+    // Permanently exclude injected concepts for this epoch. Conservative but
+    // independent of bridge timing: hinted output never reinforces its source.
+    for (final term in corpus.match(
+      hints,
+      limit: corpus.termCount,
+      profile: corpusProfile,
+    )) {
+      _hintedConcepts.add(corpus.sceneConceptFor(term));
     }
+    metrics['hint_token_estimate'] = CorpusIndex.estimateHintTokens(hints);
+    metrics['hint_characters'] = hints.length;
   }
 
   void _updateEndToEndHints() {
-    if (!endToEnd || !autoTermHints || corpusProfile == CorpusProfile.none) {
-      return;
-    }
+    if (!endToEnd) return;
+    _pruneRecentEnglish(_audioMs);
     final hints = corpus.e2eHints(
       contextHint,
       profile: corpusProfile,
       recentEnglish: _recentEnglish.map((entry) => entry.text),
-      includeRecent: true,
+      includeRecent: autoTermHints,
+      map: assistanceMap,
+      teams: assistanceTeams,
+      mapIsManual: _manualMap != null,
+      teamsAreManual: hasManualTeams,
     );
-    unawaited(host.updateHints(hints).catchError((_) {}));
+    _registerHints(hints);
+    unawaited(
+      host.updateHints(hints, _nativeAutomaticAssist).catchError((_) {}),
+    );
   }
 
   Future<void> applyOverlayOpacity() async {

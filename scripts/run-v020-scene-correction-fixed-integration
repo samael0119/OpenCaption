@@ -1,0 +1,56 @@
+#!/usr/bin/env bash
+set -euo pipefail
+cd "$(dirname "$0")/.."
+export JAVA_HOME=/home/hyh/Tools/java/eclipse-temurin-jdk17
+export PATH="$JAVA_HOME/bin:$PATH"
+export OPENCAPTION_JAVA_HOME="$JAVA_HOME"
+export OPENCAPTION_CMAKE_JOBS=1
+export GRADLE_USER_HOME="$PWD/.gradle"
+export PUB_CACHE="$PWD/.pub-cache"
+
+out=evaluation/results/v020-independent
+verify_sources() {
+  python3 - <<'PY'
+import hashlib,json
+from pathlib import Path
+d=json.loads(Path('evaluation/results/v020-independent/scene_correction_fixed_source_snapshot.json').read_text())
+for path,digest in d['files'].items():
+    if hashlib.sha256(Path(path).read_bytes()).hexdigest()!=digest:
+        raise RuntimeError('Frozen source changed: '+path)
+PY
+}
+run_phase() {
+  local phase="$1"
+  shift
+  verify_sources
+  local status=0
+  "$@" >"$out/scene_correction_fixed_${phase}.log" 2>&1 || status=$?
+  python3 - "$phase" "$status" <<'PY'
+import json,sys
+from datetime import datetime,timezone
+from pathlib import Path
+row=dict(phase=sys.argv[1],exit_code=int(sys.argv[2]),utc=datetime.now(timezone.utc).isoformat())
+with Path('evaluation/results/v020-independent/scene_correction_fixed_pipeline.jsonl').open('a') as f:
+    f.write(json.dumps(row)+'\n')
+with Path('docs/v0.2.0执行检查点.md').open('a') as f:
+    f.write('\n- 场景纠错规范修复流水线 '+row['utc']+'：'+row['phase']+' exit='+str(row['exit_code'])+'，阶段成功不等于整版质量通过。\n')
+PY
+  [[ "$status" == 0 ]] || exit "$status"
+  verify_sources
+}
+[[ ! -e "$out/scene_correction_fixed_pipeline.jsonl" ]] || { echo 'Inspect existing integration; never rerun implicitly' >&2; exit 3; }
+run_phase dart_tests scripts/flutterw test --no-pub test/scene_correction_test.dart
+run_phase analyze scripts/flutterw analyze --no-pub
+run_phase apk scripts/flutterw build apk --debug --flavor gemmaE2E --target-platform android-arm64 --no-pub
+run_phase ui_preview scripts/build-local-ui-preview
+run_phase signature .tools/android-sdk/build-tools/36.0.0/apksigner verify --verbose --print-certs build/app/outputs/flutter-apk/app-gemmae2e-debug.apk
+python3 - <<'PY'
+from pathlib import Path
+import hashlib,json
+from datetime import datetime,timezone
+p=Path('build/app/outputs/flutter-apk/app-gemmae2e-debug.apk')
+Path('evaluation/results/v020-independent/scene_correction_fixed_apk_snapshot.json').write_text(json.dumps(dict(
+    utc=datetime.now(timezone.utc).isoformat(),apk=str(p.resolve()),bytes=p.stat().st_size,
+    sha256=hashlib.sha256(p.read_bytes()).hexdigest(),source_snapshot='scene_correction_fixed_source_snapshot.json',
+    scope='Unreleased current-session scene correction UI candidate; no phone or independent quality acceptance'),indent=2)+'\n')
+PY

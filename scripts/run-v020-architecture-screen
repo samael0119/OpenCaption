@@ -1,0 +1,16 @@
+#!/usr/bin/env bash
+set -euo pipefail
+cd /home/hyh/Projects/OpenCaption
+mode="${1:?prepare|run|summarize}"
+case "$mode" in
+  prepare|summarize) memory=512M; high=384M; seconds=90 ;;
+  run) memory=2048M; high=1792M; seconds=600 ;;
+  *) exit 2 ;;
+esac
+export XDG_RUNTIME_DIR=/run/user/1000
+export DBUS_SESSION_BUS_ADDRESS=unix:path=/run/user/1000/bus
+exec systemd-run --user --scope --quiet --collect --unit="opencaption-architecture-screen1-${mode}" \
+  -p "MemoryHigh=$high" -p "MemoryMax=$memory" -p MemorySwapMax=0 \
+  timeout --signal=TERM --kill-after=10s "$seconds" \
+  flock -n evaluation/results/v020-independent/model.lock \
+  /home/hyh/Tools/litert/litert-venv/bin/python evaluation/v020_architecture_screen.py "$mode"

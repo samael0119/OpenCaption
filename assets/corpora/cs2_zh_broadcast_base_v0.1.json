@@ -3,7 +3,7 @@
   "id": "cs2-zh-broadcast-base",
   "domain": "counter-strike-2",
   "display_name": "Counter-Strike 英文赛事解说 → 中文字幕基础语料",
-  "version": "0.1.0",
+  "version": "0.1.3",
   "language_pair": "en-US -> zh-CN",
   "provenance": {
     "provided_file": "cs2_zh_broadcast_corpus_v0.1.json",
@@ -144,7 +144,8 @@
       "source_refs": [
         "blast_communication",
         "hltv_watch_guide"
-      ]
+      ],
+      "scene_entity": false
     },
     {
       "id": "cs2-pistol-round",
@@ -217,7 +218,8 @@
       "preserve": false,
       "source_refs": [
         "hltv_watch_guide"
-      ]
+      ],
+      "scene_entity": false
     },
     {
       "id": "cs2-early-round",
@@ -297,7 +299,13 @@
         "perfectworld_dictionary",
         "blast_communication",
         "hltv_watch_guide"
-      ]
+      ],
+      "hint_exclude": [
+        "eco tourism",
+        "eco friendly",
+        "eco system"
+      ],
+      "policy_review_id": "v020-cs2-eco"
     },
     {
       "id": "cs2-anti-eco",
@@ -321,8 +329,15 @@
     },
     {
       "id": "cs2-force-buy",
-      "correction_sources": ["force buy", "force buying", "forcebuy"],
-      "wrong_targets": ["强制购买", "强行购买"],
+      "correction_sources": [
+        "force buy",
+        "force buying",
+        "forcebuy"
+      ],
+      "wrong_targets": [
+        "强制购买",
+        "强行购买"
+      ],
       "english": "force-buy",
       "aliases": [
         "force buy",
@@ -343,6 +358,27 @@
       "source_refs": [
         "perfectworld_dictionary",
         "blast_communication"
+      ],
+      "hint_exclude": [
+        "software",
+        "tickets",
+        "property",
+        "subscription",
+        "license",
+        "licence"
+      ],
+      "policy_review_id": "v020-cs2-force-buy",
+      "correction_exclude": [
+        "software",
+        "tickets",
+        "property",
+        "subscription",
+        "license",
+        "licence"
+      ],
+      "correction_target_exclude": [
+        "强制购买条款",
+        "强制购买软件"
       ]
     },
     {
@@ -409,9 +445,41 @@
     },
     {
       "id": "cs2-save",
-      "correction_sources": ["save", "saving"],
-      "correction_exclude": ["file", "files", "time", "money", "settings", "replay", "life"],
-      "wrong_targets": ["保存武器", "保存", "存枪"],
+      "correction_sources": [
+        "save the awp",
+        "save their awp",
+        "save the rifle",
+        "save the gun",
+        "save the weapon",
+        "save their weapons",
+        "saving the awp",
+        "saving their rifles",
+        "decide to save",
+        "decides to save",
+        "forced to save",
+        "have to save",
+        "going to save",
+        "save this round",
+        "save for the next round"
+      ],
+      "correction_exclude": [
+        "file",
+        "files",
+        "time",
+        "money",
+        "settings",
+        "replay",
+        "life",
+        "battery",
+        "energy",
+        "document",
+        "documents"
+      ],
+      "wrong_targets": [
+        "保存武器",
+        "保存",
+        "存枪"
+      ],
       "english": "save",
       "aliases": [
         "saving",
@@ -433,6 +501,27 @@
         "perfectworld_dictionary",
         "blast_communication",
         "hltv_watch_guide"
+      ],
+      "hint_exclude": [
+        "file",
+        "files",
+        "time",
+        "money",
+        "settings",
+        "replay",
+        "life",
+        "battery",
+        "energy",
+        "document",
+        "documents"
+      ],
+      "policy_review_id": "v020-cs2-save",
+      "correction_target_exclude": [
+        "保存文件",
+        "保存文档",
+        "保存设置",
+        "保存录像",
+        "保存数据"
       ]
     },
     {
@@ -579,7 +668,19 @@
         "perfectworld_dictionary",
         "blast_communication",
         "hltv_watch_guide"
-      ]
+      ],
+      "hint_exclude": [
+        "entry fee",
+        "data entry",
+        "entry level",
+        "entry ticket"
+      ],
+      "hint_sources": [
+        "entry fragger",
+        "entry fraggers",
+        "entry player"
+      ],
+      "policy_review_id": "v020-cs2-entry-fragger"
     },
     {
       "id": "cs2-lurker",
@@ -604,7 +705,13 @@
         "perfectworld_dictionary",
         "blast_communication",
         "hltv_watch_guide"
-      ]
+      ],
+      "hint_exclude": [
+        "forum",
+        "chat room",
+        "online community"
+      ],
+      "policy_review_id": "v020-cs2-lurker"
     },
     {
       "id": "cs2-anchor",
@@ -628,7 +735,15 @@
       "source_refs": [
         "blast_communication",
         "hltv_watch_guide"
-      ]
+      ],
+      "hint_exclude": [
+        "ship",
+        "boat",
+        "news anchor",
+        "anchor text",
+        "anchor link"
+      ],
+      "policy_review_id": "v020-cs2-anchor"
     },
     {
       "id": "cs2-rotator",
@@ -728,6 +843,20 @@
       "source_refs": [
         "blast_communication",
         "hltv_watch_guide"
+      ],
+      "hint_exclude": [
+        "default settings",
+        "default value",
+        "default printer",
+        "default browser",
+        "default application"
+      ],
+      "policy_review_id": "v020-cs2-default",
+      "hint_sources": [
+        "play default",
+        "default setup",
+        "default strategy",
+        "default map control"
       ]
     },
     {
@@ -753,7 +882,16 @@
         "perfectworld_dictionary",
         "blast_communication",
         "hltv_watch_guide"
-      ]
+      ],
+      "hint_exclude": [
+        "execute the command",
+        "execute a command",
+        "execute code",
+        "execute the code",
+        "execute a program",
+        "execute an order"
+      ],
+      "policy_review_id": "v020-cs2-execute"
     },
     {
       "id": "cs2-fake",
@@ -880,7 +1018,18 @@
       "source_refs": [
         "perfectworld_dictionary",
         "blast_communication"
-      ]
+      ],
+      "hint_exclude": [
+        "rotate the wheel",
+        "rotate the image",
+        "rotate the screen",
+        "rotate the camera",
+        "rotate the tires",
+        "rotate the tyres",
+        "rotation of the earth",
+        "employee rotation"
+      ],
+      "policy_review_id": "v020-cs2-rotate"
     },
     {
       "id": "cs2-retake",
@@ -927,7 +1076,14 @@
         "perfectworld_dictionary",
         "blast_communication",
         "hltv_watch_guide"
-      ]
+      ],
+      "hint_exclude": [
+        "stack trace",
+        "call stack",
+        "stack of",
+        "stack overflow"
+      ],
+      "policy_review_id": "v020-cs2-stack"
     },
     {
       "id": "cs2-gamble-stack",
@@ -1095,7 +1251,9 @@
       "preserve": false,
       "source_refs": [
         "blast_communication"
-      ]
+      ],
+      "hint_exclude": [],
+      "policy_review_id": "v020-cs2-dry-peek"
     },
     {
       "id": "cs2-jiggle-peek",
@@ -1120,7 +1278,9 @@
       "source_refs": [
         "perfectworld_dictionary",
         "blast_communication"
-      ]
+      ],
+      "hint_exclude": [],
+      "policy_review_id": "v020-cs2-jiggle-peek"
     },
     {
       "id": "cs2-wide-swing",
@@ -1247,7 +1407,17 @@
       "source_refs": [
         "perfectworld_dictionary",
         "blast_communication"
-      ]
+      ],
+      "hint_exclude": [
+        "email",
+        "emails",
+        "spam folder",
+        "spam filter",
+        "spam message",
+        "spam messages",
+        "inbox"
+      ],
+      "policy_review_id": "v020-cs2-spam"
     },
     {
       "id": "cs2-wallbang",
@@ -1452,7 +1622,15 @@
       "source_refs": [
         "perfectworld_dictionary",
         "blast_communication"
-      ]
+      ],
+      "hint_exclude": [
+        "candle",
+        "lamp",
+        "fireplace",
+        "street",
+        "literature"
+      ],
+      "policy_review_id": "v020-cs2-lit"
     },
     {
       "id": "cs2-tag",
@@ -1476,7 +1654,16 @@
       "source_refs": [
         "perfectworld_dictionary",
         "blast_communication"
-      ]
+      ],
+      "hint_exclude": [
+        "name tag",
+        "price tag",
+        "html",
+        "metadata",
+        "tag the photo",
+        "tag the image"
+      ],
+      "policy_review_id": "v020-cs2-tag"
     },
     {
       "id": "cs2-whiff",
@@ -1530,9 +1717,23 @@
         "trading"
       ],
       "chinese": "补枪",
-      "wrong_targets": ["交易"],
-      "correction_sources": ["no trade available", "trade kill", "trade frag", "refrag"],
-      "correction_exclude": ["skin", "skins", "trade offer", "trade offers"],
+      "wrong_targets": [
+        "交易"
+      ],
+      "correction_sources": [
+        "no trade available",
+        "trade kill",
+        "trade frag",
+        "refrag"
+      ],
+      "correction_exclude": [
+        "skin",
+        "skins",
+        "trade offer",
+        "trade offers",
+        "stocks",
+        "shares"
+      ],
       "alternatives": [
         "换人头"
       ],
@@ -1547,6 +1748,28 @@
         "perfectworld_dictionary",
         "blast_communication",
         "hltv_watch_guide"
+      ],
+      "hint_exclude": [
+        "skin",
+        "skins",
+        "trade offer",
+        "trade offers",
+        "stocks",
+        "shares"
+      ],
+      "hint_sources": [
+        "no trade available",
+        "trade kill",
+        "trade frag",
+        "refrag"
+      ],
+      "policy_review_id": "v020-cs2-trade",
+      "correction_target_exclude": [
+        "交易平台",
+        "交易市场",
+        "交易记录",
+        "交易所",
+        "饰品交易"
       ]
     },
     {
@@ -1590,7 +1813,25 @@
       "preserve": false,
       "source_refs": [
         "perfectworld_dictionary"
-      ]
+      ],
+      "hint_exclude": [
+        "pick a color",
+        "pick a colour",
+        "pick a file",
+        "pick a number",
+        "pick a name",
+        "pick an option",
+        "pick a date",
+        "guitar pick",
+        "pick up"
+      ],
+      "hint_sources": [
+        "opening pick",
+        "find a pick",
+        "finds a pick",
+        "gets a pick"
+      ],
+      "policy_review_id": "v020-cs2-pick"
     },
     {
       "id": "cs2-frag",
@@ -1718,7 +1959,16 @@
         "perfectworld_dictionary",
         "blast_communication",
         "hltv_watch_guide"
-      ]
+      ],
+      "hint_exclude": [
+        "utility bill",
+        "utility company",
+        "utility vehicle",
+        "utility function",
+        "utility knife",
+        "utility software"
+      ],
+      "policy_review_id": "v020-cs2-utility"
     },
     {
       "id": "cs2-flashbang",
@@ -1781,7 +2031,12 @@
       "preserve": false,
       "source_refs": [
         "blast_communication"
-      ]
+      ],
+      "hint_exclude": [
+        "photography",
+        "camera"
+      ],
+      "policy_review_id": "v020-cs2-anti-flash"
     },
     {
       "id": "cs2-smoke",
@@ -2161,7 +2416,9 @@
       "preserve": false,
       "source_refs": [
         "blast_communication"
-      ]
+      ],
+      "hint_exclude": [],
+      "policy_review_id": "v020-cs2-game-sense"
     },
     {
       "id": "cs2-meta",
@@ -2182,7 +2439,25 @@
       "preserve": false,
       "source_refs": [
         "hltv_watch_guide"
-      ]
+      ],
+      "hint_exclude": [
+        "meta analysis",
+        "meta data",
+        "meta tag",
+        "meta tags",
+        "meta description",
+        "meta company",
+        "facebook"
+      ],
+      "hint_sources": [
+        "current meta",
+        "new meta",
+        "the meta",
+        "cs2 meta",
+        "weapon meta",
+        "meta shift"
+      ],
+      "policy_review_id": "v020-cs2-meta"
     },
     {
       "id": "cs2-awp",
@@ -2221,9 +2496,47 @@
       "context": "",
       "avoid": [],
       "preserve": false,
+      "correction_sources": [
+        "just a scout"
+      ],
+      "correction_exclude": [
+        "scout ahead",
+        "scout for talent",
+        "scout for candidates",
+        "scout for the club",
+        "scout at the club",
+        "scout troop",
+        "boy scout",
+        "girl scout"
+      ],
+      "wrong_targets": [
+        "侦察兵"
+      ],
       "source_refs": [
         "perfectworld_dictionary",
         "csgo_api"
+      ],
+      "hint_exclude": [
+        "scout ahead",
+        "scout for talent",
+        "scout for candidates",
+        "scout for the club",
+        "scout at the club",
+        "scout troop",
+        "boy scout",
+        "girl scout"
+      ],
+      "hint_sources": [
+        "SSG 08",
+        "SSG08",
+        "a scout",
+        "the scout"
+      ],
+      "policy_review_id": "v020-cs2-ssg-08",
+      "correction_target_exclude": [
+        "童子军",
+        "侦察兵部队",
+        "侦察兵训练"
       ]
     },
     {
@@ -2371,7 +2684,16 @@
         "perfectworld_dictionary",
         "blast_communication",
         "hltv_watch_guide"
-      ]
+      ],
+      "hint_exclude": [
+        "fishing",
+        "fish",
+        "hook",
+        "bait shop",
+        "click bait",
+        "clickbait"
+      ],
+      "policy_review_id": "v020-cs2-bait"
     },
     {
       "id": "cs2-choke",
@@ -2451,5 +2773,11 @@
         "perfectworld_dictionary"
       ]
     }
-  ]
+  ],
+  "policy_review": {
+    "id": "v020-glossary-predicates-20261014",
+    "method": "AI-assisted primary glossary crosscheck and constructed mechanism cases; not independent human/audio gold. Prior maintainer review applies to the original pack, not this new review.",
+    "fixture": "test/fixtures/cs2_glossary_review_v020.json",
+    "automatic_replacement_scope": "Only existing explicitly curated wrong_targets; avoid/alternatives are not executable replacements."
+  }
 }

@@ -1,0 +1,476 @@
+{
+  "frozen_before_controller_replay": true,
+  "sources": {
+    "evaluation/results/s0-20261013/supplement.jsonl": "5359dd90842ee4deef60f0b1d53f49a21cdfffa3287447e709f4907f68634c08",
+    "evaluation/results/s0-20261013/local_followup/scene_inference.jsonl": "957a00fc719b98f5c50f6d4b10580930709e2d22b229cc3688cfdb60d36ccf2d",
+    "evaluation/results/s0-20261013/local_followup/scene_manifest.json": "fffb1a0a55463f4a1315a06c3e6c9327a565a6dd7d1aa8d0c5f88b9998a3d285"
+  },
+  "sessions": [
+    {
+      "id": "original_no_hint",
+      "windows": [
+        {
+          "start_ms": 0,
+          "end_ms": 5000,
+          "inference_ms": 2315,
+          "status": "subtitle",
+          "english": "Going through. Looking for going through.",
+          "chinese": "译文暂不可用",
+          "applied_hints": "",
+          "raw": "Going through. Looking for going through.\nand 译文暂不可用",
+          "origin": "supplement/no_hint"
+        },
+        {
+          "start_ms": 5000,
+          "end_ms": 10000,
+          "inference_ms": 3284,
+          "status": "subtitle",
+          "english": "and walking 78 feet bit finishes the job they lost him on lobby",
+          "chinese": "和步行78英尺，比特完成任务他们在大厅里失去了他",
+          "applied_hints": "",
+          "raw": "and walking 78 feet bit finishes the job they lost him on lobby\n和步行78英尺，比特完成任务他们在大厅里失去了他\n",
+          "origin": "supplement/no_hint"
+        },
+        {
+          "start_ms": 10000,
+          "end_ms": 15000,
+          "inference_ms": 2720,
+          "status": "subtitle",
+          "english": "Know the clamps come in. They can spread now. Take heaven and hell.",
+          "chinese": "知道夹子来了。它们现在可以扩散了。去天堂和地狱吧。",
+          "applied_hints": "",
+          "raw": "Know the clamps come in. They can spread now. Take heaven and hell.\n知道夹子来了。它们现在可以扩散了。去天堂和地狱吧。\n",
+          "origin": "supplement/no_hint"
+        },
+        {
+          "start_ms": 15000,
+          "end_ms": 20000,
+          "inference_ms": 2063,
+          "status": "subtitle",
+          "english": "Has he got the nerve? Can he hold it?",
+          "chinese": "他有胆量吗？他能坚持住吗？",
+          "applied_hints": "",
+          "raw": "Has he got the nerve? Can he hold it?\n他有胆量吗？他能坚持住吗？",
+          "origin": "supplement/no_hint"
+        },
+        {
+          "start_ms": 20000,
+          "end_ms": 25000,
+          "inference_ms": 2268,
+          "status": "subtitle",
+          "english": "He needs something. Jacob delivers the headshot.",
+          "chinese": "他需要一些东西。雅各布打出头枪。",
+          "applied_hints": "",
+          "raw": "He needs something. Jacob delivers the headshot.\n他需要一些东西。雅各布打出头枪。",
+          "origin": "supplement/no_hint"
+        },
+        {
+          "start_ms": 25000,
+          "end_ms": 30000,
+          "inference_ms": 4079,
+          "status": "invalid",
+          "english": "",
+          "chinese": "",
+          "applied_hints": "",
+          "raw": "And number two to nine is fit there big back on towards the lobby side it's wonderful brought down\n和中文：\n和二号到九号是站在那里大后卫向着大厅那边它很棒地拉下来",
+          "origin": "supplement/no_hint"
+        },
+        {
+          "start_ms": 30000,
+          "end_ms": 35000,
+          "inference_ms": 3590,
+          "status": "subtitle",
+          "english": "Produce a weird one now. Break up the vent. He has to come up the vent. Spot is not going to get away with it. Maybe",
+          "chinese": "现在要一个奇怪的。 打断通风口。 他必须从通风口上来。 斯波特不会逃脱的。 也许",
+          "applied_hints": "",
+          "raw": "Produce a weird one now. Break up the vent. He has to come up the vent. Spot is not going to get away with it. Maybe\nand Chinese: 现在要一个奇怪的。 打断通风口。 他必须从通风口上来。 斯波特不会逃脱的。 也许",
+          "origin": "supplement/no_hint"
+        },
+        {
+          "start_ms": 35000,
+          "end_ms": 40000,
+          "inference_ms": 2590,
+          "status": "subtitle",
+          "english": "Enough of a bait though maybe that draws their attention or what that's getting from the",
+          "chinese": "够了诱饵，也许这会吸引他们的注意力或者什么",
+          "applied_hints": "",
+          "raw": "Enough of a bait though maybe that draws their attention or what that's getting from the\nand Chinese: 够了诱饵，也许这会吸引他们的注意力或者什么",
+          "origin": "supplement/no_hint"
+        },
+        {
+          "start_ms": 40000,
+          "end_ms": 45000,
+          "inference_ms": 2597,
+          "status": "subtitle",
+          "english": "Impact on impact frozen makes it a one-round game",
+          "chinese": "和 冲击与冲击冻结，使其成为一回合比赛",
+          "applied_hints": "",
+          "raw": "Impact on impact frozen makes it a one-round game\n和 冲击与冲击冻结，使其成为一回合比赛",
+          "origin": "supplement/no_hint"
+        },
+        {
+          "start_ms": 45000,
+          "end_ms": 48006,
+          "inference_ms": 2478,
+          "status": "subtitle",
+          "english": "And nonsense there and it's Jacob needed something",
+          "chinese": "和那胡言乱语在那里，雅各布需要一些东西",
+          "applied_hints": "",
+          "raw": "And nonsense there and it's Jacob needed something\n和那胡言乱语在那里，雅各布需要一些东西",
+          "origin": "supplement/no_hint"
+        }
+      ]
+    },
+    {
+      "id": "cached_tail_no_hint",
+      "windows": [
+        {
+          "start_ms": 0,
+          "end_ms": 5000,
+          "inference_ms": 2315,
+          "status": "subtitle",
+          "english": "Going through. Looking for going through.",
+          "chinese": "译文暂不可用",
+          "applied_hints": "",
+          "raw": "Going through. Looking for going through.\nand 译文暂不可用",
+          "origin": "supplement/no_hint"
+        },
+        {
+          "start_ms": 5000,
+          "end_ms": 10000,
+          "inference_ms": 3284,
+          "status": "subtitle",
+          "english": "and walking 78 feet bit finishes the job they lost him on lobby",
+          "chinese": "和步行78英尺，比特完成任务他们在大厅里失去了他",
+          "applied_hints": "",
+          "raw": "and walking 78 feet bit finishes the job they lost him on lobby\n和步行78英尺，比特完成任务他们在大厅里失去了他\n",
+          "origin": "supplement/no_hint"
+        },
+        {
+          "start_ms": 10000,
+          "end_ms": 15000,
+          "inference_ms": 2720,
+          "status": "subtitle",
+          "english": "Know the clamps come in. They can spread now. Take heaven and hell.",
+          "chinese": "知道夹子来了。它们现在可以扩散了。去天堂和地狱吧。",
+          "applied_hints": "",
+          "raw": "Know the clamps come in. They can spread now. Take heaven and hell.\n知道夹子来了。它们现在可以扩散了。去天堂和地狱吧。\n",
+          "origin": "supplement/no_hint"
+        },
+        {
+          "start_ms": 15000,
+          "end_ms": 20000,
+          "inference_ms": 2063,
+          "status": "subtitle",
+          "english": "Has he got the nerve? Can he hold it?",
+          "chinese": "他有胆量吗？他能坚持住吗？",
+          "applied_hints": "",
+          "raw": "Has he got the nerve? Can he hold it?\n他有胆量吗？他能坚持住吗？",
+          "origin": "supplement/no_hint"
+        },
+        {
+          "start_ms": 20000,
+          "end_ms": 25000,
+          "inference_ms": 2268,
+          "status": "subtitle",
+          "english": "He needs something. Jacob delivers the headshot.",
+          "chinese": "他需要一些东西。雅各布打出头枪。",
+          "applied_hints": "",
+          "raw": "He needs something. Jacob delivers the headshot.\n他需要一些东西。雅各布打出头枪。",
+          "origin": "supplement/no_hint"
+        },
+        {
+          "start_ms": 25000,
+          "end_ms": 30000,
+          "inference_ms": 4079,
+          "status": "invalid",
+          "english": "",
+          "chinese": "",
+          "applied_hints": "",
+          "raw": "And number two to nine is fit there big back on towards the lobby side it's wonderful brought down\n和中文：\n和二号到九号是站在那里大后卫向着大厅那边它很棒地拉下来",
+          "origin": "supplement/no_hint"
+        },
+        {
+          "start_ms": 30000,
+          "end_ms": 35000,
+          "inference_ms": 3590,
+          "status": "subtitle",
+          "english": "Produce a weird one now. Break up the vent. He has to come up the vent. Spot is not going to get away with it. Maybe",
+          "chinese": "现在要一个奇怪的。 打断通风口。 他必须从通风口上来。 斯波特不会逃脱的。 也许",
+          "applied_hints": "",
+          "raw": "Produce a weird one now. Break up the vent. He has to come up the vent. Spot is not going to get away with it. Maybe\nand Chinese: 现在要一个奇怪的。 打断通风口。 他必须从通风口上来。 斯波特不会逃脱的。 也许",
+          "origin": "supplement/no_hint"
+        },
+        {
+          "start_ms": 35000,
+          "end_ms": 40000,
+          "inference_ms": 4938,
+          "status": "subtitle",
+          "english": "Enough of a bait though, maybe that draws their attention or what? That's getting close to the",
+          "chinese": "不过，别再用诱饵了，也许那样会吸引他们的注意或者什么？这快要接近了",
+          "applied_hints": "",
+          "raw": "English: Enough of a bait though, maybe that draws their attention or what? That's getting close to the\nChinese: 不过，别再用诱饵了，也许那样会吸引他们的注意或者什么？这快要接近了",
+          "origin": "scene_inference/no_hint"
+        },
+        {
+          "start_ms": 40000,
+          "end_ms": 45000,
+          "inference_ms": 1918,
+          "status": "subtitle",
+          "english": "Impact on impact frozen makes it a one-round game",
+          "chinese": "冲击对冲击冻结使其成为一轮游戏",
+          "applied_hints": "",
+          "raw": "English: Impact on impact frozen makes it a one-round game\nChinese: 冲击对冲击冻结使其成为一轮游戏",
+          "origin": "scene_inference/no_hint"
+        },
+        {
+          "start_ms": 45000,
+          "end_ms": 48006,
+          "inference_ms": 2355,
+          "status": "subtitle",
+          "english": "nonsense there and it's jacob needed something",
+          "chinese": "鬼话在那里，雅各布需要一些东西",
+          "applied_hints": "",
+          "raw": "English: nonsense there and it's jacob needed something\nChinese: 鬼话在那里，雅各布需要一些东西",
+          "origin": "scene_inference/no_hint"
+        }
+      ]
+    },
+    {
+      "id": "cached_tail_oracle_hint",
+      "windows": [
+        {
+          "start_ms": 0,
+          "end_ms": 5000,
+          "inference_ms": 2315,
+          "status": "subtitle",
+          "english": "Going through. Looking for going through.",
+          "chinese": "译文暂不可用",
+          "applied_hints": "",
+          "raw": "Going through. Looking for going through.\nand 译文暂不可用",
+          "origin": "supplement/no_hint"
+        },
+        {
+          "start_ms": 5000,
+          "end_ms": 10000,
+          "inference_ms": 3284,
+          "status": "subtitle",
+          "english": "and walking 78 feet bit finishes the job they lost him on lobby",
+          "chinese": "和步行78英尺，比特完成任务他们在大厅里失去了他",
+          "applied_hints": "",
+          "raw": "and walking 78 feet bit finishes the job they lost him on lobby\n和步行78英尺，比特完成任务他们在大厅里失去了他\n",
+          "origin": "supplement/no_hint"
+        },
+        {
+          "start_ms": 10000,
+          "end_ms": 15000,
+          "inference_ms": 2720,
+          "status": "subtitle",
+          "english": "Know the clamps come in. They can spread now. Take heaven and hell.",
+          "chinese": "知道夹子来了。它们现在可以扩散了。去天堂和地狱吧。",
+          "applied_hints": "",
+          "raw": "Know the clamps come in. They can spread now. Take heaven and hell.\n知道夹子来了。它们现在可以扩散了。去天堂和地狱吧。\n",
+          "origin": "supplement/no_hint"
+        },
+        {
+          "start_ms": 15000,
+          "end_ms": 20000,
+          "inference_ms": 2063,
+          "status": "subtitle",
+          "english": "Has he got the nerve? Can he hold it?",
+          "chinese": "他有胆量吗？他能坚持住吗？",
+          "applied_hints": "",
+          "raw": "Has he got the nerve? Can he hold it?\n他有胆量吗？他能坚持住吗？",
+          "origin": "supplement/no_hint"
+        },
+        {
+          "start_ms": 20000,
+          "end_ms": 25000,
+          "inference_ms": 2268,
+          "status": "subtitle",
+          "english": "He needs something. Jacob delivers the headshot.",
+          "chinese": "他需要一些东西。雅各布打出头枪。",
+          "applied_hints": "",
+          "raw": "He needs something. Jacob delivers the headshot.\n他需要一些东西。雅各布打出头枪。",
+          "origin": "supplement/no_hint"
+        },
+        {
+          "start_ms": 25000,
+          "end_ms": 30000,
+          "inference_ms": 4079,
+          "status": "invalid",
+          "english": "",
+          "chinese": "",
+          "applied_hints": "",
+          "raw": "And number two to nine is fit there big back on towards the lobby side it's wonderful brought down\n和中文：\n和二号到九号是站在那里大后卫向着大厅那边它很棒地拉下来",
+          "origin": "supplement/no_hint"
+        },
+        {
+          "start_ms": 30000,
+          "end_ms": 35000,
+          "inference_ms": 3590,
+          "status": "subtitle",
+          "english": "Produce a weird one now. Break up the vent. He has to come up the vent. Spot is not going to get away with it. Maybe",
+          "chinese": "现在要一个奇怪的。 打断通风口。 他必须从通风口上来。 斯波特不会逃脱的。 也许",
+          "applied_hints": "",
+          "raw": "Produce a weird one now. Break up the vent. He has to come up the vent. Spot is not going to get away with it. Maybe\nand Chinese: 现在要一个奇怪的。 打断通风口。 他必须从通风口上来。 斯波特不会逃脱的。 也许",
+          "origin": "supplement/no_hint"
+        },
+        {
+          "start_ms": 35000,
+          "end_ms": 40000,
+          "inference_ms": 2900,
+          "status": "subtitle",
+          "english": "Enough of a bait though, maybe that draws their attention. Oh, that's getting close!",
+          "chinese": "够了，这饵可能吸引了他们的注意。哦，快到了！",
+          "applied_hints": "Scene map: Nuke. Relevant callouts: Heaven=天堂; Hell=地狱; Vent=通风管道.",
+          "raw": "English: Enough of a bait though, maybe that draws their attention. Oh, that's getting close!\nChinese: 够了，这饵可能吸引了他们的注意。哦，快到了！",
+          "origin": "scene_inference/oracle_hint"
+        },
+        {
+          "start_ms": 40000,
+          "end_ms": 45000,
+          "inference_ms": 1869,
+          "status": "subtitle",
+          "english": "Impact on impact frozen makes it a one-round game.",
+          "chinese": "冲击对冲击冻结使其成为一轮游戏。",
+          "applied_hints": "Scene map: Nuke. Relevant callouts: Heaven=天堂; Hell=地狱; Vent=通风管道.",
+          "raw": "English: Impact on impact frozen makes it a one-round game.\nChinese: 冲击对冲击冻结使其成为一轮游戏。",
+          "origin": "scene_inference/oracle_hint"
+        },
+        {
+          "start_ms": 45000,
+          "end_ms": 48006,
+          "inference_ms": 2426,
+          "status": "subtitle",
+          "english": "nonsense there and it's jacob needed something",
+          "chinese": "那里是胡言乱语，雅各布需要一些东西",
+          "applied_hints": "Scene map: Nuke. Relevant callouts: Heaven=天堂; Hell=地狱; Vent=通风管道.",
+          "raw": "English: nonsense there and it's jacob needed something\nChinese: 那里是胡言乱语，雅各布需要一些东西",
+          "origin": "scene_inference/oracle_hint"
+        }
+      ]
+    },
+    {
+      "id": "cached_tail_auto_hint",
+      "windows": [
+        {
+          "start_ms": 0,
+          "end_ms": 5000,
+          "inference_ms": 2315,
+          "status": "subtitle",
+          "english": "Going through. Looking for going through.",
+          "chinese": "译文暂不可用",
+          "applied_hints": "",
+          "raw": "Going through. Looking for going through.\nand 译文暂不可用",
+          "origin": "supplement/no_hint"
+        },
+        {
+          "start_ms": 5000,
+          "end_ms": 10000,
+          "inference_ms": 3284,
+          "status": "subtitle",
+          "english": "and walking 78 feet bit finishes the job they lost him on lobby",
+          "chinese": "和步行78英尺，比特完成任务他们在大厅里失去了他",
+          "applied_hints": "",
+          "raw": "and walking 78 feet bit finishes the job they lost him on lobby\n和步行78英尺，比特完成任务他们在大厅里失去了他\n",
+          "origin": "supplement/no_hint"
+        },
+        {
+          "start_ms": 10000,
+          "end_ms": 15000,
+          "inference_ms": 2720,
+          "status": "subtitle",
+          "english": "Know the clamps come in. They can spread now. Take heaven and hell.",
+          "chinese": "知道夹子来了。它们现在可以扩散了。去天堂和地狱吧。",
+          "applied_hints": "",
+          "raw": "Know the clamps come in. They can spread now. Take heaven and hell.\n知道夹子来了。它们现在可以扩散了。去天堂和地狱吧。\n",
+          "origin": "supplement/no_hint"
+        },
+        {
+          "start_ms": 15000,
+          "end_ms": 20000,
+          "inference_ms": 2063,
+          "status": "subtitle",
+          "english": "Has he got the nerve? Can he hold it?",
+          "chinese": "他有胆量吗？他能坚持住吗？",
+          "applied_hints": "",
+          "raw": "Has he got the nerve? Can he hold it?\n他有胆量吗？他能坚持住吗？",
+          "origin": "supplement/no_hint"
+        },
+        {
+          "start_ms": 20000,
+          "end_ms": 25000,
+          "inference_ms": 2268,
+          "status": "subtitle",
+          "english": "He needs something. Jacob delivers the headshot.",
+          "chinese": "他需要一些东西。雅各布打出头枪。",
+          "applied_hints": "",
+          "raw": "He needs something. Jacob delivers the headshot.\n他需要一些东西。雅各布打出头枪。",
+          "origin": "supplement/no_hint"
+        },
+        {
+          "start_ms": 25000,
+          "end_ms": 30000,
+          "inference_ms": 4079,
+          "status": "invalid",
+          "english": "",
+          "chinese": "",
+          "applied_hints": "",
+          "raw": "And number two to nine is fit there big back on towards the lobby side it's wonderful brought down\n和中文：\n和二号到九号是站在那里大后卫向着大厅那边它很棒地拉下来",
+          "origin": "supplement/no_hint"
+        },
+        {
+          "start_ms": 30000,
+          "end_ms": 35000,
+          "inference_ms": 3590,
+          "status": "subtitle",
+          "english": "Produce a weird one now. Break up the vent. He has to come up the vent. Spot is not going to get away with it. Maybe",
+          "chinese": "现在要一个奇怪的。 打断通风口。 他必须从通风口上来。 斯波特不会逃脱的。 也许",
+          "applied_hints": "",
+          "raw": "Produce a weird one now. Break up the vent. He has to come up the vent. Spot is not going to get away with it. Maybe\nand Chinese: 现在要一个奇怪的。 打断通风口。 他必须从通风口上来。 斯波特不会逃脱的。 也许",
+          "origin": "supplement/no_hint"
+        },
+        {
+          "start_ms": 35000,
+          "end_ms": 40000,
+          "inference_ms": 2830,
+          "status": "subtitle",
+          "english": "Enough of a bait though, maybe that draws their attention or something. That's getting close.",
+          "chinese": "够了，也许那样会吸引他们的注意或者什么。快到了。",
+          "applied_hints": "Scene map: Nuke. Relevant callouts: Vent=管道",
+          "raw": "English: Enough of a bait though, maybe that draws their attention or something. That's getting close.\nChinese: 够了，也许那样会吸引他们的注意或者什么。快到了。",
+          "origin": "scene_inference/auto_hint"
+        },
+        {
+          "start_ms": 40000,
+          "end_ms": 45000,
+          "inference_ms": 1917,
+          "status": "subtitle",
+          "english": "Impact on impact frozen makes it a one-round game.",
+          "chinese": "冲击对冲击冻结使其成为一轮游戏。",
+          "applied_hints": "Scene map: Nuke. Relevant callouts: Vent=管道",
+          "raw": "English: Impact on impact frozen makes it a one-round game.\nChinese: 冲击对冲击冻结使其成为一轮游戏。",
+          "origin": "scene_inference/auto_hint"
+        },
+        {
+          "start_ms": 45000,
+          "end_ms": 48006,
+          "inference_ms": 2363,
+          "status": "subtitle",
+          "english": "nonsense there and it's jacob needed something",
+          "chinese": "那里是胡言乱语，雅各布需要一些东西",
+          "applied_hints": "Scene map: Nuke. Relevant callouts: Vent=管道",
+          "raw": "English: nonsense there and it's jacob needed something\nChinese: 那里是胡言乱语，雅各布需要一些东西",
+          "origin": "scene_inference/auto_hint"
+        }
+      ]
+    }
+  ],
+  "scope": "Previously tuned Nuke clip; cached two-template tails, not independent quality or regenerated closed-loop inference; original applied hints kept. Reference map is the prior S0 declared scenario, not new annotation.",
+  "reference_map": "Nuke",
+  "reference_teams": [
+    "NAVI",
+    "FaZe"
+  ]
+}

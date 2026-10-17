@@ -1,0 +1,19 @@
+#!/usr/bin/env bash
+set -euo pipefail
+cd "$(dirname "$0")/.."
+# No builds anywhere in this sequence. Existing completed phases are retained.
+if [[ ! -f evaluation/results/v020-independent/controls.jsonl ]]; then
+  scripts/run-v020-runtime-validation controls
+fi
+for run in 1 2 3; do
+  log="evaluation/results/v020-independent/stability_${run}.jsonl"
+  if [[ -f "$log" ]]; then
+    python3 - "$log" <<'PY'
+import json,sys
+rows=[json.loads(s) for s in open(sys.argv[1])]
+assert rows[-1]['type']=='complete', 'Existing unfinished run: inspect before any retry'
+PY
+  else
+    scripts/run-v020-runtime-validation stability --run "$run" --seconds 3600
+  fi
+done

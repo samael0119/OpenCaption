@@ -1,0 +1,8 @@
+#!/usr/bin/env bash
+set -euo pipefail
+cd "$(dirname "$0")/.."
+export XDG_RUNTIME_DIR=/run/user/1000
+export DBUS_SESSION_BUS_ADDRESS=unix:path=/run/user/1000/bus
+mode="${1:?preflight or serve}"
+if [[ "$mode" == "preflight" ]]; then mem=3G; seconds=180; else [[ "$mode" == "serve" ]]; mem=6G; seconds=1800; fi
+exec systemd-run --user --scope --quiet --collect -p MemoryMax="$mem" -p MemorySwapMax=0 timeout --kill-after=10s "$seconds" flock -n evaluation/results/v020-independent/model.lock /home/hyh/Tools/litert/litert-venv/bin/python evaluation/v020_delivery_B.py "$mode"

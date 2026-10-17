@@ -1,0 +1,66 @@
+#!/usr/bin/env bash
+set -euo pipefail
+cd "$(dirname "$0")/.."
+phase="${1:-}"
+runner=(evaluation/s0_probe.py "$phase")
+case "$phase" in
+  prepare) memory_max_mb=512 ;;
+  infer|supplement|prompt_check) memory_max_mb=6144 ;;
+  summarize) memory_max_mb=256 ;;
+  context_768|context_1024)
+    memory_max_mb=6144
+    runner=(evaluation/s0_context_roster.py run --context "${phase#context_}") ;;
+  roster)
+    memory_max_mb=256
+    runner=(evaluation/s0_context_roster.py roster) ;;
+  context_summary)
+    memory_max_mb=256
+    runner=(evaluation/s0_context_roster.py summarize) ;;
+  protocol_screening)
+    memory_max_mb=6144
+    runner=(evaluation/s0_protocol_live.py screening) ;;
+  protocol_choose)
+    memory_max_mb=256
+    runner=(evaluation/s0_protocol_live.py choose) ;;
+  protocol_validation)
+    memory_max_mb=6144
+    runner=(evaluation/s0_protocol_live.py validation) ;;
+  protocol_paced)
+    memory_max_mb=6144
+    runner=(evaluation/s0_protocol_live.py paced) ;;
+  protocol_summary)
+    memory_max_mb=256
+    runner=(evaluation/s0_protocol_live.py summarize) ;;
+  local_prepare|local_summary)
+    memory_max_mb=256
+    subphase=prepare
+    [[ "$phase" == local_summary ]] && subphase=summarize
+    runner=(evaluation/s0_local_followup.py "$subphase") ;;
+  local_infer)
+    memory_max_mb=6144
+    runner=(evaluation/s0_local_followup.py infer) ;;
+  local_vad_cost)
+    memory_max_mb=512
+    runner=(evaluation/s0_vad_cost.py) ;;
+  local_scene_prepare|local_scene_summary)
+    memory_max_mb=256
+    subphase=scene_prepare
+    [[ "$phase" == local_scene_summary ]] && subphase=scene_summarize
+    runner=(evaluation/s0_local_followup.py "$subphase") ;;
+  local_scene_infer)
+    memory_max_mb=6144
+    runner=(evaluation/s0_local_followup.py scene_infer) ;;
+  *) echo 'Usage: bash scripts/run-s0-probe <phase>; phases: prepare infer supplement prompt_check summarize roster context_768 context_1024 context_summary protocol_screening protocol_choose protocol_validation protocol_paced protocol_summary local_prepare local_infer local_summary local_vad_cost local_scene_prepare local_scene_infer local_scene_summary' >&2; exit 2 ;;
+esac
+task_uid="$(id -u)"
+export XDG_RUNTIME_DIR="${XDG_RUNTIME_DIR:-/run/user/$task_uid}"
+export DBUS_SESSION_BUS_ADDRESS="${DBUS_SESSION_BUS_ADDRESS:-unix:path=$XDG_RUNTIME_DIR/bus}"
+if [[ "$phase" == prepare || "$phase" == local_vad_cost ]]; then
+  export PYTHONPATH="$PWD/evaluation/results/s0-20261013/deps${PYTHONPATH:+:$PYTHONPATH}"
+fi
+python_bin="${OPENCAPTION_LITERT_DIR:-/home/hyh/Tools/litert}/litert-venv/bin/python"
+memory_high_mb=$((memory_max_mb * 7 / 8))
+exec systemd-run --user --scope --quiet --collect \
+  --property="MemoryHigh=${memory_high_mb}M" --property="MemoryMax=${memory_max_mb}M" \
+  --property=MemorySwapMax=0 timeout --signal=TERM --kill-after=10s 900s \
+  "$python_bin" "${runner[@]}"

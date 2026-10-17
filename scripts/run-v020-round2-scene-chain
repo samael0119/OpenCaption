@@ -1,0 +1,29 @@
+#!/usr/bin/env bash
+set -euo pipefail
+cd "$(dirname "$0")/.."
+export XDG_RUNTIME_DIR=/run/user/1000
+export DBUS_SESSION_BUS_ADDRESS=unix:path=/run/user/1000/bus
+phase="${1:-baseline}"
+[[ "$phase" == baseline || "$phase" == candidate ]] || exit 2
+out=evaluation/results/v020-round2/scene-chain
+[[ ! -e "$out/${phase}_report.json" ]] || { echo 'Report exists; inspect checkpoint' >&2; exit 3; }
+python3 - "$phase" <<'PY'
+import hashlib,json,sys,tomllib
+from pathlib import Path
+s=json.loads(Path('evaluation/results/v020-convergence/optimization_state.json').read_text())
+a=tomllib.loads(Path('/home/hyh/.codex/automations/opencaption/automation.toml').read_text())
+if s['status']!='active' or a['status']!='ACTIVE' or s['current_round']!=2:
+    raise RuntimeError('Current round is not authorized')
+manifest=Path('evaluation/results/v020-round2/scene-chain')/(sys.argv[1]+'_snapshot.json')
+m=json.loads(manifest.read_text())
+for p,sha in m['files'].items():
+    if hashlib.sha256(Path(p).read_bytes()).hexdigest()!=sha:
+        raise RuntimeError('Frozen input/source changed: '+p)
+PY
+export OPENCAPTION_SCENE_CHAIN_REPORT="$out/${phase}_report.json"
+flock -n evaluation/results/v020-independent/model.lock \
+  systemd-run --user --scope --quiet --collect \
+    -p MemoryHigh=1536M -p MemoryMax=2048M -p MemorySwapMax=0 \
+    timeout --signal=TERM --kill-after=15s 180s \
+    bash scripts/flutterw test --no-pub test/v020_round2_scene_chain_test.dart --reporter expanded \
+    >"$out/${phase}.log" 2>&1

@@ -6,7 +6,7 @@ export GRADLE_USER_HOME="$project_root/.gradle"
 export XDG_CONFIG_HOME="$project_root/.tools/config"
 export FLUTTER_SUPPRESS_ANALYTICS=true
 export CI=true
-export CMAKE_BUILD_PARALLEL_LEVEL=8
+export CMAKE_BUILD_PARALLEL_LEVEL="${OPENCAPTION_CMAKE_JOBS:-8}"
 export PUB_HOSTED_URL="${PUB_HOSTED_URL:-https://pub.flutter-io.cn}"
 export FLUTTER_STORAGE_BASE_URL="${FLUTTER_STORAGE_BASE_URL:-https://storage.flutter-io.cn}"
 if [[ -d "$project_root/.tools/android-sdk" ]]; then

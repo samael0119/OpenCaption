@@ -1,0 +1,8 @@
+#!/usr/bin/env bash
+set -euo pipefail
+cd "$(dirname "$0")/.."
+export XDG_RUNTIME_DIR=/run/user/1000
+export DBUS_SESSION_BUS_ADDRESS=unix:path=/run/user/1000/bus
+for stage in freeze compile audit; do
+  systemd-run --user --scope --quiet --collect -p MemoryMax=512M -p MemorySwapMax=0 timeout --kill-after=5s 60s python evaluation/v020_integrity8.py "$stage"
+done

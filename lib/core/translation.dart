@@ -123,7 +123,11 @@ class TranslationContext {
       .trim();
 }
 
-String parseTranslationText(String raw) {
+String parseTranslationText(
+  String raw, {
+  bool allowNumeric = false,
+  Set<String> preservedIdentifiers = const {},
+}) {
   var text = raw.trim();
   if (text.startsWith('```')) {
     text = text.replaceFirst(
@@ -197,7 +201,11 @@ String parseTranslationText(String raw) {
       .replaceAll(RegExp(r'[\r\n]+'), ' ')
       .replaceAll(RegExp(r'\s+'), ' ')
       .trim();
-  if (!looksLikeSimplifiedChinese(text)) {
+  if (!looksLikeSimplifiedChinese(
+    text,
+    allowNumeric: allowNumeric,
+    preservedIdentifiers: preservedIdentifiers,
+  )) {
     throw const TranslationFailure('invalid_translation');
   }
   return text;
@@ -207,7 +215,11 @@ String parseTranslationText(String raw) {
 /// Latin tokens (player IDs, product names and numbers) but rejects copied
 /// English, JSON/reasoning wrappers, replacement characters and other common
 /// script garbage before text reaches the subtitle UI.
-bool looksLikeSimplifiedChinese(String value) {
+bool looksLikeSimplifiedChinese(
+  String value, {
+  bool allowNumeric = false,
+  Set<String> preservedIdentifiers = const {},
+}) {
   final text = value.trim();
   if (text.isEmpty ||
       text.startsWith('{') ||
@@ -223,6 +235,20 @@ bool looksLikeSimplifiedChinese(String value) {
   }
   if (RegExp(r'[\u0400-\u04ff\u3040-\u30ff\uac00-\ud7af]').hasMatch(text)) {
     return false;
+  }
+  if (RegExp(r'(.)\1{8,}', unicode: true).hasMatch(text)) return false;
+  if (allowNumeric &&
+      RegExp(
+        r'^[+-]?[0-9]{1,12}(?:[.,:/-][0-9]{1,12})*(?:[%％])?[.!。！]?$',
+      ).hasMatch(text)) {
+    return true;
+  }
+  final identity = text.replaceFirst(RegExp(r'[.!。！]+$'), '');
+  if (RegExp(r'^[A-Za-z0-9][A-Za-z0-9_-]{1,31}$').hasMatch(identity) &&
+      preservedIdentifiers.any(
+        (name) => name.toLowerCase() == identity.toLowerCase(),
+      )) {
+    return true;
   }
   final han = RegExp(r'[\u3400-\u9fff]').allMatches(text).length;
   if (han == 0) return false;

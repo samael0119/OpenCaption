@@ -5,6 +5,7 @@ import android.content.Intent
 import android.content.pm.ServiceInfo
 import android.graphics.Color
 import android.graphics.PixelFormat
+import android.graphics.drawable.GradientDrawable
 import android.media.projection.MediaProjection
 import android.media.projection.MediaProjectionManager
 import android.os.*
@@ -12,6 +13,8 @@ import android.provider.Settings
 import android.text.SpannableStringBuilder
 import android.text.Spanned
 import android.text.style.ForegroundColorSpan
+import android.text.style.RelativeSizeSpan
+import android.text.style.StyleSpan
 import android.view.*
 import android.widget.*
 
@@ -90,20 +93,22 @@ class PlaybackCaptionService : Service() {
             WindowManager.LayoutParams.FLAG_NOT_FOCUSABLE or WindowManager.LayoutParams.FLAG_NOT_TOUCH_MODAL,
             PixelFormat.TRANSLUCENT).apply { gravity = Gravity.TOP or Gravity.START; x = (12*dp).toInt(); y = (100*dp).toInt() }
         val panel = LinearLayout(this).apply {
-            orientation = LinearLayout.VERTICAL; setPadding(12, 8, 12, 12); setBackgroundColor(panelColor())
+            orientation = LinearLayout.VERTICAL
+            setPadding((16*dp).toInt(), (8*dp).toInt(), (16*dp).toInt(), (16*dp).toInt())
+            background = GradientDrawable().apply { cornerRadius=16*dp; setColor(panelColor()) }
         }
         val bar = LinearLayout(this)
-        val drag = TextView(this).apply { text = "字幕 · 拖动移动"; setTextColor(-1); textSize = 12f; setPadding(8, 12, 8, 12) }
+        val drag = TextView(this).apply { text = "拖动字幕"; contentDescription = "拖动移动悬浮字幕"; setTextColor(-1); textSize = 12f; setPadding(8, 12, 8, 12) }
         bar.addView(drag, LinearLayout.LayoutParams(0, -2, 1f))
-        var size = 18f
-        fun button(label: String, action: () -> Unit) = Button(this).apply {
-            text = label; textSize = 12f; minWidth = 0; minimumWidth = 0; setPadding(4, 0, 4, 0)
+        var size = 20f
+        fun button(label: String, description: String, widthDp: Int = 48, action: () -> Unit) = Button(this).apply {
+            text = label; contentDescription = description; textSize = 12f; minWidth = 0; minimumWidth = 0; setPadding(4, 0, 4, 0)
             setOnClickListener { action() }
-            bar.addView(this, LinearLayout.LayoutParams((44*dp).toInt(), (36*dp).toInt()))
+            bar.addView(this, LinearLayout.LayoutParams((widthDp*dp).toInt(), (48*dp).toInt()))
         }
-        button("−") { size = (size - 2).coerceAtLeast(12f); subtitle?.textSize = size }
-        button("＋") { size = (size + 2).coerceAtMost(30f); subtitle?.textSize = size }
-        button("停") { stopped?.invoke("playback_stopped"); stopSelf() }
+        button("A−", "缩小字幕") { size = (size - 2).coerceAtLeast(14f); subtitle?.textSize = size }
+        button("A+", "放大字幕") { size = (size + 2).coerceAtMost(36f); subtitle?.textSize = size }
+        button("停止", "停止采集并关闭字幕", 56) { stopped?.invoke("playback_stopped"); stopSelf() }
         var startX = 0; var startY = 0; var touchX = 0f; var touchY = 0f
         drag.setOnTouchListener { _, event ->
             when (event.action) {
@@ -115,14 +120,23 @@ class PlaybackCaptionService : Service() {
                 }
             }; true
         }
-        subtitle = TextView(this).apply { text="等待播放音频…"; textSize=size; setTextColor(sourceSubtitleColor); maxLines=8 }
-        panel.addView(bar); panel.addView(subtitle)
+        subtitle = TextView(this).apply {
+            text="等待播放音频…"; textSize=size; setTextColor(sourceSubtitleColor)
+            setLineSpacing(4*dp, 1.15f); includeFontPadding=false
+        }
+        val content = object : ScrollView(this) {
+            override fun onMeasure(widthMeasureSpec: Int, heightMeasureSpec: Int) {
+                val maximum=(resources.displayMetrics.heightPixels*.55).toInt()
+                super.onMeasure(widthMeasureSpec, MeasureSpec.makeMeasureSpec(maximum, MeasureSpec.AT_MOST))
+            }
+        }.apply { isFillViewport=false; addView(subtitle) }
+        panel.addView(bar); panel.addView(content)
         root = panel; wm.addView(panel, params)
     }
     fun setBackgroundOpacity(value: Float) {
         panelOpacity = value.coerceIn(0.2f, 1f)
         requestedOpacity = panelOpacity
-        handler.post { root?.setBackgroundColor(panelColor()) }
+        handler.post { (root?.background as? GradientDrawable)?.setColor(panelColor()) }
     }
     fun setSubtitleColors(sourceArgb: Int, translationArgb: Int) {
         sourceSubtitleColor = sourceArgb
@@ -146,10 +160,12 @@ class PlaybackCaptionService : Service() {
         handler.removeCallbacks(clearSubtitle)
         lastLines = parsed
         subtitle?.text = render(parsed)
+        (subtitle?.parent as? ScrollView)?.scrollTo(0, 0)
         handler.postDelayed(clearSubtitle, 15000)
     }
     private fun render(lines: List<OverlayLine>): CharSequence {
         val output = SpannableStringBuilder()
+        val bilingual = lines.any { it.kind == "translation" }
         lines.forEachIndexed { index, line ->
             if (index > 0) output.append('\n')
             val start = output.length
@@ -159,6 +175,11 @@ class PlaybackCaptionService : Service() {
                 "translation" -> translationSubtitleColor
                 "source" -> sourceSubtitleColor
                 else -> sourceSubtitleColor
+            }
+            if (bilingual && line.kind == "source") {
+                output.setSpan(RelativeSizeSpan(.78f), start, output.length, Spanned.SPAN_EXCLUSIVE_EXCLUSIVE)
+            } else if (line.kind == "translation") {
+                output.setSpan(StyleSpan(android.graphics.Typeface.BOLD), start, output.length, Spanned.SPAN_EXCLUSIVE_EXCLUSIVE)
             }
             output.setSpan(
                 ForegroundColorSpan(color),

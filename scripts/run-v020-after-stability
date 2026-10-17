@@ -1,0 +1,114 @@
+#!/usr/bin/env bash
+# One local work package, not a recurring automation or release workflow.
+set -euo pipefail
+cd "$(dirname "$0")/.."
+task_root="$PWD"
+task_uid="$(id -u)"
+export XDG_RUNTIME_DIR="${XDG_RUNTIME_DIR:-/run/user/$task_uid}"
+export DBUS_SESSION_BUS_ADDRESS="${DBUS_SESSION_BUS_ADDRESS:-unix:path=$XDG_RUNTIME_DIR/bus}"
+export JAVA_HOME=/home/hyh/Tools/java/eclipse-temurin-jdk17
+export PATH="$JAVA_HOME/bin:$PATH"
+export OPENCAPTION_JAVA_HOME="$JAVA_HOME"
+export GRADLE_USER_HOME="$task_root/.gradle"
+export ANDROID_HOME="$task_root/.tools/android-sdk"
+export OPENCAPTION_CMAKE_JOBS=1
+task_resume="${1:-}"
+[[ -z "$task_resume" || "$task_resume" == --resume-kotlin || "$task_resume" == --resume-signature || "$task_resume" == --resume-short-answers ]] || { echo 'Unsupported resume stage' >&2; exit 3; }
+if [[ -n "$task_resume" ]]; then
+  python3 - "$task_resume" <<'PY'
+import json,pathlib,sys
+sys.path.insert(0,'evaluation')
+from v020_post_pipeline_state import sources,digest
+p=pathlib.Path('evaluation/results/v020-independent')
+rows=[json.loads(x) for x in (p/'post_pipeline.jsonl').read_text().splitlines()]
+phase={'--resume-signature':'apk_signature','--resume-kotlin':'kotlin_tests','--resume-short-answers':'short_answers'}[sys.argv[1]]
+assert rows[-1]['phase']==phase and rows[-1]['state'].startswith('failed_')
+latest={r['phase']:r['state'] for r in rows}
+assert latest.get('dart_tests')=='passed' and latest.get('analyze')=='passed'
+if phase in ('apk_signature','short_answers'):
+    assert latest.get('kotlin_tests')=='passed' and latest.get('apk')=='passed'
+    expected=json.loads((p/'post_resume_artifact.json').read_text())
+    assert digest(pathlib.Path(expected['apk']))==expected['sha256']
+if phase=='short_answers':
+    assert all(latest.get(k)=='passed' for k in ('apk_signature','ui_preview','speech_evidence'))
+old=json.loads((p/'post_resume_predecessor.json').read_text())['sources']; current=sources()
+changed={k for k in old.keys()|current.keys() if old.get(k)!=current.get(k)}
+allowed={'scripts/run-v020-after-stability'}
+if phase=='short_answers':
+    allowed.update({'evaluation/v020_runtime_validation.py','evaluation/v020_short_answer_validation.py',
+        'evaluation/v020_bridge_transport.py','evaluation/v020_post_pipeline_state.py','scripts/run-v020-short-answers'})
+assert changed <= allowed, sorted(changed)
+PY
+fi
+task_phase=waiting_for_stability
+exec 8>evaluation/results/v020-independent/post_pipeline.lock
+flock -n 8 || { echo 'Post-stability job already active' >&2; exit 3; }
+[[ ! -e evaluation/results/v020-independent/post_source_snapshot.json ]] || { echo 'Existing snapshot: inspect checkpoint before resuming' >&2; exit 3; }
+trap 'task_status=$?; if ((task_status != 0)); then python3 evaluation/v020_post_pipeline_state.py event "$task_phase" "failed_$task_status"; fi' EXIT
+python3 evaluation/v020_post_pipeline_state.py event "$task_phase" start
+task_deadline=$((SECONDS+10800))
+while systemctl --user is-active --quiet opencaption-v020-runtime.service; do
+  ((SECONDS < task_deadline)) || { echo 'Runtime did not end within three hours' >&2; exit 124; }
+  sleep 30
+done
+python3 evaluation/v020_stability_summary.py --output evaluation/results/v020-independent/stability_summary.json
+python3 - <<'PY'
+import json,pathlib
+p=pathlib.Path('evaluation/results/v020-independent')
+assert json.loads((p/'stability_summary.json').read_text())['three_resource_runs_complete'], 'Not all three runs are complete'
+assert 'stability 3 complete: requests=720' in (p/'overnight.log').read_text(), 'Final model cleanup/exit not confirmed'
+PY
+python3 evaluation/v020_post_pipeline_state.py event "$task_phase" passed
+python3 evaluation/v020_post_pipeline_state.py snapshot
+
+run_build() {
+  task_phase="$1"; shift
+  python3 evaluation/v020_post_pipeline_state.py check
+  python3 evaluation/v020_post_pipeline_state.py event "$task_phase" start
+  exec 9>evaluation/results/v020-independent/model.lock
+  flock -n 9 || { echo 'Inference active: refusing build' >&2; return 3; }
+  systemd-run --user --scope --quiet --collect \
+    --property=MemoryHigh=5376M --property=MemoryMax=6144M --property=MemorySwapMax=0 \
+    timeout --signal=TERM --kill-after=10s 1200s "$@" \
+    >"evaluation/results/v020-independent/post_${task_phase}.log" 2>&1
+  flock -u 9
+  python3 evaluation/v020_post_pipeline_state.py check
+  python3 evaluation/v020_post_pipeline_state.py event "$task_phase" passed
+}
+if [[ -z "$task_resume" ]]; then
+  run_build dart_tests scripts/flutterw test --no-pub
+  run_build analyze scripts/flutterw analyze --no-pub
+fi
+if [[ "$task_resume" != --resume-signature && "$task_resume" != --resume-short-answers ]]; then
+  run_build kotlin_tests android/gradlew --offline --no-daemon -p android -Ptarget-platform=android-arm64 :app:testGemmaE2EDebugUnitTest
+  run_build apk scripts/flutterw build apk --debug --flavor gemmaE2E --target-platform android-arm64 --no-pub
+fi
+if [[ "$task_resume" != --resume-short-answers ]]; then
+task_phase=apk_signature
+"$ANDROID_HOME/build-tools/36.0.0/apksigner" verify --verbose --print-certs build/app/outputs/flutter-apk/app-gemmae2e-debug.apk \
+  >evaluation/results/v020-independent/post_apk_signature.log
+python3 evaluation/v020_post_pipeline_state.py artifact
+python3 evaluation/v020_post_pipeline_state.py event "$task_phase" passed
+run_build ui_preview scripts/build-local-ui-preview
+task_phase=speech_evidence
+python3 evaluation/v020_post_pipeline_state.py check
+python3 evaluation/v020_post_pipeline_state.py event "$task_phase" start
+scripts/run-v020-speech-evidence
+python3 evaluation/v020_speech_evidence_summary.py >evaluation/results/v020-independent/post_speech_evidence_summary.log
+python3 - <<'PY'
+import json,pathlib
+assert json.loads(pathlib.Path('evaluation/results/v020-independent/speech_evidence_summary.json').read_text())['integrity_pass']
+PY
+python3 evaluation/v020_post_pipeline_state.py event "$task_phase" passed
+fi
+task_phase=short_answers
+python3 evaluation/v020_post_pipeline_state.py check
+python3 evaluation/v020_post_pipeline_state.py event "$task_phase" start
+if [[ "$task_resume" == --resume-short-answers ]]; then
+  scripts/run-v020-short-answers --resume >evaluation/results/v020-independent/post_short_answers.log 2>&1
+else
+  scripts/run-v020-short-answers >evaluation/results/v020-independent/post_short_answers.log 2>&1
+fi
+python3 evaluation/v020_post_pipeline_state.py check
+python3 evaluation/v020_post_pipeline_state.py event "$task_phase" passed
+python3 evaluation/v020_post_pipeline_state.py event pipeline finished

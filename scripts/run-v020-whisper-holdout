@@ -1,0 +1,57 @@
+#!/usr/bin/env bash
+# New, untouched holdout after the main post-stability job, never concurrently.
+set -euo pipefail
+cd "$(dirname "$0")/.."
+task_root="$PWD"
+task_uid="$(id -u)"
+export XDG_RUNTIME_DIR="${XDG_RUNTIME_DIR:-/run/user/$task_uid}"
+export DBUS_SESSION_BUS_ADDRESS="${DBUS_SESSION_BUS_ADDRESS:-unix:path=$XDG_RUNTIME_DIR/bus}"
+[[ ! -e evaluation/results/v020-independent/whisper_evidence.tsv && ! -e evaluation/results/v020-independent/whisper_model.jsonl ]] || { echo 'Holdout already started; inspect before retry' >&2; exit 3; }
+task_deadline=$((SECONDS+14400))
+while systemctl --user is-active --quiet opencaption-v020-post-stability.service || \
+      systemctl --user is-active --quiet opencaption-v020-runtime.service; do
+  ((SECONDS < task_deadline)) || { echo 'Main job still active after four hours' >&2; exit 124; }
+  sleep 30
+done
+python3 - <<'PY'
+import json,pathlib
+p=pathlib.Path('evaluation/results/v020-independent/post_pipeline.jsonl')
+row=json.loads(p.read_text().splitlines()[-1])
+assert row['phase']=='pipeline' and row['state']=='finished','Main job did not finish; inspect actual failure first'
+PY
+python3 evaluation/v020_post_pipeline_state.py check
+task_phase=whisper_evidence
+trap 'task_status=$?; if ((task_status != 0)); then python3 evaluation/v020_post_pipeline_state.py event "$task_phase" "failed_$task_status"; fi' EXIT
+python3 evaluation/v020_post_pipeline_state.py event "$task_phase" start
+exec 9>evaluation/results/v020-independent/model.lock
+flock -n 9 || { echo 'Another model is active' >&2; exit 3; }
+classpath="$(cat evaluation/results/v020-jvm/protocol-classpath.txt):$task_root/evaluation/results/onnxruntime-1.22.0.jar"
+systemd-run --user --scope --quiet --collect \
+  --property=MemoryHigh=448M --property=MemoryMax=512M --property=MemorySwapMax=0 \
+  timeout --signal=TERM --kill-after=10s 120s \
+  /home/hyh/Tools/java/eclipse-temurin-jdk17/bin/java -Xmx128m -cp "$classpath" V020SpeechEvidenceProbe \
+  "$task_root" "$task_root/evaluation/results/v020-independent/whisper_vad_cases.tsv" \
+  >evaluation/results/v020-independent/whisper_evidence.tsv
+python3 - <<'PY'
+import json,pathlib,sys
+sys.path.insert(0,'evaluation')
+from v020_speech_evidence_summary import summarize
+p=pathlib.Path('evaluation/results/v020-independent')
+plan=json.loads((p/'whisper_vad_plan.json').read_text())
+result=summarize((p/'whisper_evidence.tsv').read_text().splitlines(),plan)
+(p/'whisper_vad_summary.json').write_text(json.dumps(result,ensure_ascii=False,indent=2)+'\n')
+assert result['integrity_pass']
+PY
+flock -u 9
+python3 evaluation/v020_post_pipeline_state.py event "$task_phase" passed
+task_phase=whisper_model
+python3 evaluation/v020_post_pipeline_state.py event "$task_phase" start
+flock -n 9 || { echo 'Another model is active' >&2; exit 3; }
+systemd-run --user --scope --quiet --collect \
+  --property=MemoryHigh=5376M --property=MemoryMax=6144M --property=MemorySwapMax=0 \
+  timeout --signal=TERM --kill-after=10s 900s \
+  /home/hyh/Tools/litert/litert-venv/bin/python evaluation/v020_whisper_validation.py \
+  >evaluation/results/v020-independent/whisper_model_service.log 2>&1
+flock -u 9
+python3 evaluation/v020_post_pipeline_state.py check
+python3 evaluation/v020_post_pipeline_state.py event "$task_phase" passed

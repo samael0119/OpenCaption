@@ -202,7 +202,9 @@ data class EngineConfig (
   val translationPath: String,
   val mode: String,
   val threads: Long,
-  val names: String
+  /** Bounded user scene/context hint or glossary data; never an instruction. */
+  val names: String,
+  val automaticAssist: Boolean? = null
 )
  {
   companion object {
@@ -213,7 +215,8 @@ data class EngineConfig (
       val mode = pigeonVar_list[3] as String
       val threads = pigeonVar_list[4] as Long
       val names = pigeonVar_list[5] as String
-      return EngineConfig(asrPath, vadPath, translationPath, mode, threads, names)
+      val automaticAssist = pigeonVar_list[6] as Boolean?
+      return EngineConfig(asrPath, vadPath, translationPath, mode, threads, names, automaticAssist)
     }
   }
   fun toList(): List<Any?> {
@@ -224,6 +227,7 @@ data class EngineConfig (
       mode,
       threads,
       names,
+      automaticAssist,
     )
   }
   override fun equals(other: Any?): Boolean {
@@ -234,7 +238,7 @@ data class EngineConfig (
       return true
     }
     val other = other as EngineConfig
-    return EnginePigeonUtils.deepEquals(this.asrPath, other.asrPath) && EnginePigeonUtils.deepEquals(this.vadPath, other.vadPath) && EnginePigeonUtils.deepEquals(this.translationPath, other.translationPath) && EnginePigeonUtils.deepEquals(this.mode, other.mode) && EnginePigeonUtils.deepEquals(this.threads, other.threads) && EnginePigeonUtils.deepEquals(this.names, other.names)
+    return EnginePigeonUtils.deepEquals(this.asrPath, other.asrPath) && EnginePigeonUtils.deepEquals(this.vadPath, other.vadPath) && EnginePigeonUtils.deepEquals(this.translationPath, other.translationPath) && EnginePigeonUtils.deepEquals(this.mode, other.mode) && EnginePigeonUtils.deepEquals(this.threads, other.threads) && EnginePigeonUtils.deepEquals(this.names, other.names) && EnginePigeonUtils.deepEquals(this.automaticAssist, other.automaticAssist)
   }
 
   override fun hashCode(): Int {
@@ -245,6 +249,7 @@ data class EngineConfig (
     result = 31 * result + EnginePigeonUtils.deepHash(this.mode)
     result = 31 * result + EnginePigeonUtils.deepHash(this.threads)
     result = 31 * result + EnginePigeonUtils.deepHash(this.names)
+    result = 31 * result + EnginePigeonUtils.deepHash(this.automaticAssist)
     return result
   }
 }
@@ -314,7 +319,9 @@ data class BilingualEvent (
   val startMs: Long,
   val endMs: Long,
   val english: String,
-  val chinese: String
+  val chinese: String,
+  /** Exact bounded hint data used for this inference, for causal evidence filtering. */
+  val appliedHints: String? = null
 )
  {
   companion object {
@@ -325,7 +332,8 @@ data class BilingualEvent (
       val endMs = pigeonVar_list[3] as Long
       val english = pigeonVar_list[4] as String
       val chinese = pigeonVar_list[5] as String
-      return BilingualEvent(epoch, window, startMs, endMs, english, chinese)
+      val appliedHints = pigeonVar_list[6] as String?
+      return BilingualEvent(epoch, window, startMs, endMs, english, chinese, appliedHints)
     }
   }
   fun toList(): List<Any?> {
@@ -336,6 +344,7 @@ data class BilingualEvent (
       endMs,
       english,
       chinese,
+      appliedHints,
     )
   }
   override fun equals(other: Any?): Boolean {
@@ -346,7 +355,7 @@ data class BilingualEvent (
       return true
     }
     val other = other as BilingualEvent
-    return EnginePigeonUtils.deepEquals(this.epoch, other.epoch) && EnginePigeonUtils.deepEquals(this.window, other.window) && EnginePigeonUtils.deepEquals(this.startMs, other.startMs) && EnginePigeonUtils.deepEquals(this.endMs, other.endMs) && EnginePigeonUtils.deepEquals(this.english, other.english) && EnginePigeonUtils.deepEquals(this.chinese, other.chinese)
+    return EnginePigeonUtils.deepEquals(this.epoch, other.epoch) && EnginePigeonUtils.deepEquals(this.window, other.window) && EnginePigeonUtils.deepEquals(this.startMs, other.startMs) && EnginePigeonUtils.deepEquals(this.endMs, other.endMs) && EnginePigeonUtils.deepEquals(this.english, other.english) && EnginePigeonUtils.deepEquals(this.chinese, other.chinese) && EnginePigeonUtils.deepEquals(this.appliedHints, other.appliedHints)
   }
 
   override fun hashCode(): Int {
@@ -357,6 +366,7 @@ data class BilingualEvent (
     result = 31 * result + EnginePigeonUtils.deepHash(this.endMs)
     result = 31 * result + EnginePigeonUtils.deepHash(this.english)
     result = 31 * result + EnginePigeonUtils.deepHash(this.chinese)
+    result = 31 * result + EnginePigeonUtils.deepHash(this.appliedHints)
     return result
   }
 }
@@ -410,7 +420,7 @@ interface EngineHost {
   fun drain(callback: (Result<Unit>) -> Unit)
   fun cancel()
   /** Replace the bounded E2E hint string between audio windows. */
-  fun updateHints(hints: String)
+  fun updateHints(hints: String, automaticAssist: Boolean)
   fun release(callback: (Result<Unit>) -> Unit)
   fun translate(epoch: Long, id: String, text: String, payload: String, callback: (Result<String>) -> Unit)
   fun cancelTranslation(id: String)
@@ -538,8 +548,9 @@ interface EngineHost {
           channel.setMessageHandler { message, reply ->
             val args = message as List<Any?>
             val hintsArg = args[0] as String
+            val automaticAssistArg = args[1] as Boolean
             val wrapped: List<Any?> = try {
-              api.updateHints(hintsArg)
+              api.updateHints(hintsArg, automaticAssistArg)
               listOf(null)
             } catch (exception: Throwable) {
               EnginePigeonUtils.wrapError(exception)

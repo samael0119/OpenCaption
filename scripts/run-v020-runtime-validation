@@ -1,0 +1,18 @@
+#!/usr/bin/env bash
+set -euo pipefail
+cd "$(dirname "$0")/.."
+phase="${1:?controls|summary|stability}"
+shift
+python_bin="${OPENCAPTION_LITERT_DIR:-/home/hyh/Tools/litert}/litert-venv/bin/python"
+task_uid="$(id -u)"
+export XDG_RUNTIME_DIR="${XDG_RUNTIME_DIR:-/run/user/$task_uid}"
+export DBUS_SESSION_BUS_ADDRESS="${DBUS_SESSION_BUS_ADDRESS:-unix:path=$XDG_RUNTIME_DIR/bus}"
+# One managed validation model; all runs serialize through this lock.
+exec 9>evaluation/results/v020-independent/model.lock
+flock -n 9 || { echo 'Another validation model run is active' >&2; exit 3; }
+time_limit=900
+[[ "$phase" == stability ]] && time_limit=4500
+exec systemd-run --user --scope --quiet --collect \
+  --property=MemoryHigh=5376M --property=MemoryMax=6144M --property=MemorySwapMax=0 \
+  timeout --signal=TERM --kill-after=10s "${time_limit}s" \
+  "$python_bin" evaluation/v020_runtime_validation.py "$phase" "$@"

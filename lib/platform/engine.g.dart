@@ -115,6 +115,7 @@ class EngineConfig {
     required this.mode,
     required this.threads,
     required this.names,
+    this.automaticAssist,
   });
 
   String asrPath;
@@ -127,7 +128,10 @@ class EngineConfig {
 
   int threads;
 
+  /// Bounded user scene/context hint or glossary data; never an instruction.
   String names;
+
+  bool? automaticAssist;
 
   List<Object?> _toList() {
     return <Object?>[
@@ -137,6 +141,7 @@ class EngineConfig {
       mode,
       threads,
       names,
+      automaticAssist,
     ];
   }
 
@@ -152,6 +157,7 @@ class EngineConfig {
       mode: result[3]! as String,
       threads: result[4]! as int,
       names: result[5]! as String,
+      automaticAssist: result[6] as bool?,
     );
   }
 
@@ -164,7 +170,7 @@ class EngineConfig {
     if (identical(this, other)) {
       return true;
     }
-    return _deepEquals(asrPath, other.asrPath) && _deepEquals(vadPath, other.vadPath) && _deepEquals(translationPath, other.translationPath) && _deepEquals(mode, other.mode) && _deepEquals(threads, other.threads) && _deepEquals(names, other.names);
+    return _deepEquals(asrPath, other.asrPath) && _deepEquals(vadPath, other.vadPath) && _deepEquals(translationPath, other.translationPath) && _deepEquals(mode, other.mode) && _deepEquals(threads, other.threads) && _deepEquals(names, other.names) && _deepEquals(automaticAssist, other.automaticAssist);
   }
 
   @override
@@ -250,6 +256,7 @@ class BilingualEvent {
     required this.endMs,
     required this.english,
     required this.chinese,
+    this.appliedHints,
   });
 
   int epoch;
@@ -264,6 +271,9 @@ class BilingualEvent {
 
   String chinese;
 
+  /// Exact bounded hint data used for this inference, for causal evidence filtering.
+  String? appliedHints;
+
   List<Object?> _toList() {
     return <Object?>[
       epoch,
@@ -272,6 +282,7 @@ class BilingualEvent {
       endMs,
       english,
       chinese,
+      appliedHints,
     ];
   }
 
@@ -287,6 +298,7 @@ class BilingualEvent {
       endMs: result[3]! as int,
       english: result[4]! as String,
       chinese: result[5]! as String,
+      appliedHints: result[6] as String?,
     );
   }
 
@@ -299,7 +311,7 @@ class BilingualEvent {
     if (identical(this, other)) {
       return true;
     }
-    return _deepEquals(epoch, other.epoch) && _deepEquals(window, other.window) && _deepEquals(startMs, other.startMs) && _deepEquals(endMs, other.endMs) && _deepEquals(english, other.english) && _deepEquals(chinese, other.chinese);
+    return _deepEquals(epoch, other.epoch) && _deepEquals(window, other.window) && _deepEquals(startMs, other.startMs) && _deepEquals(endMs, other.endMs) && _deepEquals(english, other.english) && _deepEquals(chinese, other.chinese) && _deepEquals(appliedHints, other.appliedHints);
   }
 
   @override
@@ -467,14 +479,14 @@ class EngineHost {
   }
 
   /// Replace the bounded E2E hint string between audio windows.
-  Future<void> updateHints(String hints) async {
+  Future<void> updateHints(String hints, bool automaticAssist) async {
     final pigeonVar_channelName = 'dev.flutter.pigeon.opencaption.EngineHost.updateHints$pigeonVar_messageChannelSuffix';
     final pigeonVar_channel = BasicMessageChannel<Object?>(
       pigeonVar_channelName,
       pigeonChannelCodec,
       binaryMessenger: pigeonVar_binaryMessenger,
     );
-    final Future<Object?> pigeonVar_sendFuture = pigeonVar_channel.send(<Object?>[hints]);
+    final Future<Object?> pigeonVar_sendFuture = pigeonVar_channel.send(<Object?>[hints, automaticAssist]);
     final pigeonVar_replyList = await pigeonVar_sendFuture as List<Object?>?;
 
     _extractReplyValueOrThrow(

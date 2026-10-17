@@ -1,0 +1,33 @@
+#!/usr/bin/env bash
+set -euo pipefail
+cd "$(dirname "$0")/.."
+export JAVA_HOME=/home/hyh/Tools/java/eclipse-temurin-jdk17
+export OPENCAPTION_JAVA_HOME="$JAVA_HOME"
+export PATH="$JAVA_HOME/bin:$PATH"
+export OPENCAPTION_CMAKE_JOBS=1
+out=evaluation/results/v020-round2/scene-denial
+[[ ! -e "$out/apk_snapshot.json" ]] || { echo 'Already built; inspect checkpoint' >&2; exit 3; }
+verify_sources() {
+  python3 - <<'PY'
+import hashlib,json
+from pathlib import Path
+m=json.loads(Path('evaluation/results/v020-round2/scene-denial/source_snapshot.json').read_text())
+for path,sha in m['files'].items():
+    if hashlib.sha256(Path(path).read_bytes()).hexdigest()!=sha:
+        raise RuntimeError('Current freeze changed: '+path)
+PY
+}
+verify_sources
+scripts/flutterw build apk --debug --flavor gemmaE2E --target-platform android-arm64 --no-pub >"$out/apk_build.log" 2>&1
+verify_sources
+.tools/android-sdk/build-tools/36.0.0/apksigner verify --verbose --print-certs build/app/outputs/flutter-apk/app-gemmae2e-debug.apk >"$out/signature.log" 2>&1
+python3 - <<'PY'
+import hashlib,json
+from pathlib import Path
+from datetime import datetime
+out=Path('evaluation/results/v020-round2/scene-denial');p=Path('build/app/outputs/flutter-apk/app-gemmae2e-debug.apk')
+(out/'apk_snapshot.json').write_text(json.dumps(dict(at=datetime.now().astimezone().isoformat(),
+    path=str(p.resolve()),bytes=p.stat().st_size,sha256=hashlib.sha256(p.read_bytes()).hexdigest(),
+    source_snapshot_sha256=hashlib.sha256((out/'source_snapshot.json').read_bytes()).hexdigest(),
+    scope='Unreleased local debug build; protocol and scene denial fixes, noFFT, no phone acceptance'),indent=2)+'\n')
+PY

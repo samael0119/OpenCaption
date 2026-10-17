@@ -1,0 +1,18 @@
+#!/usr/bin/env bash
+set -euo pipefail
+cd "$(dirname "$0")/.."
+export XDG_RUNTIME_DIR=/run/user/1000
+export DBUS_SESSION_BUS_ADDRESS=unix:path=/run/user/1000/bus
+out=evaluation/results/v020-convergence
+[[ ! -e "$out/gain1_requests.jsonl" ]] || { echo 'Already started; inspect checkpoint' >&2; exit 3; }
+if systemctl --user is-active --quiet opencaption-v020-joint-series.service; then
+  echo 'Joint series active; do not load another model' >&2
+  exit 4
+fi
+python3 evaluation/v020_gain_candidate.py verify
+flock -n evaluation/results/v020-independent/model.lock \
+  systemd-run --user --scope --unit=opencaption-gain-candidate1 --quiet --collect \
+    -p MemoryHigh=5376M -p MemoryMax=6144M -p MemorySwapMax=0 \
+    timeout --signal=TERM --kill-after=15s 600s \
+    /home/hyh/Tools/litert/litert-venv/bin/python evaluation/v020_gain_candidate.py run \
+    >"$out/gain1_run.log" 2>&1

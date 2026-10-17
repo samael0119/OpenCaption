@@ -1,6 +1,7 @@
 import 'dart:async';
 import 'package:file_selector/file_selector.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/rendering.dart' show ScrollDirection;
 import 'package:flutter/foundation.dart';
 import 'package:flutter/services.dart';
 import 'core/captions.dart';
@@ -9,6 +10,8 @@ import 'core/appearance.dart';
 import 'core/session_controller.dart';
 import 'core/corpus.dart';
 import 'core/translation.dart';
+import 'widgets/caption_transcript.dart';
+import 'widgets/scene_controls.dart';
 
 void main() {
   WidgetsFlutterBinding.ensureInitialized();
@@ -389,21 +392,28 @@ class _CaptionShellState extends State<CaptionShell> {
         ),
       ],
       const SizedBox(height: 12),
-      TextField(
-        enabled: c.phase != SessionPhase.preparing,
-        maxLength: 240,
-        decoration: InputDecoration(
-          labelText: '前置上下文提示补充（可选）',
-          hintText: '如：XXX赛后采访 / XXX比赛，XXX VS XXX',
-          helper: _infoHint(
-            summary: '场景与专名提示 · 命令和无关内容会被忽略',
-            title: '前置上下文提示补充',
-            details:
-                '可填写赛事、队伍、地图、采访场景或专有名词，例如“XXX比赛，XXX VS XXX”。模型加载后会把它作为不可信的场景数据提供给 Gemma，用于消歧；不会当作指令执行。命令、脚本、提示词注入、控制字符和过长内容会被自动忽略。',
+      ExpansionTile(
+        tilePadding: EdgeInsets.zero,
+        title: const Text('补充上下文'),
+        subtitle: const Text('可选；选择术语库后自动参考字幕线索'),
+        children: [
+          TextField(
+            enabled: c.phase != SessionPhase.preparing,
+            maxLength: 240,
+            decoration: InputDecoration(
+              labelText: '场景或专名补充（可选）',
+              hintText: '如：XXX赛后采访 / XXX比赛，XXX VS XXX',
+              helper: _infoHint(
+                summary: '场景与专名提示 · 命令和无关内容会被忽略',
+                title: '前置上下文提示补充',
+                details:
+                    '可填写赛事、队伍、地图、采访场景或专有名词，例如“XXX比赛，XXX VS XXX”。模型加载后会把它作为不可信的场景数据提供给 Gemma，用于消歧；不会当作指令执行。命令、脚本、提示词注入、控制字符和过长内容会被自动忽略。',
+              ),
+              border: OutlineInputBorder(),
+            ),
+            onChanged: (v) => c.contextHint = v,
           ),
-          border: OutlineInputBorder(),
-        ),
-        onChanged: (v) => c.contextHint = v,
+        ],
       ),
       const SizedBox(height: 12),
       DropdownButtonFormField<CorpusProfile>(
@@ -411,10 +421,10 @@ class _CaptionShellState extends State<CaptionShell> {
         decoration: InputDecoration(
           labelText: '术语库',
           helper: _infoHint(
-            summary: '默认通用模式 · 点击查看术语提示规则',
+            summary: '选库即开启自动辅助 · 无需填写战队或地图',
             title: '术语库',
             details:
-                '默认通用模式不附加领域术语。选择 CS2 后，只会把当前句命中的少量术语提供给模型；动态术语提示还会参考最近约 1 分钟的已确认英文。术语只用于消歧，不会覆盖模型对完整句意的判断。',
+                '选择 CS2 后默认开启相关术语检索、场景线索累积和已审核误译纠正。只发送近期相关的少量词条；线索不足保持未知，历史阵容快照不会直接确定当前战队。可在设置中关闭自动辅助。',
           ),
         ),
         items: CorpusProfile.values
@@ -432,30 +442,12 @@ class _CaptionShellState extends State<CaptionShell> {
               },
       ),
       if (c.endToEnd && c.corpusProfile == CorpusProfile.cs2)
-        ListTile(
-          contentPadding: EdgeInsets.zero,
-          title: Text(isTestBuild ? '动态术语提示（验证中）' : '动态术语提示'),
-          subtitle: _infoHint(
-            summary: '最近 1 分钟重复出现的术语才会进入提示 · 最多 6 条',
-            title: '动态术语提示',
-            details:
-                '根据最近约 1 分钟的已确认英文，只有重复出现且命中 CS2 术语库的词条才会进入下一段提示，最多 6 条。它是轻量规则，不会启动第二个模型，也不会让整张术语表进入 prompt。',
+        Padding(
+          padding: const EdgeInsets.only(top: 8),
+          child: Text(
+            c.autoTermHints ? '自动辅助已开启 · 线索不足时保持未知' : '自动辅助已关闭 · 可在设置中开启',
+            style: Theme.of(context).textTheme.bodySmall,
           ),
-          trailing: Switch(
-            value: c.autoTermHints,
-            onChanged: c.phase == SessionPhase.preparing
-                ? null
-                : (value) {
-                    setState(() => c.autoTermHints = value);
-                    unawaited(c.savePreferences());
-                  },
-          ),
-          onTap: c.phase == SessionPhase.preparing
-              ? null
-              : () {
-                  setState(() => c.autoTermHints = !c.autoTermHints);
-                  unawaited(c.savePreferences());
-                },
         ),
       const SizedBox(height: 12),
       DropdownButtonFormField<String>(
@@ -641,6 +633,24 @@ class _CaptionShellState extends State<CaptionShell> {
   String _statusSummary() {
     final metrics = c.metrics;
     final parts = <String>[_phaseLabel()];
+    if (c.autoTermHints && c.corpusProfile != CorpusProfile.none) {
+      parts.add(
+        c.assistanceMap == null
+            ? '场景待确认'
+            : '${c.assistanceMap}${c.manualMap == null ? '' : '（已纠正）'}',
+      );
+      if (c.assistanceTeams.length == 2) {
+        parts.add(
+          '${c.assistanceTeams.join(' vs ')}${c.hasManualTeams ? '（已纠正）' : ''}',
+        );
+      }
+    }
+    if (!diagnosticsEnabled) return parts.join(' · ');
+    if (c.autoTermHints &&
+        c.scene.teams.isEmpty &&
+        c.scene.teamCandidates.isNotEmpty) {
+      parts.add('战队候选（未确认）${c.scene.teamCandidates.join(' / ')}');
+    }
     final latency = metrics['e2e_ms'] ?? metrics['asr_ms'];
     if (latency != null) parts.add('最近推理 ${_formatDuration(latency)}');
     final queue =
@@ -869,7 +879,7 @@ class _CaptionShellState extends State<CaptionShell> {
     padding: const EdgeInsets.symmetric(horizontal: 16),
     child: ClipRRect(
       borderRadius: BorderRadius.circular(12),
-      child: ColoredBox(
+      child: Material(
         color: Theme.of(context).colorScheme.surfaceContainer,
         child: ExpansionTile(
           dense: true,
@@ -879,13 +889,33 @@ class _CaptionShellState extends State<CaptionShell> {
           }),
           title: Text(
             _statusSummary(),
-            maxLines: 1,
+            maxLines: 2,
             overflow: TextOverflow.ellipsis,
           ),
           childrenPadding: const EdgeInsets.fromLTRB(8, 0, 8, 8),
           children: [
-            _statusDetails(),
-            if (diagnosticsEnabled) ...[_runtimeModels(), _performance()],
+            ConstrainedBox(
+              constraints: BoxConstraints(
+                maxHeight: MediaQuery.sizeOf(context).height * .36,
+              ),
+              child: SingleChildScrollView(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: [
+                    if (c.initialized && c.endToEnd && c.autoTermHints)
+                      Padding(
+                        padding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
+                        child: SceneControls(controller: c),
+                      ),
+                    _statusDetails(),
+                    if (diagnosticsEnabled) ...[
+                      _runtimeModels(),
+                      _performance(),
+                    ],
+                  ],
+                ),
+              ),
+            ),
           ],
         ),
       ),
@@ -915,7 +945,9 @@ class _CaptionShellState extends State<CaptionShell> {
       Expanded(
         child: NotificationListener<ScrollNotification>(
           onNotification: (n) {
-            if (n is ScrollStartNotification && n.dragDetails != null) {
+            if ((n is ScrollStartNotification && n.dragDetails != null) ||
+                (n is UserScrollNotification &&
+                    n.direction != ScrollDirection.idle)) {
               setState(() => following = false);
             }
             return false;
@@ -946,7 +978,6 @@ class _CaptionShellState extends State<CaptionShell> {
               final resolved = c.ledger.canShowTranslation(item);
               final sourceColor = Color(c.sourceSubtitleColor.argb);
               final translationColor = Color(c.translationSubtitleColor.argb);
-              final errorColor = Theme.of(context).colorScheme.error;
               final chinese = item.status == CaptionStatus.ready && resolved
                   ? item.chinese
                   : item.status == CaptionStatus.failed && resolved
@@ -955,54 +986,36 @@ class _CaptionShellState extends State<CaptionShell> {
                       _ => translationUnavailableText,
                     }
                   : translationPendingText;
-              return Card(
+              return CaptionTranscript(
                 key: ValueKey(item.id),
-                child: Padding(
-                  padding: const EdgeInsets.all(16),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      if (item.english.trim().isNotEmpty &&
-                          (c.showEnglish ||
-                              c.captionTask == 'english' ||
-                              item.status == CaptionStatus.failed))
-                        Text(
-                          item.english,
-                          style: TextStyle(
-                            fontSize: 14,
-                            color: item.status == CaptionStatus.failed
-                                ? errorColor
-                                : sourceColor,
-                          ),
+                source: item.english,
+                translation: chinese,
+                showSource:
+                    c.showEnglish ||
+                    c.captionTask == 'english' ||
+                    item.status == CaptionStatus.failed,
+                showTranslation: c.showChinese && c.captionTask != 'english',
+                fontSize: c.fontSize,
+                sourceColor: c.captionTask == 'chinese'
+                    ? translationColor
+                    : sourceColor,
+                translationColor: c.captionTask == 'chinese'
+                    ? sourceColor
+                    : translationColor,
+                failed: item.status == CaptionStatus.failed,
+                latest: index == c.ledger.items.length - 1,
+                footer:
+                    item.status == CaptionStatus.failed &&
+                        c.phase == SessionPhase.ended
+                    ? Align(
+                        alignment: Alignment.centerRight,
+                        child: TextButton.icon(
+                          onPressed: () => c.retryTranslation(item),
+                          icon: const Icon(Icons.refresh),
+                          label: Text('重试翻译（已尝试 ${item.attempts} 次）'),
                         ),
-                      if (c.showChinese && c.captionTask != 'english') ...[
-                        const SizedBox(height: 8),
-                        Text(
-                          chinese,
-                          style: TextStyle(
-                            fontSize: c.fontSize,
-                            height: 1.45,
-                            color: item.status == CaptionStatus.failed
-                                ? errorColor
-                                : c.captionTask == 'chinese'
-                                ? sourceColor
-                                : translationColor,
-                          ),
-                        ),
-                      ],
-                      if (item.status == CaptionStatus.failed &&
-                          c.phase == SessionPhase.ended)
-                        Align(
-                          alignment: Alignment.centerRight,
-                          child: TextButton.icon(
-                            onPressed: () => c.retryTranslation(item),
-                            icon: const Icon(Icons.refresh),
-                            label: Text('重试翻译（已尝试 ${item.attempts} 次）'),
-                          ),
-                        ),
-                    ],
-                  ),
-                ),
+                      )
+                    : null,
               );
             },
           ),
@@ -1470,7 +1483,7 @@ class _SettingsPageState extends State<SettingsPage> {
           initialValue: c.corpusProfile,
           decoration: const InputDecoration(
             labelText: '术语库',
-            helperText: '通用模式默认不注入领域术语；CS2 模式只发送相关少量词条',
+            helperText: '选库默认开启自动辅助，通用模式不注入领域术语',
           ),
           items: CorpusProfile.values
               .map(
@@ -1489,8 +1502,8 @@ class _SettingsPageState extends State<SettingsPage> {
         if (c.endToEnd && c.corpusProfile == CorpusProfile.cs2)
           SwitchListTile(
             contentPadding: EdgeInsets.zero,
-            title: Text(isTestBuild ? '动态术语提示（验证中）' : '动态术语提示'),
-            subtitle: const Text('最近 1 分钟内重复或高优先级的 CS2 术语才会进入下一段提示'),
+            title: const Text('自动辅助'),
+            subtitle: const Text('参考近期字幕检索术语和判断场景；证据不足自动回退'),
             value: c.autoTermHints,
             onChanged: (value) {
               setState(() => c.autoTermHints = value);

@@ -1,0 +1,18 @@
+#!/usr/bin/env bash
+set -euo pipefail
+cd "$(dirname "$0")/.."
+export OPENCAPTION_JOINT_RUN="${1:?smoke|run1|run2|run3}"
+out=evaluation/results/v020-independent
+[[ ! -e "$out/joint_live_${OPENCAPTION_JOINT_RUN}_model.jsonl" ]] || { echo 'Existing run; inspect checkpoint' >&2; exit 3; }
+exec 9>"$out/model.lock"
+flock -n 9 || { echo 'Another model/build active' >&2; exit 3; }
+export XDG_RUNTIME_DIR=/run/user/1000
+export DBUS_SESSION_BUS_ADDRESS=unix:path=/run/user/1000/bus
+time_limit=4500
+[[ "$OPENCAPTION_JOINT_RUN" == smoke* ]] && time_limit=240
+# Compilation for this Dart test finishes before it starts the Python model.
+exec systemd-run --user --scope --quiet --collect \
+  --property=MemoryHigh=5376M --property=MemoryMax=6144M --property=MemorySwapMax=0 \
+  timeout --signal=TERM --kill-after=10s "${time_limit}s" \
+  scripts/flutterw test --no-pub evaluation/v020_joint_live_test.dart \
+  >"$out/joint_live_${OPENCAPTION_JOINT_RUN}_test.log" 2>&1

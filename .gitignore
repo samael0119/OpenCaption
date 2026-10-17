@@ -24,3 +24,5 @@ evaluation/results/
 *.hprof
 .cxx/
 /AGENTS.md
+
+android/.kotlin/

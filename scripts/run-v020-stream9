@@ -1,0 +1,6 @@
+#!/usr/bin/env bash
+set -euo pipefail
+cd "$(dirname "$0")/.."
+export XDG_RUNTIME_DIR=/run/user/1000
+export DBUS_SESSION_BUS_ADDRESS=unix:path=/run/user/1000/bus
+systemd-run --user --scope --quiet --collect -p MemoryMax=6G -p MemorySwapMax=0 timeout --kill-after=10s 900s flock -n evaluation/results/v020-independent/model.lock /home/hyh/Tools/litert/litert-venv/bin/python evaluation/v020_stream9.py serve

@@ -1,0 +1,16 @@
+#!/usr/bin/env bash
+set -euo pipefail
+cd "$(dirname "$0")/.."
+task_uid="$(id -u)"
+export XDG_RUNTIME_DIR="${XDG_RUNTIME_DIR:-/run/user/$task_uid}"
+export DBUS_SESSION_BUS_ADDRESS="${DBUS_SESSION_BUS_ADDRESS:-unix:path=$XDG_RUNTIME_DIR/bus}"
+if systemctl --user is-active --quiet opencaption-v020-runtime.service; then
+  echo 'Serial long runs are still active; wait and build/test the new parser first.' >&2
+  exit 4
+fi
+exec 9>evaluation/results/v020-independent/model.lock
+flock -n 9 || { echo 'Another validation model is active' >&2; exit 3; }
+exec systemd-run --user --scope --quiet --collect \
+  --property=MemoryHigh=5376M --property=MemoryMax=6144M --property=MemorySwapMax=0 \
+  timeout --signal=TERM --kill-after=10s 900s \
+  /home/hyh/Tools/litert/litert-venv/bin/python evaluation/v020_short_answer_validation.py "$@"

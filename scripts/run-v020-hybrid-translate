@@ -1,0 +1,15 @@
+#!/usr/bin/env bash
+set -euo pipefail
+cd "$(dirname "$0")/.."
+export XDG_RUNTIME_DIR=/run/user/1000
+export DBUS_SESSION_BUS_ADDRESS=unix:path=/run/user/1000/bus
+batch=${1:?batch 0..2}
+[[ "$batch" =~ ^[012]$ ]] || exit 2
+out=evaluation/results/v020-hybrid
+[[ ! -e "$out/translation_batch$batch.jsonl" ]] || exit 3
+flock -n evaluation/results/v020-independent/model.lock \
+  systemd-run --user --scope --unit="opencaption-hybrid-translate-$batch" --quiet --collect \
+  -p MemoryHigh=5376M -p MemoryMax=6144M -p MemorySwapMax=0 \
+  timeout --signal=TERM --kill-after=15s 150s \
+  /home/hyh/Tools/litert/litert-venv/bin/python evaluation/v020_hybrid_translate.py run "$batch" \
+  >"$out/translation_batch$batch.log" 2>&1

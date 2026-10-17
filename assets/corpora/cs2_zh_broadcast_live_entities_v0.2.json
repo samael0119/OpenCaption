@@ -1,7 +1,7 @@
 {
   "schema_version": 1,
   "id": "cs2-zh-broadcast-live-entities",
-  "version": "0.2.0",
+  "version": "0.2.6",
   "display_name": "Counter-Strike 赛事、战队、选手与地图报点语料",
   "language_pair": "en-US -> zh-CN",
   "domain": "counter-strike-2",
@@ -34,7 +34,23 @@
     "creation_method": "AI-assisted compilation and normalization from public reference links supplied by the project maintainer; reviewed and adopted by the maintainer.",
     "source_license_status": "No redistribution license was identified on the referenced pages; the links are factual references, not incorporated license grants.",
     "project_material_license": "PolyForm-Noncommercial-1.0.0",
-    "license_scope": "The project license applies only to project-contributed selection, structure, translations, annotations, and other original expression. Facts, names, trademarks, and any third-party material remain subject to their respective rights."
+    "license_scope": "The project license applies only to project-contributed selection, structure, translations, annotations, and other original expression. Facts, names, trademarks, and any third-party material remain subject to their respective rights.",
+    "supplemental_identity_reviews": [
+      {
+        "reviewed_at": "2026-10-14",
+        "source": "https://www.hltv.org/player/18053/broky",
+        "identity": "broky",
+        "scope": "Stable player identifier only; no current roster or effective dates asserted"
+      }
+    ],
+    "related_candidate_review": {
+      "reviewed_at": "2026-10-14",
+      "reviewer": "AI source cross-check; not independent human approval",
+      "scope": "12 one-hop Nuke map-route candidate associations from publisher-authored callout descriptions",
+      "source": "https://totalcsgo.com/callouts/nuke",
+      "map_version": "unknown; current game geometry not verified",
+      "activation": "diagnostic/shadow only until independent audio net-benefit acceptance"
+    }
   },
   "translation_rules": [
     {
@@ -2170,6 +2186,20 @@
       "english": "frozen",
       "aliases": [],
       "chinese": "frozen",
+      "wrong_targets": [
+        "冻结"
+      ],
+      "correction_sources": [
+        "frozen makes it a one round game"
+      ],
+      "correction_exclude": [
+        "frozen food",
+        "frozen assets",
+        "frozen funds",
+        "water",
+        "food",
+        "account"
+      ],
       "alternatives": [],
       "category": "player",
       "priority": 5,
@@ -2178,6 +2208,32 @@
       "preserve": true,
       "source_refs": [
         "players.json"
+      ],
+      "hint_exclude": [
+        "frozen food",
+        "frozen assets",
+        "frozen funds",
+        "water",
+        "food",
+        "account"
+      ],
+      "hint_sources": [
+        "frozen makes it",
+        "frozen finds",
+        "frozen gets",
+        "frozen peeks",
+        "frozen holds",
+        "frozen rotates"
+      ],
+      "policy_review_id": "v020-live-player-51",
+      "correction_target_exclude": [
+        "账户冻结",
+        "账号冻结",
+        "帐号冻结",
+        "冻结账户",
+        "冻结资金",
+        "冻结资产",
+        "冷冻食品"
       ]
     },
     {
@@ -3629,7 +3685,8 @@
       "preserve": false,
       "source_refs": [
         "maps_callouts.json"
-      ]
+      ],
+      "scene_entity": true
     },
     {
       "id": "live-map-2",
@@ -3646,7 +3703,8 @@
       "preserve": false,
       "source_refs": [
         "maps_callouts.json"
-      ]
+      ],
+      "scene_entity": true
     },
     {
       "id": "live-map-3",
@@ -3663,7 +3721,8 @@
       "preserve": false,
       "source_refs": [
         "maps_callouts.json"
-      ]
+      ],
+      "scene_entity": true
     },
     {
       "id": "live-map-4",
@@ -3680,7 +3739,8 @@
       "preserve": false,
       "source_refs": [
         "maps_callouts.json"
-      ]
+      ],
+      "scene_entity": true
     },
     {
       "id": "live-map-5",
@@ -3697,7 +3757,8 @@
       "preserve": false,
       "source_refs": [
         "maps_callouts.json"
-      ]
+      ],
+      "scene_entity": true
     },
     {
       "id": "live-map-6",
@@ -3714,7 +3775,8 @@
       "preserve": false,
       "source_refs": [
         "maps_callouts.json"
-      ]
+      ],
+      "scene_entity": true
     },
     {
       "id": "live-map-7",
@@ -3731,7 +3793,8 @@
       "preserve": false,
       "source_refs": [
         "maps_callouts.json"
-      ]
+      ],
+      "scene_entity": true
     },
     {
       "id": "live-callout-1-1",
@@ -4249,6 +4312,35 @@
       "preserve": false,
       "source_refs": [
         "maps_callouts.json"
+      ],
+      "hint_sources": [
+        "plant default",
+        "planting default",
+        "default plant",
+        "default position",
+        "default box",
+        "default spot"
+      ],
+      "hint_exclude": [
+        "default setup",
+        "default settings",
+        "play default",
+        "default strategy"
+      ],
+      "policy_review_id": "v020-default-callout-disambiguation",
+      "scene_sources": [
+        "plant default",
+        "planting default",
+        "default plant",
+        "default position",
+        "default box",
+        "default spot"
+      ],
+      "scene_exclude": [
+        "default setup",
+        "default settings",
+        "play default",
+        "default strategy"
       ]
     },
     {
@@ -5434,6 +5526,37 @@
       "preserve": false,
       "source_refs": [
         "maps_callouts.json"
+      ],
+      "related_terms": [
+        {
+          "target": "Secret",
+          "kind": "map_route",
+          "map": "Nuke",
+          "source_refs": [
+            "https://totalcsgo.com/callouts/nuke"
+          ],
+          "reviewed_at": "2026-10-14",
+          "map_version": "unknown"
+        },
+        {
+          "target": "Garage",
+          "kind": "map_route",
+          "map": "Nuke",
+          "source_refs": [
+            "https://totalcsgo.com/callouts/nuke"
+          ],
+          "reviewed_at": "2026-10-14",
+          "map_version": "unknown"
+        }
+      ],
+      "related_sources": [
+        "cross outside",
+        "hold outside",
+        "outside smokes"
+      ],
+      "related_exclude": [
+        "outside temperature",
+        "outside weather"
       ]
     },
     {
@@ -5527,6 +5650,37 @@
       "preserve": false,
       "source_refs": [
         "maps_callouts.json"
+      ],
+      "related_terms": [
+        {
+          "target": "Hut",
+          "kind": "map_route",
+          "map": "Nuke",
+          "source_refs": [
+            "https://totalcsgo.com/callouts/nuke"
+          ],
+          "reviewed_at": "2026-10-14",
+          "map_version": "unknown"
+        },
+        {
+          "target": "Squeaky",
+          "kind": "map_route",
+          "map": "Nuke",
+          "source_refs": [
+            "https://totalcsgo.com/callouts/nuke"
+          ],
+          "reviewed_at": "2026-10-14",
+          "map_version": "unknown"
+        }
+      ],
+      "related_sources": [
+        "cross lobby",
+        "through lobby",
+        "push lobby"
+      ],
+      "related_exclude": [
+        "hotel lobby",
+        "airport lobby"
       ]
     },
     {
@@ -5542,6 +5696,26 @@
       "preserve": false,
       "source_refs": [
         "maps_callouts.json"
+      ],
+      "related_terms": [
+        {
+          "target": "A Site",
+          "kind": "map_route",
+          "map": "Nuke",
+          "source_refs": [
+            "https://totalcsgo.com/callouts/nuke"
+          ],
+          "reviewed_at": "2026-10-14",
+          "map_version": "unknown"
+        }
+      ],
+      "related_sources": [
+        "through hut",
+        "push hut",
+        "hold hut"
+      ],
+      "related_exclude": [
+        "beach hut"
       ]
     },
     {
@@ -5559,6 +5733,26 @@
       "preserve": false,
       "source_refs": [
         "maps_callouts.json"
+      ],
+      "related_terms": [
+        {
+          "target": "A Site",
+          "kind": "map_route",
+          "map": "Nuke",
+          "source_refs": [
+            "https://totalcsgo.com/callouts/nuke"
+          ],
+          "reviewed_at": "2026-10-14",
+          "map_version": "unknown"
+        }
+      ],
+      "related_sources": [
+        "through squeaky",
+        "push squeaky",
+        "open squeaky"
+      ],
+      "related_exclude": [
+        "squeaky clean"
       ]
     },
     {
@@ -5653,6 +5847,37 @@
       "preserve": false,
       "source_refs": [
         "maps_callouts.json"
+      ],
+      "related_terms": [
+        {
+          "target": "Secret",
+          "kind": "map_route",
+          "map": "Nuke",
+          "source_refs": [
+            "https://totalcsgo.com/callouts/nuke"
+          ],
+          "reviewed_at": "2026-10-14",
+          "map_version": "unknown"
+        },
+        {
+          "target": "B Site",
+          "kind": "map_route",
+          "map": "Nuke",
+          "source_refs": [
+            "https://totalcsgo.com/callouts/nuke"
+          ],
+          "reviewed_at": "2026-10-14",
+          "map_version": "unknown"
+        }
+      ],
+      "related_sources": [
+        "into vent",
+        "down vent",
+        "through vent"
+      ],
+      "related_exclude": [
+        "air vent",
+        "vent frustration"
       ]
     },
     {
@@ -5670,6 +5895,27 @@
       "preserve": false,
       "source_refs": [
         "maps_callouts.json"
+      ],
+      "related_terms": [
+        {
+          "target": "B Site",
+          "kind": "map_route",
+          "map": "Nuke",
+          "source_refs": [
+            "https://totalcsgo.com/callouts/nuke"
+          ],
+          "reviewed_at": "2026-10-14",
+          "map_version": "unknown"
+        }
+      ],
+      "related_sources": [
+        "down ramp",
+        "hold ramp",
+        "push ramp"
+      ],
+      "related_exclude": [
+        "wheelchair ramp",
+        "ramp up"
       ]
     },
     {
@@ -5715,6 +5961,37 @@
       "preserve": false,
       "source_refs": [
         "maps_callouts.json"
+      ],
+      "related_terms": [
+        {
+          "target": "Lobby",
+          "kind": "map_route",
+          "map": "Nuke",
+          "source_refs": [
+            "https://totalcsgo.com/callouts/nuke"
+          ],
+          "reviewed_at": "2026-10-14",
+          "map_version": "unknown"
+        },
+        {
+          "target": "Trophy",
+          "kind": "map_route",
+          "map": "Nuke",
+          "source_refs": [
+            "https://totalcsgo.com/callouts/nuke"
+          ],
+          "reviewed_at": "2026-10-14",
+          "map_version": "unknown"
+        }
+      ],
+      "related_sources": [
+        "through radio",
+        "in radio",
+        "hold radio"
+      ],
+      "related_exclude": [
+        "on the radio",
+        "radio station"
       ]
     },
     {
@@ -5730,6 +6007,27 @@
       "preserve": false,
       "source_refs": [
         "maps_callouts.json"
+      ],
+      "related_terms": [
+        {
+          "target": "Ramp",
+          "kind": "map_route",
+          "map": "Nuke",
+          "source_refs": [
+            "https://totalcsgo.com/callouts/nuke"
+          ],
+          "reviewed_at": "2026-10-14",
+          "map_version": "unknown"
+        }
+      ],
+      "related_sources": [
+        "through control",
+        "in control",
+        "hold control"
+      ],
+      "related_exclude": [
+        "control group",
+        "control panel"
       ]
     },
     {
@@ -5924,6 +6222,35 @@
       "preserve": false,
       "source_refs": [
         "maps_callouts.json"
+      ],
+      "hint_sources": [
+        "plant default",
+        "planting default",
+        "default plant",
+        "default position",
+        "default box",
+        "default spot"
+      ],
+      "hint_exclude": [
+        "default setup",
+        "default settings",
+        "play default",
+        "default strategy"
+      ],
+      "policy_review_id": "v020-default-callout-disambiguation",
+      "scene_sources": [
+        "plant default",
+        "planting default",
+        "default plant",
+        "default position",
+        "default box",
+        "default spot"
+      ],
+      "scene_exclude": [
+        "default setup",
+        "default settings",
+        "play default",
+        "default strategy"
       ]
     },
     {
@@ -6704,6 +7031,27 @@
       "source_refs": [
         "maps_callouts.json"
       ]
+    },
+    {
+      "id": "reviewed-player-broky",
+      "english": "broky",
+      "aliases": [],
+      "chinese": "broky",
+      "alternatives": [],
+      "category": "player",
+      "priority": 5,
+      "context": "稳定选手ID；未声明当场阵容。",
+      "avoid": [],
+      "preserve": true,
+      "source_refs": [
+        "https://www.hltv.org/player/18053/broky"
+      ]
     }
-  ]
+  ],
+  "policy_review": {
+    "id": "v020-glossary-predicates-20261014",
+    "method": "AI-assisted primary glossary crosscheck and constructed mechanism cases; not independent human/audio gold. Prior maintainer review applies to the original pack, not this new review.",
+    "fixture": "test/fixtures/cs2_glossary_review_v020.json",
+    "automatic_replacement_scope": "Only existing explicitly curated wrong_targets; avoid/alternatives are not executable replacements."
+  }
 }

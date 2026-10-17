@@ -77,8 +77,8 @@ These paths exist for reproducibility and comparison. New product work should no
 1. The user selects an input, speech task, model, and optional context.
 2. The selected model is accepted only after expected-size and SHA-256 verification.
 3. Android prepares capture and a single inference worker.
-4. Gemma receives fixed five-second, non-overlapping audio windows.
-5. At most one window runs and one waits. If the device falls behind, the older waiting window is replaced rather than allowing latency to grow without bound.
+4. Gemma receives continuous, non-overlapping intervals at a supported pause or the five-second cap; unavailable VAD falls back to fixed windows.
+5. At most one interval runs and one waits. Contiguous pending short intervals merge up to five seconds; replacement and age expiry produce explicit gaps.
 6. Model output must pass the expected caption protocol before entering Dart state.
 7. Captions are displayed in stable order in the app and, for playback capture, in the movable overlay.
 8. Pause, stop, generation changes, permission loss, serious thermal state, or memory pressure invalidate or cancel relevant work.
@@ -132,3 +132,27 @@ When adding a model, capture source, or output mode:
 4. validate external data and model output at their trust boundaries;
 5. add focused tests and update README-visible behavior and limitations;
 6. report performance with the exact model, device, input, and configuration rather than as a universal claim.
+
+## v0.2.0 development integration (2026-10-14, not accepted release)
+
+Gemma capture now uses causal Silero boundaries (600 ms pause, 5 s cap, fixed fallback), retaining all nonzero PCM including weak speech and short tails. The pending queue merges contiguous short chunks up to 5 s, records explicit gaps and limits waiting age to 5 s from submission. Linux JVM and local tests validate mechanisms; Android execution and full quality/coverage gates remain unverified.
+
+Selecting the CS2 library enables bounded recent-term and scene assistance. Independent concepts/windows can support a map; duplicated or previously injected concepts cannot vote. Dated relationships distinguish an observation snapshot from effective roster intervals. Unknown dates and incomplete rosters abstain. See the v0.2.0 checkpoint for remaining player-to-team and independent-quality work.
+
+Concepts are derived from delivered model source text, not verified acoustic facts. Recent evidence uses a 60-second audio-time high-water mark; context floors prevent old-map, old-profile and late results from re-entering the current hint snapshot. Existing scene/recent-term assistance remains enabled after library selection. One-hop relation candidates and semantic preceding text are still diagnostics, without demonstrated independent positive quality gain, and are not in normal generation.
+
+All assistance shares a 240-character/96-proxy-token bound; the proxy is not the runtime tokenizer count. Explicit structured scene corrections take priority over optional free text. Named maps are separate from generic map-category terms. Invalid bundled data visibly falls back to general mode while retaining the selected preference for a later reload.
+
+The subtitle reading surface preserves Material and teal actions: flat transcript rows, quiet separators, larger source text, a stronger latest translation, theme-aware 4.5:1 text contrast and stable review scrolling. Optional context is disclosed on demand; the library selection is sufficient to enable assistance. No entrance animation delays subtitles. Overlay code uses dp spacing, labeled 48 dp controls and a bounded scroll area; its actual Android rendering remains untested. Local screenshots use illustrative text through an isolated Flutter preview, never audio inference.
+
+### Current-session scene correction (v0.2 candidate)
+
+Keep the established Material/teal caption surface. This is an Operate-mode addition within the existing status disclosure, not a new visual world. Closed state leaves subtitles dominant; expanded details have a bounded scroll area so controls remain reachable at small widths and large system text. Map and both teams are optional native selectors, with an explicit restore-auto action, current-session scope, and conflict feedback. A partial team pair stays pending. User-selected and inferred sources are labelled separately. No extra mandatory setup, decorative motion, modal workflow or persistent match selection.
+
+## Local validation boundary for this candidate
+
+The current candidate has 129 passing Dart tests, 39 passing Kotlin tests, static analysis, APK/Web builds and signature checks. Actual local light/dark scene-control interactions and 320px/1.5-scale widget cases have been checked. Saved preview screenshots use illustrative captions; the live JVM/model/controller/widget harness uses real generated captions, but its headless layout assertions are not actual screen presentation timestamps.
+
+The new three-run series uses 3×3600 seconds of real-clock PCM through product VAD, segment/buffer/queue/input/hint/protocol cores, one Linux E2B, and the actual Dart controller/widget. Each run has a 6GiB/swap-zero cgroup and a 75-minute timeout. Repeated known clips test resources and events, not independent semantic quality. It excludes Android AudioRecord, Handler, watchdog, physical overlay interaction and actual screen paint. A prior three-run inference-only experiment does not replace this series, which is still in progress.
+
+Music hallucination and critical short-answer omissions remain unresolved. Independent Chinese/CS2 positive terminology gain, scene coverage and correction recovery have not passed their gates. No release, model-default change or expanded context follows from passing mechanism tests. The checkpoint is the current source of truth; historic device measurements are not a result of this local-only round.

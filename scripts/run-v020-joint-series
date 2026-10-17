@@ -1,0 +1,24 @@
+#!/usr/bin/env bash
+set -euo pipefail
+cd "$(dirname "$0")/.."
+out=evaluation/results/v020-independent
+[[ -e "$out/joint_live_smoke_verified_summary.json" ]] || { echo 'No successful audited smoke' >&2; exit 4; }
+[[ ! -e "$out/joint_live_series.jsonl" ]] || { echo 'Inspect existing series; never implicitly restart' >&2; exit 3; }
+for run in run1 run2 run3; do
+  status=0
+  scripts/run-v020-joint-live "$run" || status=$?
+  if [[ "$status" == 0 ]]; then
+    python3 evaluation/v020_joint_live_summary.py "$run" >"$out/joint_live_${run}_audit.log" 2>&1 || status=$?
+  fi
+  python3 - "$run" "$status" <<'PY'
+import json,sys
+from datetime import datetime
+from pathlib import Path
+row=dict(run=sys.argv[1],exit_code=int(sys.argv[2]),local_time=datetime.now().astimezone().isoformat())
+out=Path('evaluation/results/v020-independent')
+with (out/'joint_live_series.jsonl').open('a') as f:f.write(json.dumps(row)+'\n')
+with Path('docs/v0.2.0执行检查点.md').open('a') as f:
+ f.write('\n- 本机核心/widget真实时钟联合 '+row['run']+' '+row['local_time']+' exit='+str(row['exit_code'])+'；以完整test/model/ui/summary记录判断，不等于独立质量/Android/真实屏幕验收。\n')
+PY
+  [[ "$status" == 0 ]] || exit "$status"
+done

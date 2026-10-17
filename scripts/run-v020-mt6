@@ -1,0 +1,15 @@
+#!/usr/bin/env bash
+set -euo pipefail
+cd "$(dirname "$0")/.."
+export XDG_RUNTIME_DIR=/run/user/1000
+export DBUS_SESSION_BUS_ADDRESS=unix:path=/run/user/1000/bus
+batch=${1:?batch 0..3}
+[[ "$batch" =~ ^[0123]$ ]] || exit 2
+out=evaluation/results/v020-mt6
+[[ ! -e "$out/batch$batch.jsonl" ]] || exit 3
+flock -n evaluation/results/v020-independent/model.lock \
+  systemd-run --user --scope --unit="opencaption-mt6-batch$batch" --quiet --collect \
+  -p MemoryHigh=1536M -p MemoryMax=2048M -p MemorySwapMax=0 \
+  timeout --signal=TERM --kill-after=10s 120s \
+  /home/hyh/Tools/litert/litert-venv/bin/python evaluation/v020_mt6_run.py run "$batch" \
+  >"$out/batch$batch.log" 2>&1

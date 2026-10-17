@@ -1,0 +1,23 @@
+#!/usr/bin/env bash
+set -euo pipefail
+cd "$(dirname "$0")/.."
+export XDG_RUNTIME_DIR=/run/user/1000
+export DBUS_SESSION_BUS_ADDRESS=unix:path=/run/user/1000/bus
+systemd-run --user --scope --quiet --collect -p MemoryMax=512M -p MemorySwapMax=0 timeout --kill-after=5s 60s python evaluation/v020_latency7_prepare.py
+systemd-run --user --scope --quiet --collect -p MemoryMax=512M -p MemorySwapMax=0 timeout --kill-after=5s 60s python - <<'PY'
+from pathlib import Path
+import subprocess,json,hashlib
+R=Path.cwd();G=R/'.gradle/caches/modules-2/files-2.1';O=R/'evaluation/results/v020-latency7';J='/home/hyh/Tools/java/eclipse-temurin-jdk17/bin/java'
+def jar(group,name,version):return next((G/group/name/version).rglob('*.jar'))
+std=jar('org.jetbrains.kotlin','kotlin-stdlib','2.2.21')
+cp=[jar('org.jetbrains.kotlin','kotlin-compiler-embeddable','2.2.21'),std,jar('org.jetbrains.kotlin','kotlin-script-runtime','2.2.21')]
+for group,name in [('org.jetbrains.kotlin','kotlin-reflect'),('org.jetbrains.kotlinx','kotlinx-coroutines-core-jvm'),('org.jetbrains','annotations')]:
+ ps=sorted((G/group/name).glob('*/*.jar'))+sorted((G/group/name).glob('*/*/*.jar'))
+ if name=='kotlin-reflect':ps=[p for p in ps if '/2.4.0/' not in str(p)]
+ if ps:cp.append(ps[-1])
+classes=O/'classes';classes.mkdir(exist_ok=True)
+command=[J,'-Xmx256m','-cp',':'.join(map(str,cp)),'org.jetbrains.kotlin.cli.jvm.K2JVMCompiler','-no-stdlib','-no-reflect','-jvm-target','17','-classpath',':'.join(map(str,cp[1:])),'-d',str(classes),str(R/'android/app/src/main/kotlin/dev/opencaption/opencaption/E2eAudioPolicy.kt'),str(R/'evaluation/V020Latency7.kt')]
+subprocess.run(command,check=True)
+(O/'compile.json').write_text(json.dumps(dict(command=command,compiler_files={str(p):hashlib.sha256(p.read_bytes()).hexdigest() for p in cp},class_files={str(p):hashlib.sha256(p.read_bytes()).hexdigest() for p in classes.rglob('*.class')},new_model_requests=0),indent=2))
+subprocess.run([J,'-Xmx128m','-cp',str(classes)+':'+str(std),'V020Latency7',str(O)],check=True)
+PY

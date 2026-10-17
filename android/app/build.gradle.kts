@@ -104,6 +104,7 @@ android {
 }
 
 dependencies {
+    implementation("com.microsoft.onnxruntime:onnxruntime-android:1.22.0")
     implementation("com.google.mlkit:translate:17.0.3")
     add("gemmaE2EImplementation", "com.google.ai.edge.litertlm:litertlm-android:0.17.0")
     testImplementation("junit:junit:4.13.2")

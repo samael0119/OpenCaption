@@ -1,0 +1,24 @@
+#!/usr/bin/env bash
+set -euo pipefail
+cd "$(dirname "$0")/.."
+task_root="$PWD"
+task_uid="$(id -u)"
+export XDG_RUNTIME_DIR="${XDG_RUNTIME_DIR:-/run/user/$task_uid}"
+export DBUS_SESSION_BUS_ADDRESS="${DBUS_SESSION_BUS_ADDRESS:-unix:path=$XDG_RUNTIME_DIR/bus}"
+if systemctl --user is-active --quiet opencaption-v020-runtime.service; then
+  echo 'Long runs active; no compilation or second model permitted yet.' >&2
+  exit 4
+fi
+[[ ! -e evaluation/results/v020-independent/speech_evidence.tsv ]] || { echo 'Existing evidence; inspect instead of rerunning' >&2; exit 3; }
+exec 9>evaluation/results/v020-independent/model.lock
+flock -n 9 || { echo 'Another model active' >&2; exit 3; }
+java_bin="/home/hyh/Tools/java/eclipse-temurin-jdk17/bin"
+stdlib="$(rg --files .gradle/caches/modules-2/files-2.1/org.jetbrains.kotlin/kotlin-stdlib/2.2.21 | rg '/kotlin-stdlib-2.2.21.jar$')"
+classpath="$task_root/build/app/tmp/kotlin-classes/gemmaE2EDebug:$task_root/evaluation/results/onnxruntime-1.22.0.jar:$task_root/$stdlib"
+"$java_bin/javac" -cp "$classpath" -d evaluation/results/v020-jvm evaluation/V020SpeechEvidenceProbe.java
+exec systemd-run --user --scope --quiet --collect \
+  --property=MemoryHigh=448M --property=MemoryMax=512M --property=MemorySwapMax=0 \
+  timeout --signal=TERM --kill-after=10s 120s \
+  "$java_bin/java" -Xmx128m -cp "$task_root/evaluation/results/v020-jvm:$classpath" \
+  V020SpeechEvidenceProbe "$task_root" "$task_root/evaluation/results/v020-independent/speech_evidence_cases.tsv" \
+  >evaluation/results/v020-independent/speech_evidence.tsv

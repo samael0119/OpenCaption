@@ -1,0 +1,19 @@
+#!/usr/bin/env bash
+set -euo pipefail
+cd "$(dirname "$0")/.."
+task_root="$PWD"
+java_bin="${OPENCAPTION_JDK_DIR:-/home/hyh/Tools/java/eclipse-temurin-jdk17}/bin"
+ort_jar="$task_root/evaluation/results/onnxruntime-1.22.0.jar"
+stdlib="$(rg --files .gradle/caches/modules-2/files-2.1/org.jetbrains.kotlin/kotlin-stdlib/2.2.21 | rg '/kotlin-stdlib-2.2.21.jar$')"
+classes="$task_root/build/app/tmp/kotlin-classes/gemmaE2EDebug"
+classpath="$classes:$ort_jar:$task_root/$stdlib"
+mkdir -p evaluation/results/v020-jvm
+"$java_bin/javac" -cp "$classpath" -d evaluation/results/v020-jvm evaluation/V020VadProbe.java
+# Compilation above is complete before model loading. Only one small VAD loads.
+task_uid="$(id -u)"
+export XDG_RUNTIME_DIR="${XDG_RUNTIME_DIR:-/run/user/$task_uid}"
+export DBUS_SESSION_BUS_ADDRESS="${DBUS_SESSION_BUS_ADDRESS:-unix:path=$XDG_RUNTIME_DIR/bus}"
+exec systemd-run --user --scope --quiet --collect \
+  --property=MemoryHigh=448M --property=MemoryMax=512M --property=MemorySwapMax=0 \
+  timeout --signal=TERM --kill-after=10s 120s \
+  /usr/bin/time -v "$java_bin/java" -Xmx128m -cp "$task_root/evaluation/results/v020-jvm:$classpath" V020VadProbe "$task_root"

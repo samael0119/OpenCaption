@@ -28,6 +28,7 @@ import com.google.mlkit.nl.translate.Translation
 import com.google.mlkit.nl.translate.Translator
 import com.google.mlkit.nl.translate.TranslatorOptions
 import java.io.File
+import org.json.JSONObject
 import java.util.concurrent.PriorityBlockingQueue
 import java.util.concurrent.ScheduledThreadPoolExecutor
 import java.util.concurrent.TimeUnit
@@ -72,6 +73,8 @@ class CaptionEngine(private val activity: MainActivity, private val events: Engi
     private val cancelledIds = java.util.concurrent.ConcurrentHashMap.newKeySet<String>()
     private val preemptedIds = java.util.concurrent.ConcurrentHashMap.newKeySet<String>()
     private val discardE2eOnPause = AtomicBoolean(false)
+    private val pendingE2eAudio = E2eAudioQueue()
+    private var boundaryVad: SileroBoundaryVad? = null
     @Volatile private var epoch = 0L
     @Volatile private var accepting = false
     @Volatile private var prepared = false
@@ -80,7 +83,52 @@ class CaptionEngine(private val activity: MainActivity, private val events: Engi
     private var noiseSuppressor: NoiseSuppressor? = null
     private var captureThread: Thread? = null
     private var config: EngineConfig? = null
-    @Volatile private var liveE2eHints = ""
+    private data class HintState(val hints: String, val automatic: Boolean)
+    @Volatile private var hintState = HintState("", false)
+    private val liveE2eHints get() = hintState.hints
+    private val e2eInferenceIndex = AtomicLong()
+    private val corpusPreservedNames by lazy { loadCorpusPreservedNames() }
+
+    private fun loadCorpusPreservedNames(): Set<String> = try {
+        fun json(asset: String): JSONObject {
+            val bytes = activity.assets.open("flutter_assets/$asset").use { stream ->
+                val output = java.io.ByteArrayOutputStream()
+                val buffer = ByteArray(4096)
+                while (true) {
+                    val count = stream.read(buffer)
+                    if (count < 0) break
+                    check(output.size() + count <= 262144) { "corpus_asset_too_large" }
+                    output.write(buffer, 0, count)
+                }
+                output.toByteArray()
+            }
+            return JSONObject(bytes.toString(Charsets.UTF_8))
+        }
+        val packs = json("assets/corpora/manifest.json").getJSONArray("packs")
+        val names = mutableListOf<String>()
+        for (index in 0 until minOf(packs.length(), 4)) {
+            val descriptor = packs.getJSONObject(index)
+            if (!descriptor.optBoolean("enabled", true)) continue
+            if (descriptor.optString("domain") !in setOf("cs2", "counter-strike-2")) continue
+            val asset = descriptor.getString("asset")
+            check(asset.startsWith("assets/corpora/") && !asset.contains("..") && asset.endsWith(".json"))
+            val terms = json(asset).getJSONArray("terms")
+            for (termIndex in 0 until minOf(terms.length(), 512)) {
+                val term = terms.getJSONObject(termIndex)
+                if (term.optBoolean("preserve") && term.optString("category") in setOf("player", "team", "map")) {
+                    names.add(term.getString("english"))
+                    val aliases = term.optJSONArray("aliases")
+                    for (aliasIndex in 0 until minOf(aliases?.length() ?: 0, 4)) {
+                        names.add(aliases!!.getString(aliasIndex))
+                    }
+                }
+            }
+        }
+        E2ePreservedNames.bounded(names)
+    } catch (error: Exception) {
+        sessionLog.write("preserved_names_unavailable ${error.javaClass.simpleName}")
+        emptySet()
+    }
     private var translator: Translator? = null
     private var permission: ((Result<Boolean>) -> Unit)? = null
     private val mlModel = TranslateRemoteModel.Builder(TranslateLanguage.CHINESE).build()
@@ -156,8 +204,8 @@ class CaptionEngine(private val activity: MainActivity, private val events: Engi
     fun trace(text: String) { sessionLog.write(text) }
 
     /** Update only the bounded E2E hint string; the next window observes it. */
-    override fun updateHints(hints: String) {
-        liveE2eHints = sanitizeHintData(hints)
+    override fun updateHints(hints: String, automaticAssist: Boolean) {
+        hintState = HintState(sanitizeHintData(hints), automaticAssist)
     }
 
     override fun prepare(config: EngineConfig, callback: (Result<Unit>) -> Unit) {
@@ -181,11 +229,18 @@ class CaptionEngine(private val activity: MainActivity, private val events: Engi
                 sessionLog.write("prepare_begin")
                 captureThread?.join()
                 engineLock.write {
-                    native.release(); e2eBackend?.close(); translator?.close(); translator = null
+                    native.release(); e2eBackend?.close(); boundaryVad?.close(); boundaryVad = null
+                    translator?.close(); translator = null
                     prepared = false
                     this.config = config
-                    liveE2eHints = sanitizeHintData(config.names)
+                    hintState = HintState(sanitizeHintData(config.names), config.automaticAssist == true)
                     if (config.mode == "e2e") {
+                        boundaryVad = try {
+                            activity.assets.open("vad/silero_v6_2_1.onnx").use { SileroBoundaryVad(it.readBytes()) }
+                        } catch (failure: Exception) {
+                            sessionLog.write("boundary_vad_unavailable fallback=fixed_5000", failure)
+                            null
+                        }
                         checkNotNull(e2eBackend) { "e2e_backend_missing" }.also {
                             it.load(config.asrPath, config.threads.toInt())
                             // Make the context ready before capture starts. The
@@ -217,7 +272,8 @@ class CaptionEngine(private val activity: MainActivity, private val events: Engi
                 post { callback(Result.success(Unit)) }
             } catch (error: Throwable) {
                 sessionLog.write("prepare_failed", error)
-                engineLock.write { native.release(); translator?.close(); translator = null }
+                engineLock.write { native.release(); e2eBackend?.close(); boundaryVad?.close(); boundaryVad = null
+                    translator?.close(); translator = null }
                 post { callback(Result.failure(error("model_prepare_failed"))) }
             }
         }
@@ -229,6 +285,9 @@ class CaptionEngine(private val activity: MainActivity, private val events: Engi
         check(prepared) { "models_not_prepared" }
         check(!recording.get() && captureThread?.isAlive != true) { "capture_still_stopping" }
         this.epoch = epoch; accepting = true; cancelledIds.clear(); discardE2eOnPause.set(false)
+        pendingE2eAudio.reset(epoch)
+        e2eInferenceIndex.set(0)
+        boundaryVad?.reset()
         val minimum = AudioRecord.getMinBufferSize(16000, AudioFormat.CHANNEL_IN_MONO, AudioFormat.ENCODING_PCM_16BIT)
         sessionLog.write("audio_min_buffer=$minimum")
         check(minimum > 0) { "audio_format_unsupported" }
@@ -279,17 +338,30 @@ class CaptionEngine(private val activity: MainActivity, private val events: Engi
         val pcm = ShortArray(320)
         val buffer = AudioBuffer()
         val e2e = config?.mode == "e2e"
-        // Gemma consumes fixed continuous windows and does its own speech
-        // decision. Avoid allocating/running the cascade-only gate and
-        // pause segmenter on that path; RMS below is only a level meter.
+        // VAD only locates boundaries: every sample remains owned by exactly
+        // one window, including weak/uncertain speech and the final short tail.
         val segmenter = if (e2e) null else EnergySegmenter()
         val signalGate = if (e2e) null else AudioSignalGate()
+        val e2eSegmenter = if (e2e) E2eSegmenter() else null
+        var vadAvailable = boundaryVad != null
         var window = 0L; var meterAt = 0L
         var e2eStart = 0L
         var levelLogAt = 0L; var peakRms = 0.0
         var firstFrame = true
         var silentFrames = 0
-        sessionLog.write("capture_begin segmentation=${if (e2e) "fixed_windows" else "pause_boundaries"} frame_ms=20 silence_ms=600 minimum_ms=800 maximum_ms=5000 e2e_window_ms=5000 e2e_overlap_ms=0")
+        sessionLog.write("capture_begin segmentation=${if (e2e && vadAvailable) "vad_pause" else if (e2e) "fixed_fallback" else "pause_boundaries"} frame_ms=20 silence_ms=600 maximum_ms=5000 e2e_overlap_ms=0")
+        fun submitBoundary(boundary: E2eSegmenter.Boundary) {
+            val snapshot = buffer.slice(boundary.start, boundary.end)
+            window++
+            e2eStart = boundary.end
+            if (isExactDigitalSilence(snapshot)) {
+                sessionLog.write("segment_skip window=$window reason=e2e_exact_zero samples=${snapshot.size}")
+                report("e2e_skipped_exact_zero", snapshot.size.toLong())
+            } else {
+                sessionLog.write("segment_submit window=$window reason=e2e_${boundary.reason} samples=${snapshot.size}")
+                submitEndToEnd(e, window, boundary.start / 16, boundary.end / 16, snapshot)
+            }
+        }
         try {
             while (recording.get()) {
                 var count = 0
@@ -298,14 +370,14 @@ class CaptionEngine(private val activity: MainActivity, private val events: Engi
                     if (n <= 0) { if (recording.get()) throw IllegalStateException("audio_read"); break }
                     count += n
                 }
-                if (count != pcm.size || !recording.get()) break
+                if (count == 0) break
                 val floats = FloatArray(count) { pcm[it] / 32768f }
                 buffer.append(floats)
                 // Calculate a cheap level meter for the UI. The Gemma path
-                // does not use it as a speech gate; fixed windows are always
+                // does not use it as a speech gate; complete intervals are always
                 // submitted unless the PCM is exactly zero.
                 val rms = sqrt(floats.sumOf { it.toDouble() * it } / count).coerceIn(0.0, 1.0)
-                silentFrames = if (pcm.all { it == 0.toShort() }) silentFrames + 1 else 0
+                silentFrames = if ((0 until count).all { pcm[it] == 0.toShort() }) silentFrames + 1 else 0
                 if (activity.playbackSelected && silentFrames > 0 && silentFrames % 500 == 0) {
                     sessionLog.write("playback_zero_audio duration_ms=${silentFrames * 20} possible_policy_block=true")
                     post { PlaybackCaptionService.instance?.update("未收到播放音频：请开始播放；目标 App 也可能禁止音频采集。") }
@@ -339,39 +411,26 @@ class CaptionEngine(private val activity: MainActivity, private val events: Engi
                     )
                     submitAsr(e, window, 1, begin, end, snapshot, true)
                 }
-                // End-to-end speech models are themselves capable of rejecting
-                // non-speech. Fixed windows avoid an energy gate permanently
-                // suppressing commentary whose level resembles a crowd bed.
-                if (e2e && buffer.total - e2eStart >= 80000) {
-                    val endSample = e2eStart + 80000
-                    val snapshot = buffer.slice(e2eStart, endSample)
-                    window++
-                    if (isExactDigitalSilence(snapshot)) {
-                        sessionLog.write("segment_skip window=$window reason=e2e_exact_zero samples=${snapshot.size}")
-                        report("e2e_skipped_exact_zero", snapshot.size.toLong())
-                    } else {
-                        sessionLog.write("segment_submit window=$window reason=e2e_fixed samples=${snapshot.size}")
-                        submitEndToEnd(e, window, e2eStart / 16, endSample / 16, snapshot)
-                    }
-                    e2eStart = endSample
+                if (e2e) {
+                    val probability = if (vadAvailable) try {
+                        boundaryVad?.observe(floats)
+                    } catch (failure: Exception) {
+                        vadAvailable = false
+                        sessionLog.write("boundary_vad_failed fallback=fixed_5000", failure)
+                        null
+                    } else null
+                    e2eSegmenter?.update(buffer.total, probability)?.let(::submitBoundary)
                 }
+                if (!recording.get()) break
             }
         } catch (error: Throwable) {
             sessionLog.write("capture_failed", error)
             if (recording.get()) post { interrupt("microphone_unavailable") }
         } finally {
-            if (config?.mode == "e2e" && !discardE2eOnPause.get() && buffer.total - e2eStart >= 16000) {
-                val snapshot = buffer.slice(maxOf(buffer.oldest, e2eStart), buffer.total)
-                if (snapshot.size >= 16000) {
-                    window++
-                    if (isExactDigitalSilence(snapshot)) {
-                        sessionLog.write("segment_skip window=$window reason=e2e_exact_zero_flush samples=${snapshot.size}")
-                        report("e2e_skipped_exact_zero", snapshot.size.toLong())
-                    } else {
-                        sessionLog.write("segment_submit window=$window reason=e2e_flush samples=${snapshot.size}")
-                        submitEndToEnd(e, window, e2eStart / 16, buffer.total / 16, snapshot)
-                    }
-                }
+            if (e2e && !discardE2eOnPause.get()) {
+                e2eSegmenter?.flush(buffer.total)?.let(::submitBoundary)
+            } else if (e2e && buffer.total > e2eStart) {
+                reportE2eGap(e, e2eStart / 16, buffer.total / 16, "pause_tail")
             }
             try { record.stop() } catch (_: Throwable) {}
             noiseSuppressor?.release(); noiseSuppressor = null
@@ -425,29 +484,52 @@ class CaptionEngine(private val activity: MainActivity, private val events: Engi
     }
 
     private fun submitEndToEnd(e: Long, window: Long, start: Long, end: Long, pcm: FloatArray) {
-        val submittedAt = SystemClock.elapsedRealtime()
-        // Do not let slow inference turn into an ever-growing stale subtitle
-        // queue. Keep the active job and replace any pending E2E window with
-        // the newest overlapping window.
-        val stale = queue.filter { it.epoch == e && it.id.startsWith("e2e-") }
-        if (stale.isNotEmpty()) {
-            stale.forEach(queue::remove)
-            sessionLog.write("e2e_queue_replaced count=${stale.size} newest=$window")
-            report("e2e_queue_replaced", stale.size.toLong())
+        val result = pendingE2eAudio.offer(E2eAudioChunk(e, window, start, end, pcm, SystemClock.elapsedRealtime()))
+        result.dropped?.let { reportE2eGap(it.epoch, it.startMs, it.endMs, "queue_replaced") }
+        if (result.merged) { sessionLog.write("e2e_queue_merged newest=$window"); report("e2e_queue_merged") }
+        if (result.schedule) enqueueEndToEnd(e)
+    }
+
+    private fun reportE2eGap(e: Long, start: Long, end: Long, reason: String) {
+        if (e != epoch) return
+        sessionLog.write("e2e_gap start_ms=$start end_ms=$end reason=$reason")
+        if (e == epoch) post { events.gap(e, start, end) {} }
+        report("e2e_gap_ms", end - start)
+    }
+
+    private fun enqueueEndToEnd(e: Long) {
+        enqueue("e2e-pump", e, priority = 1, dropped = {
+            pendingE2eAudio.clear(e)?.let { reportE2eGap(e, it.startMs, it.endMs, "cancelled") }
+        }) {
+            try {
+                val taken = pendingE2eAudio.take(e, SystemClock.elapsedRealtime())
+                taken.expired?.let { reportE2eGap(e, it.startMs, it.endMs, "queue_expired") }
+                taken.chunk?.let(::inferEndToEnd)
+            } finally {
+                if (pendingE2eAudio.finish(e)) enqueueEndToEnd(e)
+            }
         }
-        enqueue("e2e-$window", e, priority = 1) {
+    }
+
+    private fun inferEndToEnd(chunk: E2eAudioChunk) {
+            val e = chunk.epoch; val window = chunk.window
+            val start = chunk.startMs; val end = chunk.endMs; val pcm = chunk.pcm
+            val submittedAt = chunk.submittedAt
             val began = SystemClock.elapsedRealtime()
             val loadStart = loadSampler.begin()
             val thermal = if (Build.VERSION.SDK_INT >= 29) powerManager.currentThermalStatus else -1
             val nativeHeapMb = android.os.Debug.getNativeHeapAllocatedSize() / 1_000_000L
-            val pending = queue.count { it.epoch == e && it.id.startsWith("e2e-") }
+            val pending = pendingE2eAudio.pendingCount()
             sessionLog.write("e2e_resources window=$window queue_wait_ms=${began-submittedAt} pending=$pending thermal=$thermal native_heap_bytes=${android.os.Debug.getNativeHeapAllocatedSize()} source=${if (activity.playbackSelected) "playback" else "microphone"}")
             report("e2e_queue_depth", pending.toLong())
             report("e2e_thermal_status", thermal.toLong())
             report("e2e_native_heap_mb", nativeHeapMb)
+            val currentHints = hintState
+            val chosen = E2eHintPolicy.choose(e2eInferenceIndex.incrementAndGet(), currentHints.hints, currentHints.automatic)
             try {
-                sessionLog.write("e2e_begin samples=${pcm.size}")
-                checkNotNull(e2eBackend).setHints(liveE2eHints)
+                sessionLog.write("e2e_begin samples=${pcm.size} hint_chars=${chosen.hints.length} verification=${chosen.verification}")
+                if (chosen.verification) report("e2e_verification_window")
+                checkNotNull(e2eBackend).setHints(chosen.hints)
                 val completed = AtomicBoolean(false)
                 val timedOut = AtomicBoolean(false)
                 val cancellationLock = Any()
@@ -468,7 +550,8 @@ class CaptionEngine(private val activity: MainActivity, private val events: Engi
                 }
                 if (timedOut.get()) throw IllegalStateException("e2e_timeout")
                 sessionLog.write("e2e_raw=${raw.replace(Regex("[\\r\\n]+"), " ").take(400)}")
-                when (val parsed = E2eProtocol.parseFor(raw, activity.captionTask)) {
+                val preservedNames = if (E2ePreservedNames.selected(chosen.hints)) corpusPreservedNames else emptySet()
+                when (val parsed = E2eProtocol.parseFor(raw, activity.captionTask, preservedNames)) {
                     E2eProtocol.Result.NoSpeech -> {
                         sessionLog.write("e2e_filtered_no_s window=$window")
                         report("e2e_filtered_no_speech")
@@ -476,6 +559,7 @@ class CaptionEngine(private val activity: MainActivity, private val events: Engi
                     is E2eProtocol.Result.Invalid -> {
                         sessionLog.write("e2e_parse_failed window=$window reason=${parsed.reason}")
                         report("e2e_parse_failed")
+                        if (e == epoch && accepting) reportE2eGap(e, start, end, "invalid_output")
                     }
                     is E2eProtocol.Result.Subtitle -> {
                         sessionLog.write(
@@ -484,15 +568,17 @@ class CaptionEngine(private val activity: MainActivity, private val events: Engi
                         if (e == epoch && accepting) post {
                             events.bilingual(
                                 BilingualEvent(
-                                    e, window, start, end, parsed.english, parsed.chinese,
+                                    e, window, start, end, parsed.english, parsed.chinese, chosen.hints,
                                 ),
                             ) {}
+                        } else if (e == epoch) {
+                            reportE2eGap(e, start, end, "cancelled_result")
                         }
                     }
                 }
             } catch (error: Throwable) {
                 sessionLog.write("e2e_failed window=$window", error)
-                if (e == epoch && accepting) post { events.gap(e, start, end) {} }
+                if (e == epoch) reportE2eGap(e, start, end, if (accepting) "inference_failed" else "cancelled_active")
             } finally {
                 val elapsed = SystemClock.elapsedRealtime() - began
                 val loadEnd = loadSampler.begin()
@@ -508,7 +594,6 @@ class CaptionEngine(private val activity: MainActivity, private val events: Engi
                 report("e2e_ms", elapsed)
                 report("e2e_rtf_milli", elapsed * 1000L / maxOf(1L, end - start))
             }
-        }
     }
 
     /**
@@ -522,6 +607,7 @@ class CaptionEngine(private val activity: MainActivity, private val events: Engi
     override fun pause() {
         sessionLog.write("pause")
         recording.set(false)
+        pendingE2eAudio.clear(epoch)?.let { reportE2eGap(it.epoch, it.startMs, it.endMs, "pause_pending") }
         val activeE2e = activeJob?.id?.startsWith("e2e-") == true
         val pendingE2e = queue.any { it.epoch == epoch && it.id.startsWith("e2e-") }
         if (activeE2e || pendingE2e) {
@@ -558,6 +644,7 @@ class CaptionEngine(private val activity: MainActivity, private val events: Engi
     override fun cancel() {
         sessionLog.write("cancel")
         accepting = false; native.setCancelled(true); native.setTranslationCancelled(true); e2eBackend?.cancel()
+        pendingE2eAudio.clear(epoch)?.let { reportE2eGap(it.epoch, it.startMs, it.endMs, "cancelled") }
         queue.filter { it.epoch >= 0 }.forEach { if (queue.remove(it)) it.dropped() }
     }
     override fun release(callback: (Result<Unit>) -> Unit) {
@@ -565,7 +652,8 @@ class CaptionEngine(private val activity: MainActivity, private val events: Engi
         pause(); cancel(); prepared = false
         enqueue("release", -1, priority = 0, requiresAccepting = false) {
             captureThread?.join()
-            engineLock.write { native.release(); e2eBackend?.close(); translator?.close(); translator = null }
+            engineLock.write { native.release(); e2eBackend?.close(); boundaryVad?.close(); boundaryVad = null
+                translator?.close(); translator = null }
             sessionLog.write("session_release_ok")
             sessionLog.close()
             post { callback(Result.success(Unit)) }

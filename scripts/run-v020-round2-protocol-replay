@@ -1,0 +1,16 @@
+#!/usr/bin/env bash
+set -euo pipefail
+cd "$(dirname "$0")/.."
+out=evaluation/results/v020-round2/protocol
+java_bin=/home/hyh/Tools/java/eclipse-temurin-jdk17/bin
+[[ ! -e "$out/replay_rows.jsonl" ]] || { echo 'Replay exists; inspect checkpoint' >&2; exit 3; }
+for phase in before after; do
+  mkdir -p "$out/$phase-bridge"
+  "$java_bin/javac" -cp "$(cat "$out/$phase-classpath.txt")" -d "$out/$phase-bridge" evaluation/V020ProtocolBridge.java
+done
+export XDG_RUNTIME_DIR=/run/user/1000
+export DBUS_SESSION_BUS_ADDRESS=unix:path=/run/user/1000/bus
+systemd-run --user --scope --quiet --collect \
+  -p MemoryMax=512M -p MemorySwapMax=0 \
+  timeout --signal=TERM --kill-after=10s 120s python3 evaluation/v020_round2_protocol_replay.py \
+  >"$out/replay.log" 2>&1

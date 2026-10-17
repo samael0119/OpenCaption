@@ -116,7 +116,10 @@ class CaptionLedger {
   final Set<String> _ids = {};
   int _nextSequence = 0;
 
-  int get latestSequence => items.isEmpty ? -1 : items.last.sequence;
+  int get latestSequence => items.fold<int>(
+    -1,
+    (latest, item) => item.sequence > latest ? item.sequence : latest,
+  );
 
   Caption? append({
     required String id,
@@ -136,7 +139,18 @@ class CaptionLedger {
       english: english,
       createdAt: now,
     );
-    items.add(item);
+    // A future missing interval can arrive while an earlier window is still
+    // decoding. Place that late caption by audio time, preserving stable IDs.
+    final before = endMs > 0
+        ? items.indexWhere(
+            (s) => s.epoch == epoch && s.endMs > 0 && s.startMs >= endMs,
+          )
+        : -1;
+    if (before < 0) {
+      items.add(item);
+    } else {
+      items.insert(before, item);
+    }
     _trimHistory();
     return item;
   }
@@ -232,12 +246,18 @@ class CaptionLedger {
     }
   }
 
-  void gap(int epoch, String message, DateTime now) {
+  void gap(
+    int epoch,
+    String message,
+    DateTime now, {
+    int startMs = 0,
+    int endMs = 0,
+  }) {
     final s = append(
       id: 'gap-$_nextSequence',
       epoch: epoch,
-      startMs: 0,
-      endMs: 0,
+      startMs: startMs,
+      endMs: endMs,
       english: '',
       now: now,
     )!;

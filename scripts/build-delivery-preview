@@ -1,0 +1,29 @@
+#!/usr/bin/env bash
+set -euo pipefail
+cd "$(dirname "$0")/.."
+root="$PWD"
+python3 - <<'PY'
+import json,shutil
+from pathlib import Path
+from urllib.parse import urljoin
+root=Path.cwd(); stage=root/'evaluation/results/v020-delivery/ui_project';stage.mkdir(parents=True,exist_ok=True)
+for name in ['lib','assets']:
+ p=stage/name
+ if not p.exists():p.symlink_to(root/name,target_is_directory=True)
+for name in ['pubspec.yaml','pubspec.lock','.flutter-plugins-dependencies']:shutil.copy2(root/name,stage/name)
+# Test-environment-only local CJK font, never added to the product assets.
+fonts=stage/'delivery_fonts';fonts.mkdir(exist_ok=True)
+shutil.copy2('/usr/share/fonts/opentype/noto/NotoSansCJK-Regular.ttc',fonts/'NotoSansCJK-Regular.ttc')
+pub=stage/'pubspec.yaml';pub.write_text(pub.read_text().replace('flutter:\n  uses-material-design:', 'flutter:\n  fonts:\n    - family: Roboto\n      fonts:\n        - asset: delivery_fonts/NotoSansCJK-Regular.ttc\n  uses-material-design:'))
+(stage/'web').mkdir(exist_ok=True)
+html=(root/'evaluation/ui_preview/index.html').read_text().replace('<script src="flutter_bootstrap.js"','<script src="delivery_bridge.js"></script><script src="flutter_bootstrap.js"')
+(stage/'web/index.html').write_text(html)
+shutil.copy2(root/'evaluation/ui_preview/delivery_bridge.js',stage/'web/delivery_bridge.js')
+(stage/'.dart_tool').mkdir(exist_ok=True)
+shutil.copy2(root/'.dart_tool/package_graph.json',stage/'.dart_tool/package_graph.json')
+c=json.loads((root/'.dart_tool/package_config.json').read_text())
+for p in c['packages']:p['rootUri']=stage.as_uri()+'/' if p['name']=='opencaption' else urljoin((root/'.dart_tool/').as_uri()+'/',p['rootUri'])
+(stage/'.dart_tool/package_config.json').write_text(json.dumps(c))
+PY
+cd evaluation/results/v020-delivery/ui_project
+exec "$root/scripts/flutterw" build web --no-pub --no-web-resources-cdn --target lib/delivery_preview.dart --dart-define=OPENCAPTION_DELIVERY_PREVIEW=true

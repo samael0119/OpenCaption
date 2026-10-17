@@ -1,0 +1,681 @@
+{
+  "scope": "24 AI-assisted lexical/predicate reviews with original constructed examples; not independent human bilingual audio gold or net-gain evaluation.",
+  "reviews": [
+    {
+      "term_id": "cs2-force-buy",
+      "english": "force-buy",
+      "chinese": "强起",
+      "source_refs": [
+        "perfectworld_dictionary",
+        "blast_communication"
+      ],
+      "policy": "guarded_correction",
+      "positive_hints": [
+        "They force buy",
+        "They force buy again"
+      ],
+      "negative_hints": [
+        "They force buy the software",
+        "They force buying tickets"
+      ],
+      "positive": {
+        "english": "They force buy but do not have 2 smokes",
+        "chinese": "他们强制购买，没有2颗烟。",
+        "expected": "他们强起，没有2颗烟。"
+      },
+      "negative": {
+        "english": "They force buy the software",
+        "chinese": "他们强制购买软件。",
+        "expected": "他们强制购买软件。"
+      }
+    },
+    {
+      "term_id": "cs2-save",
+      "english": "save",
+      "chinese": "保枪",
+      "source_refs": [
+        "perfectworld_dictionary",
+        "blast_communication",
+        "hltv_watch_guide"
+      ],
+      "policy": "guarded_correction",
+      "positive_hints": [
+        "They save here",
+        "They save again"
+      ],
+      "negative_hints": [
+        "They save the file",
+        "They save files again"
+      ],
+      "positive": {
+        "english": "They save the AWP",
+        "chinese": "他们保存武器。",
+        "expected": "他们保枪。"
+      },
+      "negative": {
+        "english": "They save the AWP",
+        "chinese": "他们保存武器，还要保存文件。",
+        "expected": "他们保存武器，还要保存文件。"
+      }
+    },
+    {
+      "term_id": "cs2-trade",
+      "english": "trade",
+      "chinese": "补枪",
+      "source_refs": [
+        "perfectworld_dictionary",
+        "blast_communication",
+        "hltv_watch_guide"
+      ],
+      "policy": "guarded_correction",
+      "positive_hints": [
+        "They get a trade kill",
+        "They find a trade frag"
+      ],
+      "negative_hints": [
+        "The skin market describes trade kill",
+        "The trade offer says trade frag"
+      ],
+      "positive": {
+        "english": "No trade available",
+        "chinese": "没有交易。",
+        "expected": "没有补枪。"
+      },
+      "negative": {
+        "english": "They get a trade kill",
+        "chinese": "游戏有交易平台，没有交易。",
+        "expected": "游戏有交易平台，没有交易。"
+      }
+    },
+    {
+      "term_id": "cs2-ssg-08",
+      "english": "SSG 08",
+      "chinese": "鸟狙",
+      "source_refs": [
+        "perfectworld_dictionary",
+        "csgo_api"
+      ],
+      "policy": "guarded_correction",
+      "positive_hints": [
+        "It is just a scout for Shiro",
+        "They have the Scout"
+      ],
+      "negative_hints": [
+        "He is a scout for talent",
+        "He is a scout for the club"
+      ],
+      "positive": {
+        "english": "It is just a scout for Shiro",
+        "chinese": "它只是一个为Shiro的侦察兵。",
+        "expected": "它只是一个为Shiro的鸟狙。"
+      },
+      "negative": {
+        "english": "He is just a scout for the club",
+        "chinese": "他只是个侦察兵。",
+        "expected": "他只是个侦察兵。"
+      }
+    },
+    {
+      "term_id": "live-player-51",
+      "english": "frozen",
+      "chinese": "frozen",
+      "source_refs": [
+        "players.json"
+      ],
+      "policy": "guarded_correction",
+      "positive_hints": [
+        "frozen makes it a one round game",
+        "frozen peeks into the site"
+      ],
+      "negative_hints": [
+        "The water is frozen",
+        "The assets are frozen"
+      ],
+      "positive": {
+        "english": "frozen makes it a one round game",
+        "chinese": "冻结使其成为一轮游戏。",
+        "expected": "frozen使其成为一轮游戏。"
+      },
+      "negative": {
+        "english": "frozen makes it a one round game",
+        "chinese": "账户冻结，冻结使其成为一轮游戏。",
+        "expected": "账户冻结，冻结使其成为一轮游戏。"
+      }
+    },
+    {
+      "term_id": "cs2-eco",
+      "english": "eco",
+      "chinese": "经济局",
+      "source_refs": [
+        "perfectworld_dictionary",
+        "blast_communication",
+        "hltv_watch_guide"
+      ],
+      "policy": "hint_only_no_automatic_rewrite",
+      "positive_hints": [
+        "They play an eco round",
+        "Another full eco round"
+      ],
+      "negative_hints": [
+        "They discuss eco tourism",
+        "They discuss eco friendly packaging"
+      ],
+      "positive": {
+        "english": "They play an eco round",
+        "chinese": "生态。",
+        "expected": "生态。"
+      },
+      "negative": {
+        "english": "They discuss eco tourism",
+        "chinese": "生态旅游。",
+        "expected": "生态旅游。"
+      }
+    },
+    {
+      "term_id": "cs2-lurker",
+      "english": "lurker",
+      "chinese": "自由人",
+      "source_refs": [
+        "perfectworld_dictionary",
+        "blast_communication",
+        "hltv_watch_guide"
+      ],
+      "policy": "hint_only_no_automatic_rewrite",
+      "positive_hints": [
+        "The lurker crosses the site",
+        "Their lurker waits in mid"
+      ],
+      "negative_hints": [
+        "A lurker in the forum",
+        "The lurker watches the chat room"
+      ],
+      "positive": {
+        "english": "The lurker crosses the site",
+        "chinese": "潜伏者。",
+        "expected": "潜伏者。"
+      },
+      "negative": {
+        "english": "A lurker in the forum",
+        "chinese": "潜伏者。",
+        "expected": "潜伏者。"
+      }
+    },
+    {
+      "term_id": "cs2-anchor",
+      "english": "anchor",
+      "chinese": "包点防守位",
+      "source_refs": [
+        "blast_communication",
+        "hltv_watch_guide"
+      ],
+      "policy": "hint_only_no_automatic_rewrite",
+      "positive_hints": [
+        "The site anchor holds B",
+        "Their anchor defends the bombsite"
+      ],
+      "negative_hints": [
+        "The anchor holds a ship",
+        "The news anchor speaks"
+      ],
+      "positive": {
+        "english": "The site anchor holds B",
+        "chinese": "锚。",
+        "expected": "锚。"
+      },
+      "negative": {
+        "english": "The news anchor speaks",
+        "chinese": "新闻主播。",
+        "expected": "新闻主播。"
+      }
+    },
+    {
+      "term_id": "cs2-default",
+      "english": "default",
+      "chinese": "默认控图",
+      "source_refs": [
+        "blast_communication",
+        "hltv_watch_guide"
+      ],
+      "policy": "hint_only_no_automatic_rewrite",
+      "positive_hints": [
+        "They play default",
+        "Their default setup spreads across the map"
+      ],
+      "negative_hints": [
+        "Change default settings",
+        "Use the default browser"
+      ],
+      "positive": {
+        "english": "They play default",
+        "chinese": "默认。",
+        "expected": "默认。"
+      },
+      "negative": {
+        "english": "Change default settings",
+        "chinese": "默认设置。",
+        "expected": "默认设置。"
+      }
+    },
+    {
+      "term_id": "cs2-execute",
+      "english": "execute",
+      "chinese": "爆弹",
+      "source_refs": [
+        "perfectworld_dictionary",
+        "blast_communication",
+        "hltv_watch_guide"
+      ],
+      "policy": "hint_only_no_automatic_rewrite",
+      "positive_hints": [
+        "They execute onto site",
+        "A site execute begins"
+      ],
+      "negative_hints": [
+        "Execute the command",
+        "Execute a program"
+      ],
+      "positive": {
+        "english": "They execute onto site",
+        "chinese": "执行。",
+        "expected": "执行。"
+      },
+      "negative": {
+        "english": "Execute the command",
+        "chinese": "执行命令。",
+        "expected": "执行命令。"
+      }
+    },
+    {
+      "term_id": "cs2-stack",
+      "english": "stack",
+      "chinese": "重防",
+      "source_refs": [
+        "perfectworld_dictionary",
+        "blast_communication",
+        "hltv_watch_guide"
+      ],
+      "policy": "hint_only_no_automatic_rewrite",
+      "positive_hints": [
+        "They stack A",
+        "A site stack waits"
+      ],
+      "negative_hints": [
+        "Read the stack trace",
+        "A stack of books"
+      ],
+      "positive": {
+        "english": "They stack A",
+        "chinese": "堆叠。",
+        "expected": "堆叠。"
+      },
+      "negative": {
+        "english": "Read the stack trace",
+        "chinese": "堆叠轨迹。",
+        "expected": "堆叠轨迹。"
+      }
+    },
+    {
+      "term_id": "cs2-dry-peek",
+      "english": "dry peek",
+      "chinese": "干拉",
+      "source_refs": [
+        "blast_communication"
+      ],
+      "policy": "hint_only_no_automatic_rewrite",
+      "positive_hints": [
+        "They dry peek the angle",
+        "They keep dry peeking mid"
+      ],
+      "negative_hints": [
+        "Dry the paint and peek inside",
+        "Dry a towel before you peek"
+      ],
+      "positive": {
+        "english": "They dry peek the angle",
+        "chinese": "干燥探头。",
+        "expected": "干燥探头。"
+      },
+      "negative": {
+        "english": "Dry the paint and peek inside",
+        "chinese": "干燥探头。",
+        "expected": "干燥探头。"
+      }
+    },
+    {
+      "term_id": "cs2-jiggle-peek",
+      "english": "jiggle peek",
+      "chinese": "小身位晃身",
+      "source_refs": [
+        "perfectworld_dictionary",
+        "blast_communication"
+      ],
+      "policy": "hint_only_no_automatic_rewrite",
+      "positive_hints": [
+        "They jiggle peek the angle",
+        "They shoulder peek from cover"
+      ],
+      "negative_hints": [
+        "Jiggle the cable and peek inside",
+        "Jiggle a handle before you peek"
+      ],
+      "positive": {
+        "english": "They jiggle peek the angle",
+        "chinese": "肩膀探头。",
+        "expected": "肩膀探头。"
+      },
+      "negative": {
+        "english": "Jiggle the cable and peek inside",
+        "chinese": "肩膀探头。",
+        "expected": "肩膀探头。"
+      }
+    },
+    {
+      "term_id": "cs2-spam",
+      "english": "spam",
+      "chinese": "混",
+      "source_refs": [
+        "perfectworld_dictionary",
+        "blast_communication"
+      ],
+      "policy": "hint_only_no_automatic_rewrite",
+      "positive_hints": [
+        "They spam the smoke",
+        "They spam wall"
+      ],
+      "negative_hints": [
+        "Spam messages in the inbox",
+        "Spamming email again"
+      ],
+      "positive": {
+        "english": "They spam the smoke",
+        "chinese": "垃圾信息。",
+        "expected": "垃圾信息。"
+      },
+      "negative": {
+        "english": "Spam messages in the inbox",
+        "chinese": "垃圾信息。",
+        "expected": "垃圾信息。"
+      }
+    },
+    {
+      "term_id": "cs2-lit",
+      "english": "lit",
+      "chinese": "打残",
+      "source_refs": [
+        "perfectworld_dictionary",
+        "blast_communication"
+      ],
+      "policy": "hint_only_no_automatic_rewrite",
+      "positive_hints": [
+        "He is very lit",
+        "Their opponent is lit"
+      ],
+      "negative_hints": [
+        "The candle is lit",
+        "The lamp is lit"
+      ],
+      "positive": {
+        "english": "He is very lit",
+        "chinese": "点亮。",
+        "expected": "点亮。"
+      },
+      "negative": {
+        "english": "The candle is lit",
+        "chinese": "蜡烛点亮。",
+        "expected": "蜡烛点亮。"
+      }
+    },
+    {
+      "term_id": "cs2-tag",
+      "english": "tag",
+      "chinese": "打中",
+      "source_refs": [
+        "perfectworld_dictionary",
+        "blast_communication"
+      ],
+      "policy": "hint_only_no_automatic_rewrite",
+      "positive_hints": [
+        "They tag him at the site",
+        "They tagged an opponent"
+      ],
+      "negative_hints": [
+        "Read the price tag",
+        "Check the name tag"
+      ],
+      "positive": {
+        "english": "They tag him at the site",
+        "chinese": "标记。",
+        "expected": "标记。"
+      },
+      "negative": {
+        "english": "Read the price tag",
+        "chinese": "价格标记。",
+        "expected": "价格标记。"
+      }
+    },
+    {
+      "term_id": "cs2-pick",
+      "english": "pick",
+      "chinese": "抓到一个人",
+      "source_refs": [
+        "perfectworld_dictionary"
+      ],
+      "policy": "hint_only_no_automatic_rewrite",
+      "positive_hints": [
+        "They find a pick",
+        "He gets an opening pick"
+      ],
+      "negative_hints": [
+        "Pick a color",
+        "Pick up the AWP"
+      ],
+      "positive": {
+        "english": "They find a pick",
+        "chinese": "选择。",
+        "expected": "选择。"
+      },
+      "negative": {
+        "english": "Pick a color",
+        "chinese": "选择颜色。",
+        "expected": "选择颜色。"
+      }
+    },
+    {
+      "term_id": "cs2-utility",
+      "english": "utility",
+      "chinese": "道具",
+      "source_refs": [
+        "perfectworld_dictionary",
+        "blast_communication",
+        "hltv_watch_guide"
+      ],
+      "policy": "hint_only_no_automatic_rewrite",
+      "positive_hints": [
+        "They throw utility onto the site",
+        "They need utility for the round"
+      ],
+      "negative_hints": [
+        "Read the utility bill",
+        "Use a utility function"
+      ],
+      "positive": {
+        "english": "They throw utility onto the site",
+        "chinese": "实用工具。",
+        "expected": "实用工具。"
+      },
+      "negative": {
+        "english": "Read the utility bill",
+        "chinese": "水电账单。",
+        "expected": "水电账单。"
+      }
+    },
+    {
+      "term_id": "cs2-anti-flash",
+      "english": "anti-flash",
+      "chinese": "背闪",
+      "source_refs": [
+        "blast_communication"
+      ],
+      "policy": "hint_only_no_automatic_rewrite",
+      "positive_hints": [
+        "They play anti flash",
+        "He is playing anti-flash"
+      ],
+      "negative_hints": [
+        "An anti flash photography filter",
+        "An anti flash camera setting"
+      ],
+      "positive": {
+        "english": "They play anti flash",
+        "chinese": "反闪光。",
+        "expected": "反闪光。"
+      },
+      "negative": {
+        "english": "An anti flash photography filter",
+        "chinese": "摄影反闪光。",
+        "expected": "摄影反闪光。"
+      }
+    },
+    {
+      "term_id": "cs2-game-sense",
+      "english": "game sense",
+      "chinese": "游戏理解",
+      "source_refs": [
+        "blast_communication"
+      ],
+      "policy": "hint_only_no_automatic_rewrite",
+      "positive_hints": [
+        "His game sense reads the rotation",
+        "Their game sense wins the round"
+      ],
+      "negative_hints": [
+        "Sense the game and react",
+        "A sense of the game"
+      ],
+      "positive": {
+        "english": "His game sense reads the rotation",
+        "chinese": "游戏感觉。",
+        "expected": "游戏感觉。"
+      },
+      "negative": {
+        "english": "Sense the game and react",
+        "chinese": "感受游戏。",
+        "expected": "感受游戏。"
+      }
+    },
+    {
+      "term_id": "cs2-meta",
+      "english": "meta",
+      "chinese": "版本主流打法",
+      "source_refs": [
+        "hltv_watch_guide"
+      ],
+      "policy": "hint_only_no_automatic_rewrite",
+      "positive_hints": [
+        "The current meta favors rifles",
+        "The new meta changes the round"
+      ],
+      "negative_hints": [
+        "Read a meta analysis",
+        "Update a meta tag"
+      ],
+      "positive": {
+        "english": "The current meta favors rifles",
+        "chinese": "元。",
+        "expected": "元。"
+      },
+      "negative": {
+        "english": "Read a meta analysis",
+        "chinese": "元分析。",
+        "expected": "元分析。"
+      }
+    },
+    {
+      "term_id": "cs2-bait",
+      "english": "bait",
+      "chinese": "卖队友拉枪线",
+      "source_refs": [
+        "perfectworld_dictionary",
+        "blast_communication",
+        "hltv_watch_guide"
+      ],
+      "policy": "hint_only_no_automatic_rewrite",
+      "positive_hints": [
+        "He acts as bait for a teammate",
+        "They use bait to draw fire"
+      ],
+      "negative_hints": [
+        "Buy bait for fishing",
+        "Take bait from the bait shop"
+      ],
+      "positive": {
+        "english": "He acts as bait for a teammate",
+        "chinese": "诱饵。",
+        "expected": "诱饵。"
+      },
+      "negative": {
+        "english": "Buy bait for fishing",
+        "chinese": "鱼饵。",
+        "expected": "鱼饵。"
+      }
+    },
+    {
+      "term_id": "cs2-rotate",
+      "english": "rotate",
+      "chinese": "转点",
+      "source_refs": [
+        "perfectworld_dictionary",
+        "blast_communication"
+      ],
+      "policy": "hint_only_no_automatic_rewrite",
+      "positive_hints": [
+        "They rotate to B",
+        "They rotate back to A"
+      ],
+      "negative_hints": [
+        "Rotate the wheel",
+        "Rotate the image"
+      ],
+      "positive": {
+        "english": "The CTs rotate back to A",
+        "chinese": "回防。",
+        "expected": "回防。"
+      },
+      "negative": {
+        "english": "Rotate the wheel",
+        "chinese": "转动车轮。",
+        "expected": "转动车轮。"
+      }
+    },
+    {
+      "term_id": "cs2-entry-fragger",
+      "english": "entry fragger",
+      "chinese": "突破手",
+      "source_refs": [
+        "perfectworld_dictionary",
+        "blast_communication",
+        "hltv_watch_guide"
+      ],
+      "policy": "hint_only_no_automatic_rewrite",
+      "positive_hints": [
+        "Their entry fragger enters first",
+        "The entry fragger attacks the site"
+      ],
+      "negative_hints": [
+        "Pay an entry fee",
+        "Finish the data entry"
+      ],
+      "positive": {
+        "english": "Their entry fragger gets the opening kill",
+        "chinese": "突破手完成首杀。",
+        "expected": "突破手完成首杀。"
+      },
+      "negative": {
+        "english": "Finish the data entry",
+        "chinese": "数据录入。",
+        "expected": "数据录入。"
+      }
+    }
+  ],
+  "expected_is_mechanism_output_not_gold": true
+}
