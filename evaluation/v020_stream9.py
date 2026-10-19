@@ -62,7 +62,7 @@ def prepare():
  assert dict(system=system,request=request)==old['prompts']
  import litert_lm
  files={str(p):sha(p) for p in pathlib.Path(litert_lm.__file__).parent.rglob('*.py')};files.update(im['compiler_files'])
- paths=src+['evaluation/gemma_replay.py','evaluation/v020_redundancy8.py','evaluation/v020_stream9.py','evaluation/test_v020_stream9.py','evaluation/V020ProtocolBridge.java','scripts/run-v020-stream9','docs/v0.2.0第9轮流式交付归因计划.md','evaluation/results/v020-redundancy8/P0_manifest.json',str(source.relative_to(R))]+[c['path'] for c in cases]
+ paths=src+['evaluation/gemma_replay.py','evaluation/v020_redundancy8.py','evaluation/v020_stream9.py','evaluation/test_v020_stream9.py','evaluation/V020ProtocolBridge.java','scripts/run-v020-stream9','docs/dev/archive/v0.2.0第9轮流式交付归因计划.md','evaluation/results/v020-redundancy8/P0_manifest.json',str(source.relative_to(R))]+[c['path'] for c in cases]
  files.update({p:sha(R/p) for p in paths});files.update({str(p.relative_to(R)):sha(p) for p in classes.rglob('*.class')});files[str((O/'classpath.txt').relative_to(R))]=sha(O/'classpath.txt')
  assert sha(MODEL)==old['model_sha256']
  put(O/'manifest.json',dict(cases=cases,order=order,files=files,model_sha256=old['model_sha256'],prompts=dict(system=system,request=request),bounds=dict(requests=16,batches=[8,8],retries=0,residencies=1,memory=6*1024**3,swap=0,timeout=900),config=old['config'],stream_semantics='Both delta/cumulative hypotheses retained until paired output evidence; ambiguous mismatch cannot pass',sdk_version=getattr(litert_lm,'__version__','unknown'),new_requests_at_freeze=0));put(O/'compile.json',dict(command=cmd));print('FROZEN8pairs/16requests; zero Engine',flush=True)

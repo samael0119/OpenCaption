@@ -29,6 +29,6 @@ for i,ps in enumerate(tests):
  for j,p in enumerate(ps):rows.append(f'test{i}\t{(j+1)*320}\t'+('null' if p is None else 'nan' if p!=p else str(p)))
 (O/'frames.tsv').write_text('\n'.join(rows)+'\n')
 files=dict(old['files'])
-for p in ['evaluation/results/v020-latency7/manifest.json','evaluation/results/v020-latency7/frames.tsv','evaluation/results/v020-latency7/product.tsv','evaluation/V020Deadline7.kt','evaluation/v020_latency7_deadline_prepare.py','evaluation/v020_latency7_deadline_audit.py','scripts/run-v020-deadline7-P0','docs/v0.2.0第7轮硬期限时钟对照.md','evaluation/results/v020-latency7/deadline/frames.tsv']:files[p]=sha(R/p)
+for p in ['evaluation/results/v020-latency7/manifest.json','evaluation/results/v020-latency7/frames.tsv','evaluation/results/v020-latency7/product.tsv','evaluation/V020Deadline7.kt','evaluation/v020_latency7_deadline_prepare.py','evaluation/v020_latency7_deadline_audit.py','scripts/run-v020-deadline7-P0','docs/dev/archive/v0.2.0第7轮硬期限时钟对照.md','evaluation/results/v020-latency7/deadline/frames.tsv']:files[p]=sha(R/p)
 m=dict(files=files,traces=traces,synthetic_cases=12,policies=['baseline','anchored'],new_model_requests=0,mapping='Shift already-causal20ms events exactly by pad; merge prefix ticks and absolute80000 deadlines; inserted ticks hold latest available probability, no future read. Delta<=320. Both arms same events.',gate='Original P50 -20% and -200ms/P95 nonworse/requests<=+25%/grid coverage no drop; other3 phase P50/P95 no worse. No further variants.')
 with (O/'manifest.json').open('x') as f:json.dump(m,f,indent=2)

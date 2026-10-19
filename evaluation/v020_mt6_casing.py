@@ -17,7 +17,7 @@ def active():
 def prepare():
     active();resources()
     old=read(BASE/'manifest.json');files=dict(old['files'])
-    paths=['evaluation/results/v020-mt6/manifest.json','evaluation/v020_mt6_casing.py','evaluation/test_v020_mt6_casing.py','scripts/run-v020-mt6-casing','evaluation/v020_round6_candidate2_review_20261015.md']
+    paths=['evaluation/results/v020-mt6/manifest.json','evaluation/v020_mt6_casing.py','evaluation/test_v020_mt6_casing.py','scripts/run-v020-mt6-casing','docs/dev/evaluation/v020_round6_candidate2_review_20261015.md']
     paths += [f'evaluation/results/v020-mt6/batch{n}.jsonl' for n in range(4)]
     for p in paths:files[p]=sha(ROOT/p)
     cases=[]

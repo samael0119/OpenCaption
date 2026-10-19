@@ -2,10 +2,13 @@ package dev.opencaption.opencaption
 
 import android.app.*
 import android.content.Intent
+import android.content.res.Configuration
+import android.content.res.ColorStateList
 import android.content.pm.ServiceInfo
 import android.graphics.Color
 import android.graphics.PixelFormat
 import android.graphics.drawable.GradientDrawable
+import android.graphics.drawable.RippleDrawable
 import android.media.projection.MediaProjection
 import android.media.projection.MediaProjectionManager
 import android.os.*
@@ -35,6 +38,13 @@ class PlaybackCaptionService : Service() {
         private set
     private var root: LinearLayout? = null
     private var subtitle: TextView? = null
+    private var controls: LinearLayout? = null
+    private var controlViews: List<View> = emptyList()
+    private var overlayParams: WindowManager.LayoutParams? = null
+    private var overlaySpec: OverlayGeometry.Spec? = null
+    private var viewportWidth = 0
+    private var viewportHeight = 0
+    private var verticalAnchor = OverlayGeometry.BottomAnchor(0)
     @Volatile private var panelOpacity = 0.86f
     @Volatile private var sourceSubtitleColor = Color.rgb(255, 224, 130)
     @Volatile private var translationSubtitleColor = Color.rgb(165, 214, 167)
@@ -80,6 +90,45 @@ class PlaybackCaptionService : Service() {
         }
         return START_NOT_STICKY
     }
+    private fun viewport(): Pair<Int, Int> {
+        val wm = getSystemService(WindowManager::class.java)
+        if (Build.VERSION.SDK_INT >= 30) {
+            val metrics = wm.maximumWindowMetrics
+            // Match WindowManager's visible-inset frame. Hidden video-player bars
+            // must not continue reserving space at the bottom of the display.
+            val insets = metrics.windowInsets.getInsets(
+                WindowInsets.Type.systemBars() or WindowInsets.Type.displayCutout())
+            return OverlayGeometry.usableSize(metrics.bounds.width(), metrics.bounds.height(),
+                insets.left, insets.top, insets.right, insets.bottom)
+        }
+        return resources.displayMetrics.widthPixels to resources.displayMetrics.heightPixels
+    }
+    private fun surface() = GradientDrawable().apply {
+        cornerRadius = 12 * resources.displayMetrics.density
+        setColor(panelColor())
+    }
+    override fun onConfigurationChanged(newConfig: Configuration) {
+        super.onConfigurationChanged(newConfig)
+        handler.post { relayoutOverlay() }
+    }
+    private fun relayoutOverlay(onlyIfViewportChanged: Boolean = false) {
+        val panel = root ?: return
+        val params = overlayParams ?: return
+        val (width, height) = viewport()
+        if (onlyIfViewportChanged && width == viewportWidth && height == viewportHeight) return
+        val spec = OverlayGeometry.measure(width, height, resources.displayMetrics.density)
+        params.x = OverlayGeometry.rotatedX(params.x, viewportWidth, params.width, width, spec.width)
+        viewportWidth = width; viewportHeight = height; overlaySpec = spec
+        params.width = spec.width
+        params.y = verticalAnchor.y(height, panel.height)
+        panel.requestLayout()
+        runCatching { getSystemService(WindowManager::class.java).updateViewLayout(panel, params) }
+        panel.post {
+            if (root !== panel) return@post
+            params.y = verticalAnchor.y(viewportHeight, panel.height)
+            runCatching { getSystemService(WindowManager::class.java).updateViewLayout(panel, params) }
+        }
+    }
     private fun showOverlay() {
         check(Settings.canDrawOverlays(this)) { "请允许显示悬浮窗" }
         panelOpacity = requestedOpacity
@@ -87,56 +136,130 @@ class PlaybackCaptionService : Service() {
         translationSubtitleColor = requestedTranslationSubtitleColor
         val wm = getSystemService(WindowManager::class.java)
         val dp = resources.displayMetrics.density
-        val width = minOf((340 * dp).toInt(), resources.displayMetrics.widthPixels - (24 * dp).toInt())
-        val params = WindowManager.LayoutParams(width, WindowManager.LayoutParams.WRAP_CONTENT,
+        val (width, height) = viewport()
+        viewportWidth = width; viewportHeight = height
+        val spec = OverlayGeometry.measure(width, height, dp)
+        overlaySpec = spec
+        verticalAnchor = OverlayGeometry.BottomAnchor(spec.margin)
+        val params = WindowManager.LayoutParams(spec.width, WindowManager.LayoutParams.WRAP_CONTENT,
             WindowManager.LayoutParams.TYPE_APPLICATION_OVERLAY,
             WindowManager.LayoutParams.FLAG_NOT_FOCUSABLE or WindowManager.LayoutParams.FLAG_NOT_TOUCH_MODAL,
-            PixelFormat.TRANSLUCENT).apply { gravity = Gravity.TOP or Gravity.START; x = (12*dp).toInt(); y = (100*dp).toInt() }
+            PixelFormat.TRANSLUCENT).apply {
+            gravity = Gravity.TOP or Gravity.START
+            if (Build.VERSION.SDK_INT >= 30) {
+                setFitInsetsTypes(WindowInsets.Type.systemBars() or WindowInsets.Type.displayCutout())
+                setFitInsetsIgnoringVisibility(false)
+            }
+            x = (width - spec.width) / 2
+            y = verticalAnchor.y(height, spec.target + (16*dp).toInt())
+        }
+        overlayParams = params
         val panel = LinearLayout(this).apply {
             orientation = LinearLayout.VERTICAL
-            setPadding((16*dp).toInt(), (8*dp).toInt(), (16*dp).toInt(), (16*dp).toInt())
-            background = GradientDrawable().apply { cornerRadius=16*dp; setColor(panelColor()) }
+            setPadding((12*dp).toInt(), (8*dp).toInt(), (12*dp).toInt(), (8*dp).toInt())
+            background = surface()
         }
-        val bar = LinearLayout(this)
-        val drag = TextView(this).apply { text = "拖动字幕"; contentDescription = "拖动移动悬浮字幕"; setTextColor(-1); textSize = 12f; setPadding(8, 12, 8, 12) }
-        bar.addView(drag, LinearLayout.LayoutParams(0, -2, 1f))
+        val body = FrameLayout(this)
         var size = 20f
-        fun button(label: String, description: String, widthDp: Int = 48, action: () -> Unit) = Button(this).apply {
-            text = label; contentDescription = description; textSize = 12f; minWidth = 0; minimumWidth = 0; setPadding(4, 0, 4, 0)
-            setOnClickListener { action() }
-            bar.addView(this, LinearLayout.LayoutParams((widthDp*dp).toInt(), (48*dp).toInt()))
+        fun affordance(view: View, description: String, action: (() -> Unit)? = null): View {
+            view.contentDescription = description; view.tooltipText = description
+            view.isFocusable = true; view.isClickable = true
+            view.background = RippleDrawable(ColorStateList.valueOf(0x33FFFFFF), null,
+                GradientDrawable().apply { cornerRadius=8*dp; setColor(Color.WHITE) })
+            if (action != null) view.setOnClickListener { action() }
+            return view
         }
-        button("A−", "缩小字幕") { size = (size - 2).coerceAtLeast(14f); subtitle?.textSize = size }
-        button("A+", "放大字幕") { size = (size + 2).coerceAtMost(36f); subtitle?.textSize = size }
-        button("停止", "停止采集并关闭字幕", 56) { stopped?.invoke("playback_stopped"); stopSelf() }
+        val drag = affordance(ImageView(this).apply {
+            setImageResource(R.drawable.ic_overlay_drag_handle); scaleType = ImageView.ScaleType.CENTER
+        }, "拖动移动悬浮字幕")
+        val stop = affordance(ImageView(this).apply {
+            setImageResource(R.drawable.ic_overlay_stop); scaleType = ImageView.ScaleType.CENTER
+        }, "停止采集并关闭字幕") { stopped?.invoke("playback_stopped"); stopSelf() }
+        fun sizeButton(label: String, description: String, delta: Int) = affordance(TextView(this).apply {
+            text = label; textSize = 13f; gravity = Gravity.CENTER; includeFontPadding = false
+            setTextColor(Color.WHITE); setTypeface(typeface, android.graphics.Typeface.BOLD)
+        }, description) { size = (size + delta).coerceIn(14f, 36f); subtitle?.textSize = size }
+        controlViews = listOf(drag, sizeButton("A−", "缩小字幕", -2), sizeButton("A+", "放大字幕", 2), stop)
+        controls = LinearLayout(this).apply {
+            orientation = LinearLayout.HORIZONTAL; gravity = Gravity.END; visibility = View.GONE
+            controlViews.forEachIndexed { index, view ->
+                addView(view, LinearLayout.LayoutParams(spec.target, spec.target).apply {
+                    leftMargin = if (index > 0) spec.gap else 0
+                })
+            }
+        }
+        var expanded = false
+        val settings = affordance(ImageView(this).apply {
+            setImageResource(R.drawable.ic_overlay_settings); scaleType = ImageView.ScaleType.CENTER
+            imageAlpha = 184
+        }, "字幕设置") as ImageView
+        settings.setOnClickListener {
+            expanded = !expanded
+            controls?.visibility = if (expanded) View.VISIBLE else View.GONE
+            settings.imageAlpha = if (expanded) 255 else 184
+            settings.contentDescription = if (expanded) "收起字幕设置" else "字幕设置"
+            settings.tooltipText = settings.contentDescription
+        }
         var startX = 0; var startY = 0; var touchX = 0f; var touchY = 0f
-        drag.setOnTouchListener { _, event ->
-            when (event.action) {
+        drag.setOnTouchListener { view, event ->
+            when (event.actionMasked) {
                 MotionEvent.ACTION_DOWN -> { startX=params.x; startY=params.y; touchX=event.rawX; touchY=event.rawY }
                 MotionEvent.ACTION_MOVE -> {
-                    params.x=(startX+event.rawX-touchX).toInt().coerceIn(0, maxOf(0, resources.displayMetrics.widthPixels-width))
-                    params.y=(startY+event.rawY-touchY).toInt().coerceIn(0, maxOf(0, resources.displayMetrics.heightPixels-panel.height))
+                    params.x = OverlayGeometry.clamp((startX+event.rawX-touchX).toInt(), viewportWidth, params.width)
+                    params.y = verticalAnchor.dragTo((startY+event.rawY-touchY).toInt(), viewportHeight, panel.height)
                     runCatching { wm.updateViewLayout(panel, params) }
                 }
+                MotionEvent.ACTION_UP -> view.performClick()
             }; true
         }
         subtitle = TextView(this).apply {
             text="等待播放音频…"; textSize=size; setTextColor(sourceSubtitleColor)
-            setLineSpacing(4*dp, 1.15f); includeFontPadding=false
+            setLineSpacing(3*dp, 1.1f); includeFontPadding=false
+            gravity = Gravity.CENTER_HORIZONTAL
+            textAlignment = View.TEXT_ALIGNMENT_CENTER
         }
         val content = object : ScrollView(this) {
             override fun onMeasure(widthMeasureSpec: Int, heightMeasureSpec: Int) {
-                val maximum=(resources.displayMetrics.heightPixels*.55).toInt()
+                val maximum = overlaySpec?.captionMaxHeight ?: (viewportHeight*.45).toInt()
                 super.onMeasure(widthMeasureSpec, MeasureSpec.makeMeasureSpec(maximum, MeasureSpec.AT_MOST))
             }
-        }.apply { isFillViewport=false; addView(subtitle) }
-        panel.addView(bar); panel.addView(content)
-        root = panel; wm.addView(panel, params)
+        }.apply {
+            isFillViewport=false
+            setPadding(spec.contentInset, 0, spec.contentInset, 0)
+            addView(subtitle, FrameLayout.LayoutParams(-1, -2))
+        }
+        body.addView(content, FrameLayout.LayoutParams(-1, -2))
+        body.addView(settings, FrameLayout.LayoutParams(spec.target, spec.target, Gravity.END or Gravity.CENTER_VERTICAL))
+        panel.addView(body, LinearLayout.LayoutParams(-1, -2))
+        panel.addView(controls, LinearLayout.LayoutParams(-1, -2).apply { topMargin=(4*dp).toInt() })
+        root = panel
+        panel.setOnApplyWindowInsetsListener { _, insets ->
+            // Entering/leaving immersive playback can change the usable bottom
+            // without a rotation or other Configuration change.
+            handler.post { if (root === panel) relayoutOverlay(onlyIfViewportChanged = true) }
+            insets
+        }
+        panel.addOnLayoutChangeListener { _, _, top, _, bottom, _, oldTop, _, oldBottom ->
+            val oldHeight = oldBottom-oldTop
+            val newHeight = bottom-top
+            if (oldHeight > 0 && newHeight != oldHeight) {
+                params.y = verticalAnchor.y(viewportHeight, newHeight)
+                runCatching { wm.updateViewLayout(panel, params) }
+            }
+        }
+        wm.addView(panel, params)
+        panel.post {
+            if (root !== panel) return@post
+            params.y = verticalAnchor.y(viewportHeight, panel.height)
+            runCatching { wm.updateViewLayout(panel, params) }
+        }
     }
     fun setBackgroundOpacity(value: Float) {
         panelOpacity = value.coerceIn(0.2f, 1f)
         requestedOpacity = panelOpacity
-        handler.post { (root?.background as? GradientDrawable)?.setColor(panelColor()) }
+        handler.post {
+            (root?.background as? GradientDrawable)?.setColor(panelColor())
+        }
     }
     fun setSubtitleColors(sourceArgb: Int, translationArgb: Int) {
         sourceSubtitleColor = sourceArgb
@@ -199,6 +322,7 @@ class PlaybackCaptionService : Service() {
         if (instance === this) instance = null
         handler.removeCallbacksAndMessages(null)
         root?.let { runCatching { getSystemService(WindowManager::class.java).removeView(it) } }; root=null
+        controls=null; controlViews=emptyList(); overlayParams=null; overlaySpec=null
         projection?.stop(); projection=null
         stopForeground(STOP_FOREGROUND_REMOVE)
         super.onDestroy()

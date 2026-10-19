@@ -19,7 +19,7 @@ tests=[([1.0]*300),([0.1]*300),([None]*300),([float('nan')]*300),([0.0]*100+[1.0
 for i,ps in enumerate(tests):
  for j,p in enumerate(ps):rows.append(f'test{i}\t{(j+1)*320}\t'+('null' if p is None else 'nan' if p!=p else str(p)))
 (O/'frames.tsv').write_text('\n'.join(rows)+'\n')
-for x in ['android/app/src/main/kotlin/dev/opencaption/opencaption/E2eAudioPolicy.kt','android/app/src/main/kotlin/dev/opencaption/opencaption/SileroBoundaryVad.kt','evaluation/V020Latency7.kt','evaluation/v020_latency7_prepare.py','evaluation/v020_product_queue_summary.py','docs/v0.2.0第7轮延迟归因计划.md']:
+for x in ['android/app/src/main/kotlin/dev/opencaption/opencaption/E2eAudioPolicy.kt','android/app/src/main/kotlin/dev/opencaption/opencaption/SileroBoundaryVad.kt','evaluation/V020Latency7.kt','evaluation/v020_latency7_prepare.py','evaluation/v020_product_queue_summary.py','docs/dev/archive/v0.2.0第7轮延迟归因计划.md']:
  files[x]=sha(R/x)
 p=Path('/home/hyh/Downloads/opencaption/clip_gold_bilingual.srt');files[str(p)]=sha(p);files[str((O/'frames.tsv').relative_to(R))]=sha(O/'frames.tsv')
 (O/'manifest.json').write_text(json.dumps(dict(files=files,traces=meta,synthetic_cases=12,candidates_ms=[600,400],new_model_requests=0,mapping='completed=floor(total_samples/512); only completed-1 cached VAD; partial final padded VAD unused',gate='SRT end-to-submit proxy P50 -20% and -200ms; P95 no worse; requests<=+25%; queue grid coverage no drop'),indent=2)+'\n')

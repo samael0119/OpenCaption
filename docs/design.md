@@ -1,6 +1,6 @@
 # OpenCaption Design Overview
 
-This document describes the current system shape and the boundaries contributors should preserve. It is intentionally concise; benchmark history and product planning remain in the repository's Chinese working notes.
+This document describes the current system shape and the boundaries contributors should preserve. It is intentionally concise; benchmark history and product planning are local working notes under the ignored `docs/dev/` directory.
 
 ## Goals
 

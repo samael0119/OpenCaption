@@ -27,7 +27,7 @@ for c in m['cases']:
  cases.append(case)
 assert not missing,missing
 selected=[c['old_cached_structure'] for c in cases];stats=dict(complete=True,all_rows=metrics(rows),unique_raw=metrics(list(u.values())),development41=metrics(selected),groups=dict(collections.Counter(c['group'] for c in cases)),token_counts_measured=False,overhead_not_time_or_token=True,missing_cached_raw=missing,new_model_requests=0)
-files=['evaluation/results/v020-integrity8/rows.jsonl','evaluation/results/v020-integrity8/manifest.json',str(old.relative_to(R)),str(req.relative_to(R)),'evaluation/v020_redundancy8_prepare.py','docs/v0.2.0第8轮重复生成抑制计划.md']
+files=['evaluation/results/v020-integrity8/rows.jsonl','evaluation/results/v020-integrity8/manifest.json',str(old.relative_to(R)),str(req.relative_to(R)),'evaluation/v020_redundancy8_prepare.py','docs/dev/archive/v0.2.0第8轮重复生成抑制计划.md']
 files.extend(c['path'] for c in cases)
 for name,data in [('P0_manifest.json',dict(at=datetime.datetime.now().astimezone().isoformat(),files={p:sha(R/p) for p in files},cases=cases,config=m['config'],model_sha256=m['model_sha256'],prompts=m['prompts'],score_policy=m['scoring'],source_scoring_manifest=str(old.relative_to(R)))),('P0_summary.json',stats)]:
  with (O/name).open('x') as f:json.dump(data,f,ensure_ascii=False,indent=2)

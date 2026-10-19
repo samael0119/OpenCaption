@@ -75,7 +75,7 @@ File(args[1]).writeBytes(wav(E2eAudioInput.prepareShort(x)))
   for mode in (['audio','text_reference'] if i%2==0 else ['text_reference','audio']):order.append(dict(index=len(order),case_id=c['id'],mode=mode))
  put('score_spec.json',dict(units=UNITS,states=['preserved','omitted','contradicted','uncertain'],unknown_not_correct=True,primary_ids=[1860,1870,1889,1941,1957,1972],primary_units=16,total_cases=8,context_unknown_id=1908,conflicting_human_translation_id=1978,all_cases_coverage_required=True,AI_assisted_not_independent_human=True,additional_facts_make_whole_sentence_fail=True,case1978_english_source_diagnostic_only=True,case1908_objects_sense_not_required=True,classes_can_overlap_report_intersections=True))
  files=dict(im['compiler_files'])
- paths=[R/p for p in src]+[backend,capture,R/'evaluation/V020ProtocolBridge.java',O/'score_spec.json',O/'classpath.txt',R/'evaluation/results/v020-evidence11/qualification.json',R/'evaluation/results/v020-evidence11/reference_audit.json',R/'docs/v0.2.0第11轮新材料诊断计划.md',R/'scripts/run-v020-diagnostic11']
+ paths=[R/p for p in src]+[backend,capture,R/'evaluation/V020ProtocolBridge.java',O/'score_spec.json',O/'classpath.txt',R/'evaluation/results/v020-evidence11/qualification.json',R/'evaluation/results/v020-evidence11/reference_audit.json',R/'docs/dev/archive/v0.2.0第11轮新材料诊断计划.md',R/'scripts/run-v020-diagnostic11']
  paths+=list((R/'evaluation').glob('*.py'))+list(classes.rglob('*.class'))+[R/c['product_path'] for c in cases]+[R/c['audio_path'] for c in cases]
  import litert_lm
  paths+=list(pathlib.Path(litert_lm.__file__).parent.rglob('*.py'))

@@ -11,6 +11,10 @@ export PUB_HOSTED_URL="${PUB_HOSTED_URL:-https://pub.flutter-io.cn}"
 export FLUTTER_STORAGE_BASE_URL="${FLUTTER_STORAGE_BASE_URL:-https://storage.flutter-io.cn}"
 if [[ -d "$project_root/.tools/android-sdk" ]]; then
   export ANDROID_HOME="$project_root/.tools/android-sdk"
+  # The host-side Vulkan shader generator resolves Ninja through PATH.
+  if [[ -d "$ANDROID_HOME/cmake/3.22.1/bin" ]]; then
+    export PATH="$ANDROID_HOME/cmake/3.22.1/bin:$PATH"
+  fi
 fi
 if [[ -n "${OPENCAPTION_JAVA_HOME:-}" ]]; then
   export JAVA_HOME="$OPENCAPTION_JAVA_HOME"

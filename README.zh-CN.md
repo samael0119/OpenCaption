@@ -142,21 +142,14 @@ OPENCAPTION_MEMORY_MAX_MB=6144 scripts/run-gemma-eval \
 
 `scripts/run-gemma-eval` 使用 systemd cgroup 的 `MemoryHigh`／`MemoryMax` 限制实际内存并禁用 swap，默认上限为 6 GiB，允许通过 `OPENCAPTION_MEMORY_MAX_MB` 调低。不要用 `ulimit -v` 代替实际内存限制；mmap 地址空间和进程常驻内存不是同一个指标。评测脚本会记录每窗口原始输出、解析状态、推理时间、RTF 和峰值 RSS。
 
-当前实验报告：
-
-- [Gemma 4 加速探索](evaluation/gemma4_acceleration_exploration.md)
-- [Gemma 4 E2B/E4B 对比](evaluation/gemma4_e4b_exploration.md)
-- [Qwen 与 TranslateGemma 可行性](evaluation/translate_gemma4b_exploration.md)
+实验过程、开发计划、检查点和本机评测报告统一保存在不纳入版本控制的 `docs/dev/`，不作为公开文档的链接目标。
 
 ## 项目文档
 
+- [文档导航](docs/README.md)
 - [简明设计与架构说明](docs/design.md)
-- [当前 PRD](docs/实时字幕_PRD.md)
-- [开发计划（目标与历史基线）](docs/开发计划.md)
-- [实施记录](docs/实施记录.md)
-- [本设备音频与悬浮字幕测试](docs/playback_test_guide.md)
-- [公开发布检查清单](docs/release-checklist.md)
-- [实机评测指南](evaluation/README.md)
+- [评测工具说明](evaluation/README.md)
+- [版本变更](CHANGELOG.md)
 
 ## 贡献、安全与许可证
 

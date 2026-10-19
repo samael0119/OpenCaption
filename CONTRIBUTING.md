@@ -23,6 +23,8 @@ scripts/flutterw test --no-pub
 
 Run tests and model experiments serially. Inference experiments must use an explicit memory limit; do not load multiple large models concurrently.
 
+Keep local plans, checkpoints, build receipts and experiment reports under `docs/dev/`. This directory is ignored and must not be force-added to a contribution; public documentation belongs in the README, changelog or design overview.
+
 For behavior changes, update the relevant tests and documentation. Generated Pigeon bridge files must be regenerated from `pigeons/engine.dart` and committed with the source change.
 
 ## Pull requests

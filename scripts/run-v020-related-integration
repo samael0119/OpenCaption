@@ -32,7 +32,7 @@ from pathlib import Path
 row=dict(phase=sys.argv[1],exit_code=int(sys.argv[2]),utc=datetime.now(timezone.utc).isoformat())
 with Path('evaluation/results/v020-independent/related_pipeline.jsonl').open('a') as f:
     f.write(json.dumps(row)+'\n')
-with Path('docs/v0.2.0执行检查点.md').open('a') as f:
+with Path('docs/dev/v0.2.0执行检查点.md').open('a') as f:
     f.write('\n- 关联检索集成流水线 '+row['utc']+'：'+row['phase']+' exit='+str(row['exit_code'])+'，阶段成功不等于整版质量通过。\n')
 PY
   [[ "$status" == 0 ]] || exit "$status"

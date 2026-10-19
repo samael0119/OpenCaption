@@ -26,3 +26,6 @@ evaluation/results/
 /AGENTS.md
 
 android/.kotlin/
+
+# Local development plans, checkpoints, experiment reports and build notes.
+/docs/dev/

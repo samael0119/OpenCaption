@@ -111,7 +111,7 @@ def freeze():
  b=Protocol()
  try:prompts=b.prompt('CS2 broadcast.');assert b.parse('[NONE]','CS2 broadcast.')['status']=='no_speech'
  finally:b.close()
- paths=[R/'evaluation/v020_delivery_B.py',R/'evaluation/v020_delivery_B_browser.cjs',R/'evaluation/gemma_replay.py',R/'scripts/run-v020-delivery-B',R/'lib/delivery_live_preview.dart',R/'scripts/build-delivery-live-preview',R/'docs/v0.2.0交付包B运行入口冻结_20261016.md',O/'prepare_manifest.json',O/'preparation_audit.json',O/'V020DeliveryBRunnerCapture.java',O/'runner_classpath.txt']+list((O/'runner_classes').rglob('*.class'))
+ paths=[R/'evaluation/v020_delivery_B.py',R/'evaluation/v020_delivery_B_browser.cjs',R/'evaluation/gemma_replay.py',R/'scripts/run-v020-delivery-B',R/'lib/delivery_live_preview.dart',R/'scripts/build-delivery-live-preview',R/'docs/dev/archive/v0.2.0交付包B运行入口冻结_20261016.md',O/'prepare_manifest.json',O/'preparation_audit.json',O/'V020DeliveryBRunnerCapture.java',O/'runner_classpath.txt']+list((O/'runner_classes').rglob('*.class'))
  paths+=list((O/'ui_project/build/web').rglob('*'))
  import litert_lm
  paths+=list(Path(litert_lm.__file__).parent.rglob('*.py'))

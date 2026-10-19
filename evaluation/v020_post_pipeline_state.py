@@ -55,14 +55,14 @@ def main():
         with (OUT/'post_pipeline.jsonl').open('a') as log:
             log.write(json.dumps(row,ensure_ascii=False)+'\n')
         if row['state'] != 'start':
-            with (ROOT/'docs/v0.2.0执行检查点.md').open('a') as doc:
+            with (ROOT/'docs/dev/v0.2.0执行检查点.md').open('a') as doc:
                 doc.write(f"\n- 本机后续流水线 {row['at']}：`{row['phase']}` → `{row['state']}`；日志见 evaluation/results/v020-independent/post_pipeline.jsonl。阶段成功不代表整版验收。\n")
     elif action == 'artifact':
         apk = ROOT/'build/app/outputs/flutter-apk/app-gemmae2e-debug.apk'
         value = dict(at=stamp(),apk=str(apk),apk_sha256=digest(apk),apk_bytes=apk.stat().st_size,
                      source_snapshot=str(snapshot), scope='Unreleased local candidate; no install/Android performance claim')
         (OUT/'post_apk_snapshot.json').write_text(json.dumps(value,ensure_ascii=False,indent=2)+'\n')
-        with (ROOT/'docs/v0.2.0晨间报告.md').open('a') as doc:
+        with (ROOT/'docs/dev/archive/v0.2.0晨间报告.md').open('a') as doc:
             doc.write(f"\n## 本机流水线候选更新 {value['at']}\n\n新候选APK已构建并完成签名检查，SHA256 `{value['apk_sha256']}`，{value['apk_bytes']}字节；覆盖上方03:10产物哈希，源快照与测试日志见 evaluation/results/v020-independent/post_apk_snapshot.json / post_source_snapshot.json / post_pipeline.jsonl。其他质量关口仍以报告判定，未发布、未安装。\n")
     else:
         raise ValueError(action)

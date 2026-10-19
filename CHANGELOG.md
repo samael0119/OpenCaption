@@ -4,9 +4,21 @@ Notable user-visible changes are documented here. The project follows semantic v
 
 ## Unreleased
 
+## 0.2.0-preview.3 - 2026-10-17
+
+- Fix overlay bottom dragging in immersive playback by matching visible system-bar insets and updating placement when those insets change.
+- Preserve the manually chosen bottom anchor through long/short captions, temporary screen-edge clamping, rotation and settings expansion; avoid cumulative position drift.
+- Add five geometry regressions (53 Android unit tests pass). Android device interaction remains unverified; recognition and terminology behaviour are unchanged.
+
+## 0.2.0-preview.2 - 2026-10-17
+
+- Center overlay subtitles and integrate a small settings toggle at the right end of the subtitle bar; reveal drag, stop and text-size controls inside the same bar only when opened.
+- Adapt overlay width to landscape screens and reflow/clamp the overlay after rotation while preserving subtitle colours, opacity and capture controls.
+- Package the approved integrated-settings layout as an arm64 Release-mode preview (123.6MB), using the existing local test signature and keeping R8 disabled for LiteRT compatibility. Six geometry checks pass alongside the existing 42 Android unit tests; native on-device interaction remains unverified.
+
 ## 0.2.0-preview.1 - 2026-10-17
 
-Local engineering and subtitle-reading preview (`0.2.0-preview.1+3`), not a completed v0.2.0 release. See the [preview notes](docs/v0.2.0-preview.1.md) for build and acceptance limits.
+Local engineering and subtitle-reading preview (`0.2.0-preview.1+3`), not a completed v0.2.0 release. Build and acceptance limits are described in these version entries.
 
 - Pause-first Gemma segmentation with a five-second cap and fixed-window fallback; a bounded pending queue merges contiguous short intervals and reports replacement or expiry as audio gaps.
 - Exact-zero audio filtering and stricter bilingual/no-speech validation; E2B short nonzero inputs receive leading-zero padding without additional capture wait.
@@ -15,7 +27,7 @@ Local engineering and subtitle-reading preview (`0.2.0-preview.1+3`), not a comp
 - A simpler subtitle reading surface, expandable status details, theme and large-text handling, and stable history review. Overlay layout changes have not been checked on Android.
 - Mouse-wheel history review now stays in place when new captions arrive; returning to the latest caption restores automatic following.
 
-Nonzero-music hallucinations, critical short-answer omissions and independent CS2/Chinese quality remain unresolved. Related one-hop candidates and semantic preceding context have not been enabled in normal generation. Local unit/build/UI checks do not establish content accuracy or screen latency; final joint long-run acceptance remains incomplete. The bounded optimization cycle is paused. See the [checkpoint](docs/v0.2.0执行检查点.md) for evidence and remaining work.
+Nonzero-music hallucinations, critical short-answer omissions and independent CS2/Chinese quality remain unresolved. Related one-hop candidates and semantic preceding context have not been enabled in normal generation. Local unit/build/UI checks do not establish content accuracy or screen latency; final joint long-run acceptance remains incomplete. The bounded optimization cycle is paused. Detailed checkpoints and experiment records are maintained locally under the ignored `docs/dev/` directory.
 
 ## 0.1.0 - 2026-09-16
 

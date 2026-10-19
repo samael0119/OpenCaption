@@ -78,7 +78,7 @@ object V020Pcm10 {
  order=[]
  for i,c in enumerate(selected):
   for mode in (['current','candidate'] if i%2==0 else ['candidate','current']):order.append(dict(index=len(order),case_id=c['id'],group=c['group'],mode=mode))
- files=dict(im['compiler_files']);paths=src+[str(capture.relative_to(R)),str(backend.relative_to(R)),'evaluation/v020_pcm10_prepare.py','evaluation/v020_pcm10.py','evaluation/gemma_replay.py','evaluation/v020_redundancy8.py','evaluation/V020ProtocolBridge.java','docs/v0.2.0第10轮PCM往返保真计划.md','scripts/run-v020-pcm10']
+ files=dict(im['compiler_files']);paths=src+[str(capture.relative_to(R)),str(backend.relative_to(R)),'evaluation/v020_pcm10_prepare.py','evaluation/v020_pcm10.py','evaluation/gemma_replay.py','evaluation/v020_redundancy8.py','evaluation/V020ProtocolBridge.java','docs/dev/archive/v0.2.0第10轮PCM往返保真计划.md','scripts/run-v020-pcm10']
  for c in cases:paths.extend([c['path'],c['current_path'],c['candidate_path']])
  files.update({p:sha(R/p) for p in paths});files.update({str(p.relative_to(R)):sha(p) for p in classes.rglob('*.class')});files[str((O/'classpath.txt').relative_to(R))]=sha(O/'classpath.txt')
  import litert_lm
