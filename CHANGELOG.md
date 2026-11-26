@@ -4,6 +4,9 @@ Notable user-visible changes are documented here. The project follows semantic v
 
 ## Unreleased
 
+- Add optional Gemma caption styles and independently selectable Chinese community player names. Keep the existing audio prompts and Standard default; apply a small, guarded set of CS2 wording and playful display rules after inference, with an audio-time cooldown for added jokes.
+- Reject the tested generative style/meaning prompts after nonzero-music hallucinations increased. This development work does not establish an ASR accuracy or independent human preference improvement.
+
 ## 0.2.0-preview.3 - 2026-10-17
 
 - Fix overlay bottom dragging in immersive playback by matching visible system-bar insets and updating placement when those insets change.

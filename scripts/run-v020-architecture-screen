@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 set -euo pipefail
-cd /home/hyh/Projects/OpenCaption
+cd "$(dirname "$0")/.."
 mode="${1:?prepare|run|summarize}"
 case "$mode" in
   prepare|summarize) memory=512M; high=384M; seconds=90 ;;

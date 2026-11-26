@@ -21,6 +21,7 @@ class Caption {
     required this.endMs,
     required this.english,
     required DateTime createdAt,
+    this.diagnosticWindow,
     this.status = CaptionStatus.queued,
     this.chinese = '',
     this.errorCode,
@@ -29,6 +30,8 @@ class Caption {
   final String id;
   final int epoch, sequence, startMs, endMs;
   final String english;
+  final int? diagnosticWindow;
+  bool diagnosticPaintReported = false;
   final DateTime createdAt;
   DateTime lastAttemptAt;
   int attempts = 0;
@@ -128,6 +131,7 @@ class CaptionLedger {
     required int endMs,
     required String english,
     required DateTime now,
+    int? diagnosticWindow,
   }) {
     if (!_ids.add(id)) return null;
     final item = Caption(
@@ -138,6 +142,7 @@ class CaptionLedger {
       endMs: endMs,
       english: english,
       createdAt: now,
+      diagnosticWindow: diagnosticWindow,
     );
     // A future missing interval can arrive while an earlier window is still
     // decoding. Place that late caption by audio time, preserving stable IDs.

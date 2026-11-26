@@ -10,6 +10,7 @@ import '../platform/engine.g.dart';
 import 'appearance.dart';
 import 'build_config.dart';
 import 'captions.dart';
+import 'caption_style.dart';
 import 'corpus.dart';
 import 'scene_assistant.dart';
 import 'translation.dart';
@@ -25,6 +26,8 @@ class SessionController extends ChangeNotifier implements EngineEvents {
   static const _playback = MethodChannel('dev.opencaption/playback');
   bool playbackAudio = false;
   String captionTask = 'bilingual';
+  CaptionStyle captionStyle = CaptionStyle.standard;
+  bool communityNicknames = false;
   bool showChinese = true;
   CorpusProfile _corpusProfile = CorpusProfile.none;
   bool _autoTermHints = false;
@@ -143,6 +146,7 @@ class SessionController extends ChangeNotifier implements EngineEvents {
   Future<void> _configureAudio() async {
     try {
       await _playback.invokeMethod<void>('task', {'task': captionTask});
+      await applyCaptionStyle();
       if (playbackAudio) {
         await _playback.invokeMethod<void>('opacity', {
           'value': overlayBackgroundOpacity.clamp(.2, 1.0),
@@ -202,6 +206,14 @@ class SessionController extends ChangeNotifier implements EngineEvents {
   Future<void>? _stopping;
   final Map<int, int> _revisions = {};
   final Set<int> _closedWindows = {};
+  RecognitionEvent? _e2ePreview;
+  String get e2eSourcePreview {
+    final preview = _e2ePreview;
+    return running && showEnglish && preview != null && preview.epoch == epoch
+        ? preview.text
+        : '';
+  }
+
   bool _needsPrepare = false;
   bool _releaseOnPause = false;
   bool get canConfigure =>
@@ -272,6 +284,8 @@ class SessionController extends ChangeNotifier implements EngineEvents {
       fallback: SubtitleColor.green,
     );
     final savedCaptionTask = prefs.getString('captionTask');
+    captionStyle = CaptionStyle.fromId(prefs.getString('captionStyle'));
+    communityNicknames = prefs.getBool('communityNicknames') ?? false;
     captionTask =
         const {
           'bilingual',
@@ -363,6 +377,8 @@ class SessionController extends ChangeNotifier implements EngineEvents {
     // color if the user temporarily rolls back.
     await p.setString('subtitleColor', sourceSubtitleColor.id);
     await p.setString('captionTask', captionTask);
+    await p.setString('captionStyle', captionStyle.name);
+    await p.setBool('communityNicknames', communityNicknames);
     await p.setString('theme', theme);
     await p.setString('asrId', asrId);
     await p.setString('localTranslationId', localTranslationId);
@@ -474,6 +490,7 @@ class SessionController extends ChangeNotifier implements EngineEvents {
       external.reset();
       _revisions.clear();
       _closedWindows.clear();
+      _e2ePreview = null;
       _translationPayloads.clear();
       _translationQueue.clear();
       _activeTranslationId = null;
@@ -517,6 +534,7 @@ class SessionController extends ChangeNotifier implements EngineEvents {
   Future<void> _pause() async {
     final e = epoch;
     phase = SessionPhase.pausing;
+    _e2ePreview = null;
     level = 0;
     context.clear();
     notifyListeners();
@@ -607,6 +625,7 @@ class SessionController extends ChangeNotifier implements EngineEvents {
     if (_stopping != null) await _stopping;
     if (running) {
       phase = SessionPhase.pausing;
+      _e2ePreview = null;
       level = 0;
       notifyListeners();
       await host.pause();
@@ -632,6 +651,7 @@ class SessionController extends ChangeNotifier implements EngineEvents {
 
   void clearReview() {
     epoch++;
+    _e2ePreview = null;
     unawaited(host.release().catchError((_) {}));
     ledger.clear();
     _translationPayloads.clear();
@@ -708,6 +728,10 @@ class SessionController extends ChangeNotifier implements EngineEvents {
 
   @override
   void recognition(RecognitionEvent event) {
+    if (endToEnd) {
+      _recognitionPreview(event);
+      return;
+    }
     if (event.epoch != epoch ||
         !(running || phase == SessionPhase.pausing) ||
         _closedWindows.contains(event.window) ||
@@ -751,6 +775,40 @@ class SessionController extends ChangeNotifier implements EngineEvents {
     notifyListeners();
   }
 
+  // E2E drafts are display-only. The final bilingual event owns history and
+  // scene evidence, including when it revises or retracts the draft.
+  void _recognitionPreview(RecognitionEvent event) {
+    if (event.epoch != epoch || !(running || phase == SessionPhase.pausing)) {
+      return;
+    }
+    if (event.finalResult) {
+      if (!_closedWindows.add(event.window)) return;
+      _trimRecognitionState(event.window);
+      if (_advanceAssistanceClock(event.endMs)) _updateEndToEndHints();
+      if (_e2ePreview?.window == event.window) {
+        _e2ePreview = null;
+        if (playbackAudio && showEnglish) _showOverlay([]);
+      }
+    } else {
+      if (!running ||
+          backendFlavor != 'gemmaE2E' ||
+          captionTask != 'bilingual' ||
+          !showEnglish ||
+          event.text.trim().isEmpty ||
+          (_e2ePreview?.window ?? -1) >= event.window ||
+          _closedWindows.any((window) => window >= event.window)) {
+        return;
+      }
+      _e2ePreview = event;
+      if (playbackAudio) {
+        _showOverlay([
+          {'kind': 'source', 'text': event.text.trim()},
+        ]);
+      }
+    }
+    notifyListeners();
+  }
+
   @override
   void bilingual(BilingualEvent event) {
     if (!endToEnd ||
@@ -759,6 +817,8 @@ class SessionController extends ChangeNotifier implements EngineEvents {
       return;
     }
     if (!_closedWindows.add(event.window)) return;
+    if ((_e2ePreview?.window ?? -1) <= event.window) _e2ePreview = null;
+    final timer = diagnosticsEnabled ? (Stopwatch()..start()) : null;
     _trimRecognitionState(event.window);
     final eligibleEvidence = event.startMs >= _assistanceFloorMs;
     final previousMap = scene.map;
@@ -793,6 +853,7 @@ class SessionController extends ChangeNotifier implements EngineEvents {
       endMs: event.endMs,
       english: event.english.trim(),
       now: DateTime.now(),
+      diagnosticWindow: diagnosticsEnabled ? event.window : null,
     );
     _pruneTranslationState();
     if (item != null) {
@@ -828,7 +889,12 @@ class SessionController extends ChangeNotifier implements EngineEvents {
         text: corrected,
         allowEmpty: captionTask == 'english',
       );
-      if (playbackAudio) {
+      if (timer != null) {
+        _reportCaptionTiming('controller', event.epoch, event.window, {
+          'workUs': timer.elapsedMicroseconds,
+        });
+      }
+      if (playbackAudio && _e2ePreview == null) {
         final overlayLines = <Map<String, String>>[
           if ((showEnglish || captionTask == 'english') &&
               event.english.trim().isNotEmpty)
@@ -843,17 +909,67 @@ class SessionController extends ChangeNotifier implements EngineEvents {
               'text': corrected,
             },
         ];
-        unawaited(
-          _playback
-              .invokeMethod<void>('subtitle', {
-                'text': overlayLines.map((line) => line['text']).join('\n'),
-                'lines': overlayLines,
-              })
-              .catchError((_) {}),
-        );
+        _showOverlay(overlayLines, event: event);
       }
     }
     notifyListeners();
+  }
+
+  void _showOverlay(List<Map<String, String>> lines, {BilingualEvent? event}) {
+    unawaited(
+      _playback
+          .invokeMethod<void>('subtitle', {
+            'text': lines.map((line) => line['text']).join('\n'),
+            'lines': lines,
+            if (diagnosticsEnabled && event != null) ...{
+              'epoch': event.epoch,
+              'window': event.window,
+              'source': lines.any((line) => line['kind'] == 'source'),
+              'translation': lines.any(
+                (line) =>
+                    line['kind'] == 'translation' &&
+                    line['text'] != translationUnavailableText,
+              ),
+            },
+          })
+          .catchError((_) {}),
+    );
+  }
+
+  void reportCaptionPaint(
+    Caption caption, {
+    required bool source,
+    required bool translation,
+  }) {
+    final window = caption.diagnosticWindow;
+    if (window == null ||
+        caption.diagnosticPaintReported ||
+        caption.epoch != epoch) {
+      return;
+    }
+    caption.diagnosticPaintReported = true;
+    _reportCaptionTiming('flutter_paint', caption.epoch, window, {
+      'source': source,
+      'translation': translation,
+    });
+  }
+
+  void _reportCaptionTiming(
+    String stage,
+    int epoch,
+    int window,
+    Map<String, Object> fields,
+  ) {
+    unawaited(
+      _playback
+          .invokeMethod<void>('captionTiming', {
+            'stage': stage,
+            'epoch': epoch,
+            'window': window,
+            ...fields,
+          })
+          .catchError((_) {}),
+    );
   }
 
   void _enqueueTranslation(String id, {bool first = false}) {
@@ -1135,6 +1251,18 @@ class SessionController extends ChangeNotifier implements EngineEvents {
     unawaited(
       host.updateHints(hints, _nativeAutomaticAssist).catchError((_) {}),
     );
+  }
+
+  Future<void> applyCaptionStyle() async {
+    if (backendFlavor != 'gemmaE2E') return;
+    try {
+      await _playback.invokeMethod<void>('captionStyle', {
+        'style': captionStyle.name,
+        'nicknames': communityNicknames,
+      });
+    } on MissingPluginException {
+      // Web/local preview has no native inference backend.
+    }
   }
 
   Future<void> applyOverlayOpacity() async {

@@ -9,10 +9,14 @@ import com.google.ai.edge.litertlm.Engine
 import com.google.ai.edge.litertlm.EngineConfig
 import com.google.ai.edge.litertlm.ExperimentalApi
 import com.google.ai.edge.litertlm.ExperimentalFlags
+import com.google.ai.edge.litertlm.Message
+import com.google.ai.edge.litertlm.MessageCallback
 import com.google.ai.edge.litertlm.SamplerConfig
 import com.google.ai.edge.litertlm.ThinkingConfig
 import java.nio.ByteBuffer
 import java.nio.ByteOrder
+import java.util.concurrent.CompletableFuture
+import java.util.concurrent.TimeUnit
 
 object FlavorBackendFactory {
     fun create(activity: MainActivity): EndToEndBackend = GemmaBackend(activity)
@@ -47,8 +51,11 @@ private class GemmaBackend(private val activity: MainActivity) : EndToEndBackend
     private var engine: Engine? = null
     private var runtime = "unloaded"
     private var hints = ""
+    private var captionStyle = "standard"
     private var shortAudioInput = false
     override fun setHints(hints: String) { this.hints = sanitizeHints(hints) }
+    override fun setCaptionStyle(style: String) { captionStyle = style }
+    private val conversationLock = Any()
     @Volatile private var activeConversation: Conversation? = null
 
     @OptIn(ExperimentalApi::class)
@@ -103,34 +110,78 @@ private class GemmaBackend(private val activity: MainActivity) : EndToEndBackend
     override fun runtimeInfo(): String =
         "$runtime short_audio_floor_ms=${if (shortAudioInput) 2000 else 0}"
 
-    override fun infer(samples: FloatArray): String {
+    override fun infer(samples: FloatArray, onSourcePreview: ((String) -> Unit)?): String {
         val task = activity.captionTask
+        val thinking = ThinkingConfig(enableThinking = false, thinkingTokenBudget = 0)
         val config = ConversationConfig(
-            systemInstruction = Contents.of(E2eProtocol.systemFor(task)),
+            systemInstruction = Contents.of(CaptionStyle.systemFor(task, captionStyle)),
             samplerConfig = SamplerConfig(topK = 1, topP = 1.0, temperature = 0.0),
             maxOutputToken = GEMMA_MAX_OUTPUT_TOKENS,
-            thinkingConfig = ThinkingConfig(enableThinking = false, thinkingTokenBudget = 0),
+            thinkingConfig = thinking,
+        )
+        val input = Contents.of(
+            // Gemma 4 expects audio after its text instruction.
+            Content.Text(E2eProtocol.requestFor(task, hints)),
+            Content.AudioBytes(wav(if (shortAudioInput) E2eAudioInput.prepareShort(samples) else samples)),
         )
         return requireNotNull(engine).createConversation(config).use { conversation ->
-            activeConversation = conversation
             try {
-                conversation.sendMessage(
-                    Contents.of(
-                        // Gemma 4 expects audio after its text instruction.
-                        Content.Text(E2eProtocol.requestFor(task, hints)),
-                        Content.AudioBytes(wav(if (shortAudioInput) E2eAudioInput.prepareShort(samples) else samples)),
-                    ),
-                    extraContext = mapOf("enable_thinking" to false),
-                    maxOutputToken = GEMMA_MAX_OUTPUT_TOKENS,
-                    thinkingConfig = ThinkingConfig(enableThinking = false, thinkingTokenBudget = 0),
-                ).contents.contents.filterIsInstance<Content.Text>().joinToString("") { it.text }
+                if (shortAudioInput && task == "bilingual" && onSourcePreview != null) {
+                    stream(conversation, input, thinking, onSourcePreview)
+                } else {
+                    activeConversation = conversation
+                    conversation.sendMessage(
+                        input,
+                        extraContext = mapOf("enable_thinking" to false),
+                        maxOutputToken = GEMMA_MAX_OUTPUT_TOKENS,
+                        thinkingConfig = thinking,
+                    ).contents.contents.filterIsInstance<Content.Text>().joinToString("") { it.text }
+                }
             } finally {
-                activeConversation = null
+                synchronized(conversationLock) { activeConversation = null }
             }
         }
     }
 
-    override fun cancel() { activeConversation?.cancelProcess() }
+    private fun stream(
+        conversation: Conversation,
+        input: Contents,
+        thinking: ThinkingConfig,
+        onSourcePreview: (String) -> Unit,
+    ): String {
+        val text = StringBuilder()
+        val result = CompletableFuture<String>()
+        var previewSent = false
+        synchronized(conversationLock) {
+            activeConversation = conversation
+            conversation.sendMessageAsync(
+                input,
+                object : MessageCallback {
+                    override fun onMessage(message: Message) {
+                        message.contents.contents.filterIsInstance<Content.Text>().forEach { text.append(it.text) }
+                        if (!previewSent) E2eProtocol.previewEnglish(text.toString())?.let { source ->
+                            previewSent = true
+                            onSourcePreview(source)
+                        }
+                    }
+                    override fun onDone() { result.complete(text.toString()) }
+                    override fun onError(throwable: Throwable) { result.completeExceptionally(throwable) }
+                },
+                extraContext = mapOf("enable_thinking" to false),
+                maxOutputToken = GEMMA_MAX_OUTPUT_TOKENS,
+                thinkingConfig = thinking,
+            )
+        }
+        try {
+            // The engine watchdog requests cancellation first. Bound the wait
+            // separately in case LiteRT never sends a terminal callback.
+            return result.get(E2E_WATCHDOG_MS + 1_000, TimeUnit.MILLISECONDS)
+        } finally {
+            if (!result.isDone) runCatching { cancel() }
+        }
+    }
+
+    override fun cancel() { synchronized(conversationLock) { activeConversation?.cancelProcess() } }
     override fun close() { engine?.close(); engine = null; runtime = "unloaded"; shortAudioInput = false }
 
     private fun wav(samples: FloatArray): ByteArray {

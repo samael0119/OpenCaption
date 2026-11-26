@@ -39,7 +39,7 @@ import kotlin.concurrent.read
 import kotlin.concurrent.write
 import kotlin.math.sqrt
 
-private const val E2E_WATCHDOG_MS = 15_000L
+internal const val E2E_WATCHDOG_MS = 15_000L
 private val hintUnsafeCharacters = Regex("[\\u0000-\\u001f\\u007f\\u200b-\\u200f\\u202a-\\u202e<>`{}]")
 private val hintPromptInjection = Regex(
     "<\\s*/?\\s*(?:system|user|assistant|developer|think|analysis)\\s*>|" +
@@ -318,10 +318,11 @@ class CaptionEngine(private val activity: MainActivity, private val events: Engi
                 null
             }
         } else null
-        try {
+        val captureStartMs = try {
             native.resetVad(); record.startRecording()
             check(record.recordingState == AudioRecord.RECORDSTATE_RECORDING) { "audio_start_failed" }
             recording.set(true)
+            SystemClock.elapsedRealtime()
         } catch (failure: Exception) {
             noiseSuppressor?.release(); noiseSuppressor=null
             record.release(); recorder=null
@@ -330,10 +331,10 @@ class CaptionEngine(private val activity: MainActivity, private val events: Engi
         sessionLog.write("audio_start_ok source=${if (playback) "PLAYBACK_CAPTURE" else if (e2e) "VOICE_RECOGNITION" else "MIC"} session=${record.audioSessionId} sample_rate=${record.sampleRate} noise_suppressor=${noiseSuppressor?.enabled == true} background=${PlaybackCaptionService.active}")
         PlaybackCaptionService.instance?.update("正在采集本设备音频…")
         activity.window.addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON)
-        captureThread = Thread({ capture(record, epoch) }, "caption-audio").also { it.start() }
+        captureThread = Thread({ capture(record, epoch, captureStartMs) }, "caption-audio").also { it.start() }
     }
 
-    private fun capture(record: AudioRecord, e: Long) {
+    private fun capture(record: AudioRecord, e: Long, captureStartMs: Long) {
         android.os.Process.setThreadPriority(android.os.Process.THREAD_PRIORITY_AUDIO)
         val pcm = ShortArray(320)
         val buffer = AudioBuffer()
@@ -349,8 +350,9 @@ class CaptionEngine(private val activity: MainActivity, private val events: Engi
         var levelLogAt = 0L; var peakRms = 0.0
         var firstFrame = true
         var silentFrames = 0
-        sessionLog.write("capture_begin segmentation=${if (e2e && vadAvailable) "vad_pause" else if (e2e) "fixed_fallback" else "pause_boundaries"} frame_ms=20 silence_ms=600 maximum_ms=5000 e2e_overlap_ms=0")
+        sessionLog.write("capture_begin epoch=$e capture_start_elapsed_ms=$captureStartMs segmentation=${if (e2e && vadAvailable) "vad_pause" else if (e2e) "fixed_fallback" else "pause_boundaries"} frame_ms=20 silence_ms=600 maximum_ms=5000 e2e_overlap_ms=0")
         fun submitBoundary(boundary: E2eSegmenter.Boundary) {
+            val cutAt = if (BuildConfig.DIAGNOSTICS_ENABLED) SystemClock.elapsedRealtime() else 0L
             val snapshot = buffer.slice(boundary.start, boundary.end)
             window++
             e2eStart = boundary.end
@@ -359,7 +361,7 @@ class CaptionEngine(private val activity: MainActivity, private val events: Engi
                 report("e2e_skipped_exact_zero", snapshot.size.toLong())
             } else {
                 sessionLog.write("segment_submit window=$window reason=e2e_${boundary.reason} samples=${snapshot.size}")
-                submitEndToEnd(e, window, boundary.start / 16, boundary.end / 16, snapshot)
+                submitEndToEnd(e, window, boundary, snapshot, cutAt)
             }
         }
         try {
@@ -483,8 +485,15 @@ class CaptionEngine(private val activity: MainActivity, private val events: Engi
         }
     }
 
-    private fun submitEndToEnd(e: Long, window: Long, start: Long, end: Long, pcm: FloatArray) {
-        val result = pendingE2eAudio.offer(E2eAudioChunk(e, window, start, end, pcm, SystemClock.elapsedRealtime()))
+    private fun submitEndToEnd(e: Long, window: Long, boundary: E2eSegmenter.Boundary, pcm: FloatArray, cutAt: Long) {
+        val queuedAt = SystemClock.elapsedRealtime()
+        val start = boundary.start / 16
+        val end = boundary.end / 16
+        val result = pendingE2eAudio.offer(E2eAudioChunk(e, window, start, end, pcm, queuedAt))
+        if (BuildConfig.DIAGNOSTICS_ENABLED) {
+            sessionLog.write("e2e_cut_timing epoch=$e window=$window start_ms=$start end_ms=$end " +
+                "boundary=${boundary.reason} cut_elapsed_ms=$cutAt queued_elapsed_ms=$queuedAt")
+        }
         result.dropped?.let { reportE2eGap(it.epoch, it.startMs, it.endMs, "queue_replaced") }
         if (result.merged) { sessionLog.write("e2e_queue_merged newest=$window"); report("e2e_queue_merged") }
         if (result.schedule) enqueueEndToEnd(e)
@@ -492,7 +501,7 @@ class CaptionEngine(private val activity: MainActivity, private val events: Engi
 
     private fun reportE2eGap(e: Long, start: Long, end: Long, reason: String) {
         if (e != epoch) return
-        sessionLog.write("e2e_gap start_ms=$start end_ms=$end reason=$reason")
+        sessionLog.write("e2e_gap epoch=$e start_ms=$start end_ms=$end reason=$reason")
         if (e == epoch) post { events.gap(e, start, end) {} }
         report("e2e_gap_ms", end - start)
     }
@@ -511,6 +520,9 @@ class CaptionEngine(private val activity: MainActivity, private val events: Engi
         }
     }
 
+    private var playfulEpoch = -1L
+    private var lastPlayfulEndMs = 0L
+
     private fun inferEndToEnd(chunk: E2eAudioChunk) {
             val e = chunk.epoch; val window = chunk.window
             val start = chunk.startMs; val end = chunk.endMs; val pcm = chunk.pcm
@@ -525,11 +537,15 @@ class CaptionEngine(private val activity: MainActivity, private val events: Engi
             report("e2e_thermal_status", thermal.toLong())
             report("e2e_native_heap_mb", nativeHeapMb)
             val currentHints = hintState
+            val style = activity.captionStyle
             val chosen = E2eHintPolicy.choose(e2eInferenceIndex.incrementAndGet(), currentHints.hints, currentHints.automatic)
+            val previewQueued = AtomicBoolean(false)
+            var finalQueued = false
             try {
                 sessionLog.write("e2e_begin samples=${pcm.size} hint_chars=${chosen.hints.length} verification=${chosen.verification}")
                 if (chosen.verification) report("e2e_verification_window")
                 checkNotNull(e2eBackend).setHints(chosen.hints)
+                checkNotNull(e2eBackend).setCaptionStyle(style.style)
                 val completed = AtomicBoolean(false)
                 val timedOut = AtomicBoolean(false)
                 val cancellationLock = Any()
@@ -541,17 +557,43 @@ class CaptionEngine(private val activity: MainActivity, private val events: Engi
                         e2eBackend?.cancel()
                     } }
                 }, E2E_WATCHDOG_MS, TimeUnit.MILLISECONDS)
+                val inferenceStarted = if (BuildConfig.DIAGNOSTICS_ENABLED) SystemClock.elapsedRealtime() else 0L
                 val raw = try {
-                    checkNotNull(e2eBackend).infer(pcm)
+                    checkNotNull(e2eBackend).infer(pcm) preview@{ source ->
+                        if (e != epoch || !accepting || !recording.get() || timedOut.get() ||
+                            !previewQueued.compareAndSet(false, true)) return@preview
+                        post {
+                            if (e == epoch && accepting && recording.get() && !timedOut.get()) {
+                                if (BuildConfig.DIAGNOSTICS_ENABLED) {
+                                    sessionLog.write("e2e_source_preview_timing epoch=$e window=$window elapsed_ms=${SystemClock.elapsedRealtime()}")
+                                }
+                                events.recognition(RecognitionEvent(e, window, 0, start, end, source, false)) {}
+                            }
+                        }
+                    }
                 } finally {
                     synchronized(cancellationLock) {
                         if (completed.compareAndSet(false, true)) timeout.cancel(false)
                     }
                 }
+                val inferenceEnded = if (BuildConfig.DIAGNOSTICS_ENABLED) SystemClock.elapsedRealtime() else 0L
                 if (timedOut.get()) throw IllegalStateException("e2e_timeout")
                 sessionLog.write("e2e_raw=${raw.replace(Regex("[\\r\\n]+"), " ").take(400)}")
                 val preservedNames = if (E2ePreservedNames.selected(chosen.hints)) corpusPreservedNames else emptySet()
-                when (val parsed = E2eProtocol.parseFor(raw, activity.captionTask, preservedNames)) {
+                val parseStarted = if (BuildConfig.DIAGNOSTICS_ENABLED) SystemClock.elapsedRealtime() else 0L
+                val parsed = E2eProtocol.parseFor(raw, activity.captionTask, preservedNames)
+                if (BuildConfig.DIAGNOSTICS_ENABLED) {
+                    val parseMs = SystemClock.elapsedRealtime() - parseStarted
+                    val status = when (parsed) {
+                        E2eProtocol.Result.NoSpeech -> "no_speech"
+                        is E2eProtocol.Result.Invalid -> "invalid"
+                        is E2eProtocol.Result.Subtitle -> "subtitle"
+                    }
+                    sessionLog.write("e2e_window_timing epoch=$e window=$window start_ms=$start end_ms=$end status=$status " +
+                        "queue_ms=${began-submittedAt} inference_ms=${inferenceEnded-inferenceStarted} " +
+                        "parse_ms=$parseMs worker_start_elapsed_ms=$began")
+                }
+                when (parsed) {
                     E2eProtocol.Result.NoSpeech -> {
                         sessionLog.write("e2e_filtered_no_s window=$window")
                         report("e2e_filtered_no_speech")
@@ -562,15 +604,32 @@ class CaptionEngine(private val activity: MainActivity, private val events: Engi
                         if (e == epoch && accepting) reportE2eGap(e, start, end, "invalid_output")
                     }
                     is E2eProtocol.Result.Subtitle -> {
+                        // The inference worker is serial. Audio-time cooldown is
+                        // independent of wall-clock speed and resets per epoch.
+                        val cooldown = playfulEpoch != e || start - lastPlayfulEndMs >= 30_000
+                        val rendered = if (CaptionStyle.translates(activity.captionTask)) {
+                            CaptionStyle.render(parsed.english, parsed.chinese, style,
+                                E2ePreservedNames.selected(chosen.hints), cooldown)
+                        } else CaptionStyle.Rendered(parsed.chinese, 0, false)
                         sessionLog.write(
                             "e2e_ok english=${parsed.english.length} chinese=${parsed.chinese.length}",
                         )
-                        if (e == epoch && accepting) post {
-                            events.bilingual(
-                                BilingualEvent(
-                                    e, window, start, end, parsed.english, parsed.chinese, chosen.hints,
-                                ),
-                            ) {}
+                        if (e == epoch && accepting) {
+                            if (rendered.playful) { playfulEpoch = e; lastPlayfulEndMs = end }
+                            if (rendered.playful) report("caption_playful")
+                            if (rendered.nicknamesUsed > 0) report("caption_nicknames", rendered.nicknamesUsed.toLong())
+                            if (rendered.localizedPhrases > 0) report("caption_localized_phrases", rendered.localizedPhrases.toLong())
+                            finalQueued = true
+                            post {
+                                if (BuildConfig.DIAGNOSTICS_ENABLED) {
+                                    sessionLog.write("e2e_dispatch_timing epoch=$e window=$window elapsed_ms=${SystemClock.elapsedRealtime()}")
+                                }
+                                events.bilingual(
+                                    BilingualEvent(
+                                        e, window, start, end, parsed.english, rendered.chinese, chosen.hints,
+                                    ),
+                                ) {}
+                            }
                         } else if (e == epoch) {
                             reportE2eGap(e, start, end, "cancelled_result")
                         }
@@ -580,6 +639,13 @@ class CaptionEngine(private val activity: MainActivity, private val events: Engi
                 sessionLog.write("e2e_failed window=$window", error)
                 if (e == epoch) reportE2eGap(e, start, end, if (accepting) "inference_failed" else "cancelled_active")
             } finally {
+                if (previewQueued.get() && !finalQueued) {
+                    post {
+                        if (e == epoch) {
+                            events.recognition(RecognitionEvent(e, window, 1, start, end, "", true)) {}
+                        }
+                    }
+                }
                 val elapsed = SystemClock.elapsedRealtime() - began
                 val loadEnd = loadSampler.begin()
                 val cpuPercent = loadSampler.processCpuPercent(loadStart, loadEnd)

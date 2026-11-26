@@ -10,6 +10,7 @@ import android.content.Intent
 import android.graphics.Color
 import android.media.projection.MediaProjectionManager
 import android.os.Build
+import android.os.SystemClock
 import android.net.Uri
 import android.provider.Settings
 
@@ -22,6 +23,8 @@ class MainActivity : FlutterActivity() {
         private set
     var captionTask = "bilingual"
         private set
+    @Volatile var captionStyle = CaptionStyle.Options()
+        private set
     override fun configureFlutterEngine(flutterEngine: FlutterEngine) {
         super.configureFlutterEngine(flutterEngine)
         val messenger = flutterEngine.dartExecutor.binaryMessenger
@@ -30,6 +33,16 @@ class MainActivity : FlutterActivity() {
         PlaybackCaptionService.stopped = { code -> if (playbackSelected) captions?.interrupt(code) }
         MethodChannel(messenger, "dev.opencaption/playback").setMethodCallHandler { call, result ->
             when (call.method) {
+                "captionStyle" -> {
+                    val style = call.argument<String>("style")
+                    val nicknames = call.argument<Boolean>("nicknames")
+                    if (style !in CaptionStyle.styles || nicknames == null) {
+                        result.error("invalid_caption_style", "未知翻译风格", null)
+                    } else {
+                        captionStyle = CaptionStyle.Options(style!!, nicknames)
+                        result.success(null)
+                    }
+                }
                 "task" -> {
                     val task=call.argument<String>("task")
                     if (task !in setOf("bilingual", "english", "chinese", "auto_zh")) result.error("invalid_task", "未知字幕任务", null)
@@ -37,6 +50,19 @@ class MainActivity : FlutterActivity() {
                 }
                 "startupTiming" -> {
                     captions?.trace("startup_verify_ms=${call.argument<Number>("verifyMs")} task=$captionTask")
+                    result.success(null)
+                }
+                "captionTiming" -> {
+                    if (BuildConfig.DIAGNOSTICS_ENABLED) {
+                        val epoch = call.argument<Number>("epoch")?.toLong()
+                        val window = call.argument<Number>("window")?.toLong()
+                        val stage = call.argument<String>("stage")
+                        if (epoch != null && window != null && (stage == "controller" || stage == "flutter_paint")) {
+                            captions?.trace("e2e_${stage}_timing epoch=$epoch window=$window " +
+                                "elapsed_ms=${SystemClock.elapsedRealtime()} work_us=${call.argument<Number>("workUs")} " +
+                                "source=${call.argument<Boolean>("source")} translation=${call.argument<Boolean>("translation")}")
+                        }
+                    }
                     result.success(null)
                 }
                 "start" -> {
@@ -57,7 +83,17 @@ class MainActivity : FlutterActivity() {
                 "subtitle" -> {
                     val lines = call.argument<List<*>>("lines")
                     if (lines != null) {
-                        PlaybackCaptionService.instance?.update(lines)
+                        val epoch = if (BuildConfig.DIAGNOSTICS_ENABLED) call.argument<Number>("epoch")?.toLong() else null
+                        val window = if (epoch != null) call.argument<Number>("window")?.toLong() else null
+                        val onDraw: ((Long) -> Unit)? = if (epoch != null && window != null) {
+                            val source = call.argument<Boolean>("source") == true
+                            val translation = call.argument<Boolean>("translation") == true
+                            if (source || translation) { at ->
+                                captions?.trace("e2e_overlay_draw_timing epoch=$epoch window=$window " +
+                                    "elapsed_ms=$at source=$source translation=$translation")
+                            } else null
+                        } else null
+                        PlaybackCaptionService.instance?.update(lines, onDraw)
                     } else {
                         PlaybackCaptionService.instance?.update(call.argument<String>("text").orEmpty())
                     }

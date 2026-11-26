@@ -103,6 +103,11 @@ object E2eProtocol {
     private val han = Regex("[\\u3400-\\u9fff]")
     private val englishLabel = Regex("^(?:English|EN|Transcript|Transcription)\\s*[:：]\\s*", RegexOption.IGNORE_CASE)
     private val chineseLabel = Regex("^(?:(?:and|和)\\s*)?(?:Chinese|中文|ZH(?:-CN)?|Translation|翻译)\\s*[:：]\\s*", RegexOption.IGNORE_CASE)
+    private val previewPair = Regex(
+        "^(?:([^\\r\\n]+)\\r?\\n[ \\t]*)?English[ \\t]*[:：][ \\t]*([^\\r\\n]+)" +
+            "\\r?\\n[ \\t]*(?:Chinese|中文)[ \\t]*[:：]",
+        RegexOption.IGNORE_CASE,
+    )
     private val pair = Regex(
         "(?:^|[\\r\\n])\\s*(?:English|EN|Transcript|Transcription)\\s*[:：]\\s*(.+?)" +
             "\\s*(?:\\r?\\n|\\s+and\\s+)(?:and\\s+)?(?:Chinese|中文|ZH(?:-CN)?|Translation|翻译)" +
@@ -115,6 +120,21 @@ object E2eProtocol {
             "\\s*[:：]\\s*(.+?)\\s*\\z",
         setOf(RegexOption.IGNORE_CASE, RegexOption.DOT_MATCHES_ALL),
     )
+
+    /** A full translation label closes the source line. A repeated preamble must agree. */
+    fun previewEnglish(raw: String): String? {
+        val text = raw.trimStart()
+        if (text.contains("[NONE]", ignoreCase = true) ||
+            structuredOrReasoning.containsMatchIn(text) || reasoningLine.containsMatchIn(text)) return null
+        val match = previewPair.find(text) ?: return null
+        val preamble = tidy(match.groupValues[1])
+        val english = tidy(match.groupValues[2])
+        if ((preamble.isNotEmpty() && preamble != english) ||
+            sentinel.matches(english) || han.containsMatchIn(english) || structuredOrReasoning.containsMatchIn(english) ||
+            controlToken.containsMatchIn(english) || replacementCharacter.containsMatchIn(english) ||
+            (!latin.containsMatchIn(english) && !numeric.matches(english))) return null
+        return english
+    }
 
     @JvmOverloads
     fun parse(raw: String, preservedNames: Set<String> = emptySet()): Result {

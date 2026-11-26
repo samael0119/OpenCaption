@@ -79,6 +79,8 @@ Models are downloaded separately and remain subject to their providers' licenses
 5. The default terminology profile is general and injects no glossary. Select the CS2 profile explicitly to use its terminology.
 6. Adjust theme, font size, source/translation colors, overlay opacity, and CPU support threads in settings.
 
+Development code also offers Standard, Natural commentary, and Community caption styles for Gemma; Standard remains the default. With the CS2 profile selected, a small set of reviewed display rules can localize wording and optionally use community nicknames for karrigan, s1mple, and ZywOo. Unknown names retain their IDs. Styles affect subsequent Chinese output only, without changing the audio prompt, source transcript, history, or inference count. Independent quality and human preference gains have not been established.
+
 Gemma uses fixed five-second, non-overlapping audio windows and serial inference. If work backs up, an old window that has not started may be replaced so latency cannot grow without bound. Pause, stop, background transitions, serious thermal conditions, memory pressure, or revoked audio permission stop or cancel the relevant task.
 
 ## Privacy and limitations

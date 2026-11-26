@@ -105,6 +105,10 @@ Models are downloaded separately and are not licensed by this repository. The ca
 
 Terminology is optional. General mode injects no domain glossary; the CS2 profile must be selected explicitly. The bundled packs are maintainer-directed, AI-assisted project compilations. Their metadata distinguishes project-contributed expression from public facts, names, trademarks, and third-party rights.
 
+### Caption styles (development)
+
+Gemma settings offer Standard, Natural commentary, and Community styles, with an independent nickname preference. All styles retain the original inference prompts. A bounded native renderer can apply reviewed CS2 lexical substitutions and three sourced player-name mappings after protocol validation, preserving source text and leaving unknown names unchanged. Its one playful rule requires an exact affirmative fact in both languages and a 30-second audio-time cooldown. Options are captured before each inference, do not rewrite history, and do not add inference calls. Transcription-only tasks bypass translation styling. General mode bypasses domain-specific rendering. Generative style instructions failed the local music guard and were removed; content and human preference acceptance remain incomplete.
+
 ## Failure behavior
 
 - Missing or invalid models block session start with a visible error.

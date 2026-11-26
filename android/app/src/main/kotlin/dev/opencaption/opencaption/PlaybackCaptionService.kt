@@ -6,6 +6,7 @@ import android.content.res.Configuration
 import android.content.res.ColorStateList
 import android.content.pm.ServiceInfo
 import android.graphics.Color
+import android.graphics.Canvas
 import android.graphics.PixelFormat
 import android.graphics.drawable.GradientDrawable
 import android.graphics.drawable.RippleDrawable
@@ -34,10 +35,20 @@ class PlaybackCaptionService : Service() {
         val active get() = instance?.projection != null
     }
     private data class OverlayLine(val kind: String, val text: String)
+    private inner class SubtitleView : TextView(this@PlaybackCaptionService) {
+        var afterDraw: ((Long) -> Unit)? = null
+        override fun onDraw(canvas: Canvas) {
+            super.onDraw(canvas)
+            val callback = afterDraw ?: return
+            afterDraw = null
+            val at = SystemClock.elapsedRealtime()
+            handler.post { callback(at) }
+        }
+    }
     var projection: MediaProjection? = null
         private set
     private var root: LinearLayout? = null
-    private var subtitle: TextView? = null
+    private var subtitle: SubtitleView? = null
     private var controls: LinearLayout? = null
     private var controlViews: List<View> = emptyList()
     private var overlayParams: WindowManager.LayoutParams? = null
@@ -53,6 +64,7 @@ class PlaybackCaptionService : Service() {
     private val handler = Handler(Looper.getMainLooper())
     private val clearSubtitle = Runnable {
         lastLines = emptyList()
+        subtitle?.afterDraw = null
         subtitle?.text = "等待新的字幕…"
     }
     override fun onBind(intent: Intent?) = null
@@ -212,7 +224,7 @@ class PlaybackCaptionService : Service() {
                 MotionEvent.ACTION_UP -> view.performClick()
             }; true
         }
-        subtitle = TextView(this).apply {
+        subtitle = SubtitleView().apply {
             text="等待播放音频…"; textSize=size; setTextColor(sourceSubtitleColor)
             setLineSpacing(3*dp, 1.1f); includeFontPadding=false
             gravity = Gravity.CENTER_HORIZONTAL
@@ -273,7 +285,7 @@ class PlaybackCaptionService : Service() {
     private fun panelColor(): Int =
         ((panelOpacity * 255f).toInt().coerceIn(0, 255) shl 24) or 0x00101010
     fun update(text: String) = update(listOf(OverlayLine("plain", text)))
-    fun update(lines: List<*>) {
+    fun update(lines: List<*>, onDraw: ((Long) -> Unit)? = null) {
         val parsed = lines.mapNotNull { value ->
             val map = value as? Map<*, *> ?: return@mapNotNull null
             val text = map["text"]?.toString()?.trim().orEmpty()
@@ -282,6 +294,7 @@ class PlaybackCaptionService : Service() {
         }
         handler.removeCallbacks(clearSubtitle)
         lastLines = parsed
+        subtitle?.afterDraw = onDraw.takeIf { parsed.isNotEmpty() }
         subtitle?.text = render(parsed)
         (subtitle?.parent as? ScrollView)?.scrollTo(0, 0)
         handler.postDelayed(clearSubtitle, 15000)

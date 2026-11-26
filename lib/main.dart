@@ -1,7 +1,8 @@
 import 'dart:async';
 import 'package:file_selector/file_selector.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter/rendering.dart' show ScrollDirection;
+import 'package:flutter/rendering.dart'
+    show PaintingContext, RenderProxyBox, ScrollDirection;
 import 'package:flutter/foundation.dart';
 import 'package:flutter/services.dart';
 import 'core/captions.dart';
@@ -9,6 +10,7 @@ import 'core/build_config.dart';
 import 'core/appearance.dart';
 import 'core/session_controller.dart';
 import 'core/corpus.dart';
+import 'core/caption_style.dart';
 import 'core/translation.dart';
 import 'widgets/caption_transcript.dart';
 import 'widgets/scene_controls.dart';
@@ -64,6 +66,40 @@ class CaptionShell extends StatefulWidget {
   State<CaptionShell> createState() => _CaptionShellState();
 }
 
+class _CaptionPaintProbe extends SingleChildRenderObjectWidget {
+  const _CaptionPaintProbe({
+    super.key,
+    required this.afterPaint,
+    required super.child,
+  });
+
+  final VoidCallback afterPaint;
+
+  @override
+  _CaptionPaintBox createRenderObject(BuildContext context) =>
+      _CaptionPaintBox(afterPaint);
+
+  @override
+  void updateRenderObject(BuildContext context, _CaptionPaintBox renderObject) {
+    renderObject.afterPaint = afterPaint;
+  }
+}
+
+class _CaptionPaintBox extends RenderProxyBox {
+  _CaptionPaintBox(this.afterPaint);
+
+  VoidCallback? afterPaint;
+
+  @override
+  void paint(PaintingContext context, Offset offset) {
+    super.paint(context, offset);
+    final callback = afterPaint;
+    if (callback == null) return;
+    afterPaint = null;
+    WidgetsBinding.instance.addPostFrameCallback((_) => callback());
+  }
+}
+
 class _CaptionShellState extends State<CaptionShell> {
   SessionController get c => widget.controller;
   final scroll = ScrollController();
@@ -71,6 +107,7 @@ class _CaptionShellState extends State<CaptionShell> {
   bool diagnosticsExpanded = false;
   int unread = 0, seen = 0;
   int seenSequence = -1;
+  String seenE2ePreview = '';
   @override
   void dispose() {
     scroll.dispose();
@@ -223,24 +260,28 @@ class _CaptionShellState extends State<CaptionShell> {
     final home =
         c.phase == SessionPhase.idle || c.phase == SessionPhase.preparing;
     final latestSequence = c.ledger.latestSequence;
-    if (latestSequence >= 0 && latestSequence != seenSequence) {
+    final finalArrived = latestSequence >= 0 && latestSequence != seenSequence;
+    final preview = c.e2eSourcePreview;
+    final previewArrived = preview.isNotEmpty && preview != seenE2ePreview;
+    seenE2ePreview = preview;
+    if (finalArrived) {
       final delta = seenSequence < 0
           ? c.ledger.items.length
           : latestSequence - seenSequence;
       if (!following && delta > 0) unread += delta;
       seenSequence = latestSequence;
       seen = c.ledger.items.length;
-      if (following) {
-        WidgetsBinding.instance.addPostFrameCallback((_) {
-          if (mounted && scroll.hasClients) {
-            scroll.animateTo(
-              scroll.position.maxScrollExtent,
-              duration: const Duration(milliseconds: 180),
-              curve: Curves.easeOut,
-            );
-          }
-        });
-      }
+    }
+    if (following && (finalArrived || previewArrived)) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (mounted && scroll.hasClients) {
+          scroll.animateTo(
+            scroll.position.maxScrollExtent,
+            duration: const Duration(milliseconds: 180),
+            curve: Curves.easeOut,
+          );
+        }
+      });
     }
     return PopScope(
       canPop: c.phase == SessionPhase.idle,
@@ -958,12 +999,15 @@ class _CaptionShellState extends State<CaptionShell> {
             itemCount: c.ledger.items.length + 1,
             itemBuilder: (context, index) {
               if (index == c.ledger.items.length) {
+                final temporary = c.endToEnd
+                    ? c.e2eSourcePreview
+                    : c.stable.temporary;
                 return Padding(
                   padding: const EdgeInsets.all(12),
                   child: Text(
-                    c.stable.temporary.isEmpty
+                    temporary.isEmpty
                         ? (c.running ? '正在听…' : '')
-                        : '临时英文：${c.stable.temporary}',
+                        : '临时英文：$temporary',
                     style: Theme.of(context).textTheme.bodyMedium,
                   ),
                 );
@@ -986,15 +1030,18 @@ class _CaptionShellState extends State<CaptionShell> {
                       _ => translationUnavailableText,
                     }
                   : translationPendingText;
-              return CaptionTranscript(
+              final showSource =
+                  c.showEnglish ||
+                  c.captionTask == 'english' ||
+                  item.status == CaptionStatus.failed;
+              final showTranslation =
+                  c.showChinese && c.captionTask != 'english';
+              final transcript = CaptionTranscript(
                 key: ValueKey(item.id),
                 source: item.english,
                 translation: chinese,
-                showSource:
-                    c.showEnglish ||
-                    c.captionTask == 'english' ||
-                    item.status == CaptionStatus.failed,
-                showTranslation: c.showChinese && c.captionTask != 'english',
+                showSource: showSource,
+                showTranslation: showTranslation,
                 fontSize: c.fontSize,
                 sourceColor: c.captionTask == 'chinese'
                     ? translationColor
@@ -1016,6 +1063,32 @@ class _CaptionShellState extends State<CaptionShell> {
                         ),
                       )
                     : null,
+              );
+              if (!diagnosticsEnabled ||
+                  c.playbackAudio ||
+                  item.diagnosticWindow == null ||
+                  item.diagnosticPaintReported) {
+                return transcript;
+              }
+              final translated =
+                  showTranslation &&
+                  item.status == CaptionStatus.ready &&
+                  resolved &&
+                  chinese.isNotEmpty &&
+                  chinese != translationUnavailableText;
+              final source =
+                  (showSource && item.english.isNotEmpty) ||
+                  (translated && c.captionTask == 'chinese');
+              final translation = translated && c.captionTask != 'chinese';
+              if (!source && !translation) return transcript;
+              return _CaptionPaintProbe(
+                key: ValueKey('paint-${item.id}'),
+                afterPaint: () => c.reportCaptionPaint(
+                  item,
+                  source: source,
+                  translation: translation,
+                ),
+                child: transcript,
               );
             },
           ),
@@ -1414,6 +1487,49 @@ class _SettingsPageState extends State<SettingsPage> {
             c.showChinese = value != 'english';
           }),
         ),
+        if (c.backendFlavor == 'gemmaE2E') ...[
+          const SizedBox(height: 16),
+          DropdownButtonFormField<CaptionStyle>(
+            initialValue: c.captionStyle,
+            isExpanded: true,
+            decoration: InputDecoration(
+              labelText: '翻译风格',
+              helperText: '${c.captionStyle.description}；切换后用于后续片段',
+              helperMaxLines: 3,
+            ),
+            items: CaptionStyle.values
+                .map(
+                  (style) =>
+                      DropdownMenuItem(value: style, child: Text(style.label)),
+                )
+                .toList(),
+            onChanged: (value) async {
+              if (value == null) return;
+              setState(() {
+                c.captionStyle = value;
+                if (value == CaptionStyle.community) {
+                  c.communityNicknames = true;
+                }
+              });
+              await c.applyCaptionStyle();
+              await c.savePreferences();
+            },
+          ),
+          SwitchListTile(
+            contentPadding: EdgeInsets.zero,
+            title: const Text('选手使用中文社区外号'),
+            subtitle: const Text('仅 CS2 词库生效；已确认的选手可显示为“大表哥”等，未知名称保留 ID'),
+            value: c.communityNicknames,
+            onChanged: (value) async {
+              setState(() => c.communityNicknames = value);
+              await c.applyCaptionStyle();
+              await c.savePreferences();
+            },
+          ),
+          if (c.captionStyle == CaptionStyle.community)
+            const Text('含少量趣味改写；仅在原意明确时使用，不改数字、否定或人物关系。'),
+          const SizedBox(height: 12),
+        ],
         DropdownButtonFormField<SubtitleColor>(
           initialValue: c.sourceSubtitleColor,
           decoration: const InputDecoration(

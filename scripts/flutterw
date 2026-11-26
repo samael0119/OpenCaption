@@ -1,6 +1,7 @@
 #!/usr/bin/env bash
 set -euo pipefail
-project_root="$(cd "$(dirname "$0")/.." && pwd)"
+project_root="$(cd "$(dirname "$0")/.." && pwd -P)"
+cd "$project_root"
 export PUB_CACHE="$project_root/.pub-cache"
 export GRADLE_USER_HOME="$project_root/.gradle"
 export XDG_CONFIG_HOME="$project_root/.tools/config"

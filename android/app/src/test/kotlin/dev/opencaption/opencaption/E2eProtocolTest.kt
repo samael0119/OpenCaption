@@ -1,10 +1,27 @@
 package dev.opencaption.opencaption
 
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertNull
 import org.junit.Assert.assertTrue
 import org.junit.Test
 
 class E2eProtocolTest {
+    @Test fun previewsOnlyAClosedAndUnambiguousEnglishLine() {
+        assertEquals("They are going B.", E2eProtocol.previewEnglish("English: They are going B.\nChinese:"))
+        assertEquals("They are going B.", E2eProtocol.previewEnglish(
+            "They are going B.\r\nEnglish： They are going B.\r\n中文：他"))
+        for (raw in listOf(
+            "English: They are go",
+            "English: They are going B.\nChin",
+            "English: They are going B.\nChinese",
+            "They are going A.\nEnglish: They are going B.\nChinese:",
+            "English: [NONE]\nChinese:",
+            "English: They are going B.\nChinese: [NONE]",
+            "English: Reasoning: background voice\nChinese:",
+            "English: <|start_of_turn|>They are going B.\nChinese:",
+        )) assertNull(raw, E2eProtocol.previewEnglish(raw))
+    }
+
     @Test fun repeatedStandaloneAndCompleteSilencePairIsNoSpeech() {
         // Actual quiet-whisper-471 output from the bounded gain2 diagnostic.
         assertEquals(E2eProtocol.Result.NoSpeech,

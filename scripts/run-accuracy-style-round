@@ -1,0 +1,12 @@
+#!/usr/bin/env bash
+set -euo pipefail
+cd "$(dirname "$0")/.."
+export XDG_RUNTIME_DIR=/run/user/1000
+export DBUS_SESSION_BUS_ADDRESS=unix:path=/run/user/1000/bus
+out=evaluation/results/accuracy-style-20261019
+[[ ! -e "$out/requests.jsonl" ]] || { echo 'Already started; inspect evidence. No implicit retry.' >&2; exit 3; }
+exec flock -n evaluation/results/v020-independent/model.lock \
+ systemd-run --user --scope --quiet --collect --unit=opencaption-accuracy-style-20261019 \
+ -p MemoryHigh=5376M -p MemoryMax=6144M -p MemorySwapMax=0 \
+ timeout --signal=TERM --kill-after=15s 900s \
+ /home/hyh/Tools/litert/litert-venv/bin/python -u evaluation/accuracy_style_round.py serve

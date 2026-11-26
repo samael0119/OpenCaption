@@ -1,0 +1,29 @@
+#!/usr/bin/env bash
+set -euo pipefail
+cd "$(dirname "$0")/.."
+task_root="$PWD"
+python3 - <<'PY'
+from pathlib import Path
+import json, shutil
+root=Path.cwd(); stage=root/'evaluation/results/accuracy-style-20261019/ui_project'; stage.mkdir(parents=True,exist_ok=True)
+for name in ['lib','assets']:
+    path=stage/name
+    if not path.exists():path.symlink_to(root/name, target_is_directory=True)
+for name in ['pubspec.yaml','pubspec.lock','.flutter-plugins-dependencies']:
+    shutil.copy2(root/name, stage/name)
+fonts=stage/'delivery_fonts'; fonts.mkdir(exist_ok=True)
+shutil.copy2('/usr/share/fonts/opentype/noto/NotoSansCJK-Regular.ttc', fonts/'NotoSansCJK-Regular.ttc')
+pub=stage/'pubspec.yaml'
+pub.write_text(pub.read_text().replace('flutter:\n  uses-material-design:', 'flutter:\n  fonts:\n    - family: Roboto\n      fonts:\n        - asset: delivery_fonts/NotoSansCJK-Regular.ttc\n  uses-material-design:'))
+(stage/'web').mkdir(exist_ok=True)
+shutil.copy2(root/'evaluation/ui_preview/index.html',stage/'web/index.html')
+(stage/'.dart_tool').mkdir(exist_ok=True)
+shutil.copy2(root/'.dart_tool/package_graph.json',stage/'.dart_tool/package_graph.json')
+config=json.loads((root/'.dart_tool/package_config.json').read_text())
+from urllib.parse import urljoin
+for package in config['packages']:
+    package['rootUri']=(stage.as_uri()+'/' if package['name']=='opencaption' else urljoin((root/'.dart_tool/').as_uri()+'/',package['rootUri']))
+(stage/'.dart_tool/package_config.json').write_text(json.dumps(config))
+PY
+cd evaluation/results/accuracy-style-20261019/ui_project
+exec "$task_root/scripts/flutterw" build web --no-pub --target lib/local_preview.dart --dart-define=OPENCAPTION_LOCAL_PREVIEW=true
