@@ -2,10 +2,35 @@
 
 Notable user-visible changes are documented here. The project follows semantic version tags for public snapshots; it does not yet promise a stable API.
 
-## Unreleased
+## 0.2.0 - 2026-11-27
 
-- Add optional Gemma caption styles and independently selectable Chinese community player names. Keep the existing audio prompts and Standard default; apply a small, guarded set of CS2 wording and playful display rules after inference, with an audio-time cooldown for added jokes.
-- Reject the tested generative style/meaning prompts after nonzero-music hallucinations increased. This development work does not establish an ASR accuracy or independent human preference improvement.
+Major mobile real-time captioning release introducing a dual-pipeline architecture inside the main `OpenCaption` APK, upgraded floating overlay UX, CS2 phonetic normalization and unified community nicknames, and faster startup/model management.
+
+### Dual-Pipeline On-Device Architecture
+- **Decoupled ONNX ASR + HY-MT1.5-1.8B pipeline** (`听译分离 · ONNX + HY-MT`) alongside **Gemma 4 E2B/E4B LiteRT-LM** (`端到端 · Gemma 4`), switchable directly on the home screen while preserving each mode's selected models.
+- **Pure-Kotlin ONNX Runtime ASR (`OnnxAsrEngine`)** reusing the existing `onnxruntime-android` runtime with zero extra APK bloat:
+  - **Parakeet-TDT 0.6B v3 INT8** (639 MB, 25 European languages, recommended for English — ~0.3–0.4 s per window on Snapdragon 8 Elite CPU).
+  - **SenseVoice-Small INT8** (228 MB, zh/en/ja/ko/yue — ~0.18–0.22 s per window on CPU) with Silero VAD speech gating, `<|nospeech|>/<|BGM|>` header filtering, quiet-speech gain guard, and filler hallucination suppression.
+- **Tencent HY-MT1.5-1.8B Q4** local Chinese translation via `llama.cpp` forced to CPU (`op_offload=false`, empty Vulkan device list) to eliminate mobile Adreno Vulkan prompt corruption while keeping 1.0–2.5 s per-sentence latency.
+- Removed slow/deprecated Whisper (`small`/`base`/`large-v3-turbo`) and legacy Qwen 0.5B/0.8B models from the catalog.
+
+### Floating Overlay & Playback Capture UX
+- **2-slot rolling caption display** (dimmed previous subtitle above, bold active bilingual caption below) with length-scaled minimum reading hold (`1.8–2.6 s`) to prevent rapid subtitle flashing.
+- Whole-panel drag and tap-to-toggle quick bar (`双语/仅中`, `2行/1行`, `A−`, `A+`, `停止`) with 4.5 s auto-hide and 12 s silence smooth fade.
+- **Persistent overlay preferences** (font size, bilingual/Chinese-only, 2-line/1-line) synchronized bidirectionally with Settings (`14–36` font size), plus immediate persistence for all Home and Settings controls.
+- **Android 14+ full-display default** via `MediaProjectionConfig.createConfigForDefaultDisplay()` so system playback capture defaults directly to sharing the entire screen.
+- Stopping the overlay now keeps the local translator warm in memory so retrying an interrupted last line works immediately.
+
+### CS2 Terminology, Phonetic Normalizer & Community Styles
+- Added pre-MT **CS2 phonetic normalizer (`AsrPhoneticNormalizer`)** covering 60+ active pro player IDs (200+ phonetic variants including `monese→m0NESY`, `carrigan→karrigan`, `shira→sh1ro`, etc.), callout homophones (`Maine→Main`, `city side→CT side`, `double orb→double AWP`, `U til→util`), and context-gated ambiguous names.
+- Added curated broadcast terminology pack (`cs2_zh_asr_broadcast_v0.3.json`), 5-minute decoupled match memory, and custom `A=B` hint pair injection.
+- Unified **148-player CS2 community nickname asset** (`assets/corpora/cs2_player_nicknames.json`) shared by both Dart (HY-MT1.5) and Kotlin (Gemma E2E), supporting multi-variant nickname rotation and context guards for ordinary English words.
+- Enabled **Standard / Natural commentary / Community** translation styles and community nicknames across both decoupled HY-MT1.5 and Gemma E2E pipelines.
+
+### Model Management & Startup
+- Added **one-tap deprecated model cleanup (`一键清理`)** in the Model Manager to safely reclaim storage from removed legacy weights without touching active models.
+- Extended receipt+stat fast-path verification to all large single-file and multi-file bundle models (millisecond startup checks) with live `% · MB/s` download progress.
+- Unified Android launcher name to **OpenCaption** while keeping package ID and signing key unchanged for seamless in-place upgrades.
 
 ## 0.2.0-preview.3 - 2026-10-17
 

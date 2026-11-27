@@ -6,10 +6,10 @@
 
 [简体中文](README.zh-CN.md) · [Documentation](docs/README.md) · [License](LICENSE)
 
-OpenCaption is a local-first Android app for real-time captions. Its main path combines a Flutter UI, Kotlin audio capture and scheduling, and Gemma 4 through LiteRT-LM to produce English transcripts and Simplified Chinese captions directly on the device.
+OpenCaption is a local-first Android app for real-time bilingual captions. It combines a Flutter UI, Kotlin audio capture and overlay scheduling, and two switchable on-device inference pipelines: a fast **Decoupled ONNX ASR + HY-MT1.5** pipeline (Parakeet-TDT / SenseVoice + Tencent HY-MT1.5-1.8B) and an **End-to-End Gemma 4** pipeline through LiteRT-LM.
 
-> [!WARNING]
-> OpenCaption is a development and evaluation preview. Model quality, long-run stability, power consumption, and device compatibility have not passed the release gates. Current release-mode APKs use a local development signature and are not store-ready packages.
+> [!NOTE]
+> OpenCaption `v0.2.0` ships a local-signed arm64 Android release APK for direct installation and evaluation. Models are downloaded inside the app on first use and run completely offline afterwards.
 
 ## Screenshots
 
@@ -28,60 +28,44 @@ OpenCaption is a local-first Android app for real-time captions. Its main path c
 
 ## What it does
 
-- Runs speech understanding and caption generation locally after model setup; audio is not uploaded by the default path.
-- Supports microphone input and Android 10+ playback capture with a movable caption overlay, subject to the source app's audio-sharing policy.
+- Runs speech recognition and Chinese translation 100% locally after model setup; raw audio is never persisted or uploaded.
+- Supports **two switchable pipelines** inside the main APK:
+  - **Decoupled (`ONNX + HY-MT1.5`)**: Fast on-device ONNX ASR (`Parakeet-TDT 0.6B v3 INT8` or `SenseVoice-Small INT8`) paired with `HY-MT1.5-1.8B Q4` for ~1.5–2.5 s end-to-end bilingual captions on modern Snapdragon phones.
+  - **End-to-End (`Gemma 4 LiteRT-LM`)**: Single-model multimodal speech understanding with `Gemma 4 E2B` or `E4B`.
+- Supports microphone input and Android 10+ playback audio capture (defaulting to full-display capture on Android 14+) with a **2-line rolling floating overlay**, anti-flash reading hold, drag + quick controls (`双语/仅中`, `2行/1行`, `A−/A+`, stop), and persistent preferences.
 - Offers English-to-bilingual captions, automatic-language-to-Chinese plus source text, English-only transcription, and Chinese-only transcription.
-- Downloads or imports models with expected-size and SHA-256 verification, resumable downloads, and multiple configured sources.
-- Provides optional scene/name context, a CS2 terminology profile, theme and caption styling, and bounded runtime diagnostics.
+- Downloads or imports models with expected-size and SHA-256 verification, resumable downloads with live `% · MB/s` speed, fast startup receipt verification, and one-tap cleanup for deprecated legacy models.
+- Provides optional scene/name context (including `source=target` custom hints), a CS2 terminology profile with phonetic ASR normalization, **Standard / Natural commentary / Community** translation styles, and a unified 148-player CS2 community nickname catalog (`assets/corpora/cs2_player_nicknames.json`).
 - Keeps captions in the current session only. Returning to the home screen clears the transcript.
 
-## Recommended path
+## Recommended pipelines & models
 
-`gemmaE2E` is the current mainline flavor. Gemma 4 E2B is the default and recommended real-time model:
+`gemmaE2E` is the mainline Android build flavor (`OpenCaption`) and includes **both** switchable pipelines:
 
-- LiteRT-LM Android `0.17.0` with `.litertlm` packages from `litert-community`.
-- GPU-first initialization with CPU fallback; audio encoding runs on the CPU.
-- E2B and E4B both use MTP/speculative decoding, `maxNumTokens=768`, a maximum output of 128 tokens, and the app cache directory.
-- Configurable CPU support threads: 2, 4, 6, or 8; the default is 4.
-- Observed latency on the current test phone is roughly 0.6–1.6 seconds for E2B and 2.6–6 seconds for E4B. These figures are observations, not cross-device guarantees.
-
-| Flavor | Role | Implementation | Recommendation |
+| Pipeline | Models | Observed latency (Snapdragon 8 Elite) | Best for |
 | --- | --- | --- | --- |
-| `gemmaE2E` | Mainline | Gemma 4 E2B/E4B through LiteRT-LM; one model handles speech understanding, transcription, and Chinese output | Default |
-| `cascade` | Compatibility and historical evaluation | whisper.cpp followed by ML Kit or local GGUF translation | Not a future mainline |
-| `qwenE2E` | Experimental | Qwen Omni through MNN | Dedicated experiments only |
+| **Decoupled · ONNX + HY-MT** | `Parakeet-TDT 0.6B v3 INT8` (639 MB, recommended) or `SenseVoice-Small INT8` (228 MB) + `HY-MT1.5-1.8B Q4` (1.07 GB) | ASR ~0.2–0.4 s + MT ~1.0–2.5 s | Live English/esports broadcasts, low latency & high accuracy |
+| **End-to-End · Gemma 4** | `Gemma 4 E2B` (2.59 GB) or `Gemma 4 E4B` (3.66 GB) via LiteRT-LM `0.17.0` | E2B ~0.6–1.6 s; E4B ~2.6–6 s | Single-model multimodal E2E captioning |
 
-The repository retains the older whisper.cpp/llama.cpp path and Qwen manifests for reproducibility and compatibility. The Gemma flavor does not load Whisper, Silero, or a separate translation model.
+Legacy `cascade` (whisper.cpp) and `qwenE2E` (MNN) build flavors remain in the repository for historical reproducibility, while slow Whisper and legacy Qwen 0.5B/0.8B weights have been removed from the active model catalog (`assets/models.json`).
 
-## Models
+### Model catalog
 
-The model manager shows purpose, size, readiness, source, recommendation, and integrity status. Current entries include:
+- **Parakeet-TDT 0.6B v3 INT8** (~639 MB): Default recommended ASR for English and 25 European languages; pure-Kotlin ONNX Runtime inference.
+- **SenseVoice-Small INT8** (~228 MB): Fast multilingual ONNX ASR (Chinese, English, Japanese, Korean, Cantonese) with ModelScope primary mirror.
+- **HY-MT1.5-1.8B Q4** (~1.07 GB): Default local Chinese translation model via `llama.cpp` CPU inference with dynamic term injection.
+- **Gemma 4 E2B** (~2.59 GB) / **Gemma 4 E4B** (~3.66 GB): LiteRT-LM end-to-end multimodal models (GPU-first with CPU fallback).
 
-- Gemma 4 E2B (~2.59 GB): default real-time caption model.
-- Gemma 4 E4B (~3.66 GB): quality-oriented option with higher mobile latency.
-- Whisper `small.en` and `base.en`: English-only legacy cascade candidates.
-- Qwen2.5 0.5B and Qwen3.5 0.8B: legacy local-translation experiments; Qwen3.5 did not fit the current real cgroup memory constraints reliably.
-- Qwen Omni 3B MNN: earlier end-to-end experimental flavor.
-- NLLB-200: unavailable because the current runtime does not support its encoder-decoder architecture.
-
-TranslateGemma 4B is not listed because the published LiteRT Community artifact is a MediaPipe Web `.task`, not a LiteRT-LM-loadable `.litertlm` package.
-
-Models are downloaded separately and remain subject to their providers' licenses and terms. They are not covered by this repository's license.
+Models are downloaded separately inside the app and remain subject to their providers' licenses and terms. They are not covered by this repository's license.
 
 ## Using the app
 
-1. Install the APK for the required flavor and open **Prepare and manage models**. Downloads and imports are checked against the catalog size and SHA-256 digest.
-2. For Gemma E2E, keep E2B selected unless quality is more important than latency. Choose the speech task on the home screen.
-3. Choose an input:
-   - **Microphone** captures ambient sound. Audio playing only in headphones cannot reach the microphone.
-   - **This-device audio** uses Android 10+ playback capture and a foreground overlay. It requires system and overlay permission, and the source app must allow audio sharing. Calls, DRM content, and some apps may block capture. OpenCaption does not record the screen.
-4. Optionally provide up to 240 characters of scene or proper-name context. It is filtered and treated as untrusted data, not as a second instruction channel.
-5. The default terminology profile is general and injects no glossary. Select the CS2 profile explicitly to use its terminology.
-6. Adjust theme, font size, source/translation colors, overlay opacity, and CPU support threads in settings.
-
-Development code also offers Standard, Natural commentary, and Community caption styles for Gemma; Standard remains the default. With the CS2 profile selected, a small set of reviewed display rules can localize wording and optionally use community nicknames for karrigan, s1mple, and ZywOo. Unknown names retain their IDs. Styles affect subsequent Chinese output only, without changing the audio prompt, source transcript, history, or inference count. Independent quality and human preference gains have not been established.
-
-Gemma uses fixed five-second, non-overlapping audio windows and serial inference. If work backs up, an old window that has not started may be replaced so latency cannot grow without bound. Pause, stop, background transitions, serious thermal conditions, memory pressure, or revoked audio permission stop or cancel the relevant task.
+1. Install the `OpenCaption` APK and open **Model Manager** (`模型管理`) to download the models for your chosen pipeline (e.g. `Parakeet-TDT 0.6B v3` + `HY-MT1.5-1.8B` for decoupled mode, or `Gemma 4 E2B` for E2E). Upgrading users can tap **一键清理** to remove obsolete Whisper/Qwen weights.
+2. Choose the pipeline, models, speech task, and input source on the home screen (all selections are persisted automatically):
+   - **Microphone** captures ambient sound.
+   - **This-device audio** uses Android 10+ playback capture and a floating caption overlay (defaults to entire screen on Android 14+). Does not record video; DRM or apps that disallow playback capture may block audio.
+3. Optionally enter scene/name context or `A=B` term overrides (up to 240 chars) and select the **CS2** terminology profile for esports broadcasts.
+4. In **Settings**, adjust theme, font size (`14–36`, synced live with the floating overlay), source/translation colors, overlay opacity, CPU threads, **translation style** (`Standard`, `Natural commentary`, `Community`), and **Chinese community player nicknames** (configurable in `assets/corpora/cs2_player_nicknames.json`).
 
 ## Privacy and limitations
 

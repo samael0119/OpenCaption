@@ -63,14 +63,12 @@ Audio remains in native/runtime memory and is not written as a recording. Playba
 
 ### Model paths
 
-`gemmaE2E` is the mainline flavor. One Gemma model performs speech understanding, transcription, and optional Chinese output through LiteRT-LM.
+`gemmaE2E` is the mainline flavor (`OpenCaption`) and exposes two switchable on-device pipelines:
 
-The repository also retains two experimental or compatibility flavors:
+1. **Decoupled (`ONNX + HY-MT1.5`)**: Pure-Kotlin ONNX Runtime ASR (`Parakeet-TDT 0.6B v3 INT8` or `SenseVoice-Small INT8`, gated by Silero VAD) produces source text, `AsrPhoneticNormalizer` normalizes CS2 phonetic homophones, and `llama.cpp` runs `HY-MT1.5-1.8B Q4` on CPU (`op_offload=false`, empty GPU device list to avoid mobile Vulkan corruption) with dynamic matched-term injection.
+2. **End-to-End (`Gemma 4 LiteRT-LM`)**: One Gemma 4 E2B/E4B model performs speech understanding, transcription, and optional Chinese output through LiteRT-LM.
 
-- `cascade`: whisper.cpp recognition followed by ML Kit or GGUF translation;
-- `qwenE2E`: Qwen Omni through MNN.
-
-These paths exist for reproducibility and comparison. New product work should not silently expand them into additional mainlines.
+The repository retains `cascade` and `qwenE2E` flavors for historical comparison. Deprecated Whisper and legacy Qwen 0.5B/0.8B models have been removed from `assets/models.json`, and `ModelStore` provides one-tap cleanup for orphaned legacy weights on device.
 
 ## Runtime flow
 
@@ -105,9 +103,13 @@ Models are downloaded separately and are not licensed by this repository. The ca
 
 Terminology is optional. General mode injects no domain glossary; the CS2 profile must be selected explicitly. The bundled packs are maintainer-directed, AI-assisted project compilations. Their metadata distinguishes project-contributed expression from public facts, names, trademarks, and third-party rights.
 
-### Caption styles (development)
+### Caption styles & community nicknames
 
-Gemma settings offer Standard, Natural commentary, and Community styles, with an independent nickname preference. All styles retain the original inference prompts. A bounded native renderer can apply reviewed CS2 lexical substitutions and three sourced player-name mappings after protocol validation, preserving source text and leaving unknown names unchanged. Its one playful rule requires an exact affirmative fact in both languages and a 30-second audio-time cooldown. Options are captured before each inference, do not rewrite history, and do not add inference calls. Transcription-only tasks bypass translation styling. General mode bypasses domain-specific rendering. Generative style instructions failed the local music guard and were removed; content and human preference acceptance remain incomplete.
+Settings offer **Standard**, **Natural commentary**, and **Community** styles, plus an independent **Chinese community player nicknames** toggle:
+
+- **Single source of truth**: Player nicknames live in `assets/corpora/cs2_player_nicknames.json` (covering all 148 collected CS2 players, supporting multi-variant nickname rotation and `require_context` guards for ordinary English words) and are loaded by both Dart (`CaptionStyleRenderer`) and Kotlin (`CaptionStyle.kt`).
+- **Decoupled HY-MT1.5 pipeline**: Style directives, matched community slang hints (in Community mode), and matched player nicknames are injected into the HY-MT1.5 translation prompt, followed by guarded Chinese post-processing (`CaptionStyleRenderer.render`).
+- **Gemma E2E pipeline**: Keeps the validated audio prompt unchanged and applies guarded post-inference lexical/nickname rendering (`CaptionStyle.kt`) with an audio-time cooldown for playful expressions.
 
 ## Failure behavior
 
