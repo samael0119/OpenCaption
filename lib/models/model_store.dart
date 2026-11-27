@@ -112,7 +112,7 @@ typedef ModelHttpClientFactory = HttpClient Function();
 class ModelStore extends ChangeNotifier {
   ModelStore({
     ModelHttpClientFactory? clientFactory,
-    this.probeBytes = 64 * 1024,
+    this.probeBytes = 512 * 1024,
   }) : _clientFactory = clientFactory ?? HttpClient.new;
 
   final ModelHttpClientFactory _clientFactory;
@@ -126,6 +126,84 @@ class ModelStore extends ChangeNotifier {
   final Set<String> ready = {};
   final Map<String, Set<HttpClient>> _clients = {};
   final Set<String> _cancelled = {};
+  int orphanedBytes = 0;
+  int orphanedCount = 0;
+
+  Set<String> _knownEntryNames() {
+    final names = <String>{};
+    for (final spec in catalog) {
+      names.add(spec.file);
+      names.add('${spec.file}.part');
+      names.add('${spec.file}.verified');
+    }
+    return names;
+  }
+
+  Future<int> _entityBytes(FileSystemEntity entity) async {
+    if (entity is File) {
+      try {
+        return await entity.length();
+      } catch (_) {
+        return 0;
+      }
+    }
+    if (entity is Directory) {
+      var total = 0;
+      try {
+        await for (final child in entity.list(recursive: true, followLinks: false)) {
+          if (child is File) {
+            try {
+              total += await child.length();
+            } catch (_) {}
+          }
+        }
+      } catch (_) {}
+      return total;
+    }
+    return 0;
+  }
+
+  /// Scans `directory` for model files or folders no longer listed in `catalog`
+  /// (e.g. removed Whisper/Qwen weights) so the user can reclaim storage safely.
+  Future<void> scanOrphanedModels() async {
+    if (!await directory.exists()) {
+      orphanedBytes = 0;
+      orphanedCount = 0;
+      return;
+    }
+    final known = _knownEntryNames();
+    var bytes = 0;
+    var count = 0;
+    await for (final entity in directory.list(followLinks: false)) {
+      final name = entity.path.split(Platform.pathSeparator).last;
+      if (known.contains(name)) continue;
+      final size = await _entityBytes(entity);
+      bytes += size;
+      if (!name.endsWith('.verified')) count++;
+    }
+    orphanedBytes = bytes;
+    orphanedCount = count == 0 && bytes > 0 ? 1 : count;
+  }
+
+  /// Deletes all orphaned model files/folders no longer referenced by `catalog`.
+  /// Never touches active catalog models or runs while a download is active.
+  Future<int> cleanupOrphanedModels() async {
+    if (busy || !await directory.exists()) return 0;
+    final known = _knownEntryNames();
+    var freed = 0;
+    await for (final entity in directory.list(followLinks: false)) {
+      final name = entity.path.split(Platform.pathSeparator).last;
+      if (known.contains(name)) continue;
+      final size = await _entityBytes(entity);
+      try {
+        await entity.delete(recursive: true);
+        freed += size;
+      } catch (_) {}
+    }
+    await scanOrphanedModels();
+    notifyListeners();
+    return freed;
+  }
 
   Future<void> initialize() async {
     directory = Directory(
@@ -153,6 +231,7 @@ class ModelStore extends ChangeNotifier {
         }
       }
     }
+    await scanOrphanedModels();
     notifyListeners();
   }
 
@@ -189,14 +268,51 @@ class ModelStore extends ChangeNotifier {
     }
   }
 
+  Future<Map<String, Map<String, int>>> _bundleStats(ModelSpec spec) async {
+    final stats = <String, Map<String, int>>{};
+    for (final part in spec.parts) {
+      final stat = await File('${path(spec.id)}/${part.file}').stat();
+      if (stat.type != FileSystemEntityType.file || stat.size != part.size) {
+        return const {};
+      }
+      stats[part.file] = <String, int>{
+        'size': stat.size,
+        'modifiedUs': stat.modified.microsecondsSinceEpoch,
+        'changedUs': stat.changed.microsecondsSinceEpoch,
+      };
+    }
+    return stats;
+  }
+
+  bool _bundleStatsMatch(
+    Map<String, Object?>? receipt,
+    Map<String, Map<String, int>> current,
+  ) {
+    if (receipt == null || current.isEmpty) return false;
+    final saved = receipt['parts'];
+    if (saved is! Map || saved.length != current.length) return false;
+    for (final entry in current.entries) {
+      final item = saved[entry.key];
+      if (item is! Map) return false;
+      if (item['size'] != entry.value['size'] ||
+          item['modifiedUs'] != entry.value['modifiedUs'] ||
+          item['changedUs'] != entry.value['changedUs']) {
+        return false;
+      }
+    }
+    return true;
+  }
+
   Future<void> _writeReceipt(ModelSpec spec, ModelSource? source) async {
     final stat = spec.parts.isEmpty ? await File(path(spec.id)).stat() : null;
+    final partStats = spec.parts.isNotEmpty ? await _bundleStats(spec) : null;
     await File('${path(spec.id)}.verified').writeAsString(
       jsonEncode(<String, Object?>{
         'sha256': spec.hash,
         'size': spec.size,
         if (stat != null) 'modifiedUs': stat.modified.microsecondsSinceEpoch,
         if (stat != null) 'changedUs': stat.changed.microsecondsSinceEpoch,
+        if (partStats != null && partStats.isNotEmpty) 'parts': partStats,
         'sourceId': source?.id ?? 'manual-import',
         'sourceLabel': source?.label ?? '手动导入',
         'completedAt': DateTime.now().toUtc().toIso8601String(),
@@ -208,28 +324,47 @@ class ModelStore extends ChangeNotifier {
   Future<void> verifyForUse(String id) async {
     try {
       final model = spec(id);
-      if (model.id == 'gemma-4-e2b-litert' && model.parts.isEmpty) {
+      // Fast-path large models (>= 16 MiB) when file sizes + timestamps still
+      // match their verified receipt, avoiding multi-hundred-MB SHA-256 reads
+      // on every session start. Small files (< 16 MiB) are hashed directly.
+      if (model.size >= 16 * 1024 * 1024) {
         final receipt = await _readReceipt(model);
-        final stat = await File(path(id)).stat();
-        if (stat.type == FileSystemEntityType.file &&
-            stat.size == model.size &&
-            receipt?['modifiedUs'] == stat.modified.microsecondsSinceEpoch &&
-            receipt?['changedUs'] == stat.changed.microsecondsSinceEpoch) {
+        if (model.parts.isEmpty) {
+          final stat = await File(path(id)).stat();
+          if (stat.type == FileSystemEntityType.file &&
+              stat.size == model.size &&
+              receipt?['modifiedUs'] == stat.modified.microsecondsSinceEpoch &&
+              receipt?['changedUs'] == stat.changed.microsecondsSinceEpoch) {
+            return;
+          }
+          await _verify(model, path(id));
+          final refreshed = <String, Object?>{
+            ...?receipt,
+            'sha256': model.hash,
+            'size': model.size,
+            'modifiedUs': stat.modified.microsecondsSinceEpoch,
+            'changedUs': stat.changed.microsecondsSinceEpoch,
+          };
+          await File(
+            '${path(id)}.verified',
+          ).writeAsString(jsonEncode(refreshed), flush: true);
+          return;
+        } else {
+          final currentStats = await _bundleStats(model);
+          if (_bundleStatsMatch(receipt, currentStats)) return;
+          await _verify(model, path(id));
+          final updatedStats = await _bundleStats(model);
+          final refreshed = <String, Object?>{
+            ...?receipt,
+            'sha256': model.hash,
+            'size': model.size,
+            if (updatedStats.isNotEmpty) 'parts': updatedStats,
+          };
+          await File(
+            '${path(id)}.verified',
+          ).writeAsString(jsonEncode(refreshed), flush: true);
           return;
         }
-        await _verify(model, path(id));
-        // Old receipts undergo one full check, then retain download provenance.
-        final refreshed = <String, Object?>{
-          ...?receipt,
-          'sha256': model.hash,
-          'size': model.size,
-          'modifiedUs': stat.modified.microsecondsSinceEpoch,
-          'changedUs': stat.changed.microsecondsSinceEpoch,
-        };
-        await File(
-          '${path(id)}.verified',
-        ).writeAsString(jsonEncode(refreshed), flush: true);
-        return;
       }
       await _verify(spec(id), path(id));
     } catch (_) {
@@ -377,19 +512,33 @@ class ModelStore extends ChangeNotifier {
         mode: offset == 0 ? FileMode.write : FileMode.append,
       );
       var received = offset;
-      var lastNotification = DateTime.now();
+      var windowBytes = 0;
+      var windowStart = DateTime.now();
+      var lastNotification = windowStart;
       try {
         await for (final chunk in response.timeout(
           const Duration(seconds: 30),
         )) {
           if (_cancelled.contains(id)) throw const _SourceFailure('已取消');
           received += chunk.length;
+          windowBytes += chunk.length;
           if (received > spec.size) throw const _SourceFailure('模型文件过大');
           sink.add(chunk);
           progress[id] = received / spec.size;
-          if (DateTime.now().difference(lastNotification).inMilliseconds >
-              150) {
-            lastNotification = DateTime.now();
+          final now = DateTime.now();
+          if (now.difference(lastNotification).inMilliseconds > 250) {
+            final elapsedMs = now.difference(windowStart).inMilliseconds;
+            if (elapsedMs >= 500) {
+              final bytesPerSec = windowBytes * 1000.0 / elapsedMs;
+              final speedText = bytesPerSec >= 1024 * 1024
+                  ? '${(bytesPerSec / (1024 * 1024)).toStringAsFixed(1)} MB/s'
+                  : '${(bytesPerSec / 1024).toStringAsFixed(0)} KB/s';
+              final pct = (received * 100 / spec.size).toStringAsFixed(1);
+              states[id] = '使用${source.label}下载中 $pct% · $speedText';
+              windowBytes = 0;
+              windowStart = now;
+            }
+            lastNotification = now;
             notifyListeners();
           }
         }
@@ -509,6 +658,7 @@ class ModelStore extends ChangeNotifier {
       if (importPath != null) throw const _SourceFailure('目录模型不支持单文件导入');
       await partial.create(recursive: true);
       var completed = 0;
+      ModelSource? lastUsedSource;
       for (final part in model.parts) {
         if (_cancelled.contains(id)) throw const _SourceFailure('已取消');
         final target = File('${partial.path}/${part.file}');
@@ -531,7 +681,7 @@ class ModelStore extends ChangeNotifier {
         for (final source in part.sources) {
           try {
             activeSources[id] = source.label;
-            states[id] = '下载 ${part.file}…';
+            states[id] = '使用${source.label}下载 ${part.file}…';
             notifyListeners();
             await _downloadPart(
               id,
@@ -544,6 +694,7 @@ class ModelStore extends ChangeNotifier {
             final hash = (await sha256.bind(target.openRead()).first)
                 .toString();
             if (hash != part.hash) throw const FormatException('模型分片校验失败');
+            lastUsedSource = source;
             lastFailure = null;
             break;
           } catch (error) {
@@ -558,14 +709,17 @@ class ModelStore extends ChangeNotifier {
         completed += part.size;
       }
       states[id] = '正在校验…';
+      notifyListeners();
       await _verify(model, partial.path);
       final destination = Directory(path(id));
       if (await destination.exists()) await destination.delete(recursive: true);
       await partial.rename(destination.path);
       await _writeQwenOverrides(model, destination);
-      await _writeReceipt(model, null);
+      await _writeReceipt(model, lastUsedSource);
       ready.add(id);
-      activeSources[id] = '官方 Thinker-only 文件集';
+      activeSources[id] = model.id == 'qwen2.5-omni-3b-mnn'
+          ? '官方 Thinker-only 文件集'
+          : (lastUsedSource?.label ?? '已下载');
     } catch (error) {
       errors[id] = _cancelled.contains(id) ? '已取消，可继续下载' : '模型目录下载或校验失败，可重试';
     } finally {
@@ -621,16 +775,36 @@ class ModelStore extends ChangeNotifier {
         mode: offset == 0 ? FileMode.write : FileMode.append,
       );
       var received = offset;
+      var windowBytes = 0;
+      var windowStart = DateTime.now();
+      var lastNotification = windowStart;
       try {
         await for (final chunk in response.timeout(
           const Duration(seconds: 30),
         )) {
           if (_cancelled.contains(id)) throw const _SourceFailure('已取消');
           received += chunk.length;
+          windowBytes += chunk.length;
           if (received > part.size) throw const _SourceFailure('模型分片过大');
           sink.add(chunk);
           progress[id] = (completed + received) / total;
-          notifyListeners();
+          final now = DateTime.now();
+          if (now.difference(lastNotification).inMilliseconds > 250) {
+            final elapsedMs = now.difference(windowStart).inMilliseconds;
+            if (elapsedMs >= 500) {
+              final bytesPerSec = windowBytes * 1000.0 / elapsedMs;
+              final speedText = bytesPerSec >= 1024 * 1024
+                  ? '${(bytesPerSec / (1024 * 1024)).toStringAsFixed(1)} MB/s'
+                  : '${(bytesPerSec / 1024).toStringAsFixed(0)} KB/s';
+              final pct = ((completed + received) * 100 / total)
+                  .toStringAsFixed(1);
+              states[id] = '使用${source.label}下载中 $pct% · $speedText';
+              windowBytes = 0;
+              windowStart = now;
+            }
+            lastNotification = now;
+            notifyListeners();
+          }
         }
       } finally {
         await sink.close();

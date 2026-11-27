@@ -2,6 +2,7 @@ import 'dart:async';
 import 'dart:convert';
 import 'dart:io';
 
+import 'caption_style.dart';
 import 'corpus.dart';
 
 const translationUnavailableText = '译文暂不可用';
@@ -70,10 +71,21 @@ const cs2TranslationInstruction =
 /// profile. SessionController always selects the profile-specific instruction.
 const translationInstruction = cs2TranslationInstruction;
 
-String translationInstructionFor(CorpusProfile profile) =>
-    profile == CorpusProfile.cs2
-    ? cs2TranslationInstruction
-    : genericTranslationInstruction;
+String translationInstructionFor(
+  CorpusProfile profile, {
+  CaptionStyle style = CaptionStyle.standard,
+}) {
+  final base = profile == CorpusProfile.cs2
+      ? cs2TranslationInstruction
+      : genericTranslationInstruction;
+  return switch (style) {
+    CaptionStyle.standard => base,
+    CaptionStyle.natural =>
+      '$base Use smooth, natural spoken Chinese commentary phrasing without adding jokes or changing facts.',
+    CaptionStyle.community =>
+      '$base Use lively Mainland Chinese community esports/colloquial phrasing while strictly preserving all numbers, negation, and facts.',
+  };
+}
 
 class TranslationContext {
   final List<String> _history = [];
@@ -121,6 +133,157 @@ class TranslationContext {
       .replaceAll(RegExp(r'[\r\n]+'), ' ')
       .replaceAll(RegExp(r'\s+'), ' ')
       .trim();
+
+  /// Builds Tencent HY-MT1.5 prompt using dynamic term filtering: only terms
+  /// matched in the current utterance (and matched proper nouns or explicit
+  /// `A=B` pairs from optional context hints) are injected, using the exact
+  /// surface phrase that appears in `current` so aliases like `big green` or
+  /// `Util` map cleanly without hallucinations.
+  String hyMtPrompt(
+    String current,
+    List<Map<String, Object?>> matchedTerms,
+    String contextHint, {
+    CaptionStyle style = CaptionStyle.standard,
+    CorpusProfile profile = CorpusProfile.none,
+    bool communityNicknames = false,
+    int? nicknameSeed,
+    String activeContext = '',
+  }) {
+    final cleanCurrent = _singleLine(current);
+    final lowerCurrent = cleanCurrent.toLowerCase();
+    final refLines = <String>[];
+    final seen = <String>{};
+    if (communityNicknames && profile == CorpusProfile.cs2) {
+      for (final entry in CaptionStyleRenderer.matchedNicknames(
+        cleanCurrent,
+        seed: nicknameSeed,
+        activeContext: '$activeContext $contextHint',
+      ).entries) {
+        if (seen.add(entry.key.toLowerCase())) {
+          refLines.add('${entry.key} 翻译成 ${entry.value}');
+        }
+      }
+    }
+    if (style == CaptionStyle.community && profile == CorpusProfile.cs2) {
+      for (final entry
+          in CaptionStyleRenderer.matchedCommunityHints(cleanCurrent).entries) {
+        if (refLines.length >= 6) break;
+        if (seen.add(entry.key.toLowerCase())) {
+          refLines.add('${entry.key} 翻译成 ${entry.value}');
+        }
+      }
+    }
+    for (final term in matchedTerms.take(6)) {
+      final english = _singleLine(term['english'] as String? ?? '');
+      final chinese = _singleLine(term['chinese'] as String? ?? '');
+      if (english.isEmpty || chinese.isEmpty) continue;
+      final target = term['preserve'] == true ? english : chinese;
+      // Pick the longest surface form (english or alias) actually present in
+      // cleanCurrent so HY-MT1.5 sees the exact phrase it is translating.
+      final candidates = <String>[
+        english,
+        ...List<String>.from(term['aliases'] as List? ?? const []).map(_singleLine),
+      ]..sort((a, b) => b.length.compareTo(a.length));
+      var surface = english;
+      for (final candidate in candidates) {
+        if (candidate.isEmpty) continue;
+        final escaped = RegExp.escape(candidate.toLowerCase());
+        if (RegExp(r'(?:^|[^a-z0-9])' + escaped + r'(?:$|[^a-z0-9])')
+            .hasMatch(lowerCurrent)) {
+          surface = candidate;
+          break;
+        }
+      }
+      if (!seen.add(surface.toLowerCase())) continue;
+      refLines.add('$surface 翻译成 $target');
+    }
+    final cleanHint = CorpusIndex.sanitizeContext(contextHint);
+    if (cleanHint.isNotEmpty && refLines.length < 7) {
+      for (final rawToken in cleanHint.split(RegExp(r'[,，、;；/|]+'))) {
+        final token = _singleLine(rawToken);
+        if (token.length < 2 || token.length > 48) continue;
+        final pairMatch = RegExp(r'^(.+?)\s*(?:=|->|→|：|:)\s*(.+)$').firstMatch(token);
+        if (pairMatch != null) {
+          final src = _singleLine(pairMatch.group(1)!);
+          final dst = _singleLine(pairMatch.group(2)!);
+          if (src.length >= 2 &&
+              dst.isNotEmpty &&
+              !seen.contains(src.toLowerCase()) &&
+              lowerCurrent.contains(src.toLowerCase())) {
+            seen.add(src.toLowerCase());
+            refLines.add('$src 翻译成 $dst');
+            if (refLines.length >= 7) break;
+          }
+          continue;
+        }
+        if (token.length > 24) continue;
+        if (!RegExp(r'^[A-Za-z0-9][A-Za-z0-9._ -]{1,23}$').hasMatch(token)) {
+          continue;
+        }
+        final key = token.toLowerCase();
+        if (seen.contains(key)) continue;
+        final escaped = RegExp.escape(key);
+        if (RegExp(r'(?:^|[^a-z0-9])' + escaped + r'(?:$|[^a-z0-9])')
+            .hasMatch(lowerCurrent)) {
+          seen.add(key);
+          refLines.add('$token 翻译成 $token');
+          if (refLines.length >= 7) break;
+        }
+      }
+    }
+    final wordCount = cleanCurrent
+        .split(RegExp(r'\s+'))
+        .where((w) => w.isNotEmpty)
+        .length;
+    // Short 1-3 word fragments can cause HY-MT1.5 to re-translate previous
+    // context; only include one concise previous clause for fuller sentences.
+    final prevLine = wordCount >= 4 && _history.isNotEmpty
+        ? _singleLine(_history.last)
+        : '';
+    final sections = <String>[];
+    if (prevLine.isNotEmpty) {
+      sections.add('上文：$prevLine');
+    }
+    if (refLines.isNotEmpty) {
+      sections.add('参考下面的翻译：\n${refLines.join('\n')}');
+    }
+    final isCs2 = profile == CorpusProfile.cs2;
+    if (sections.isEmpty) {
+      final directive = switch (style) {
+        CaptionStyle.standard =>
+          '将以下文本翻译为简体中文，注意只需要输出翻译后的结果，不要额外解释：',
+        CaptionStyle.natural => isCs2
+            ? '请将以下文本翻译为流畅口语化的中文CS2电竞解说字幕，保留原意和比分数字，不要额外解释：'
+            : '请将以下文本翻译为自然流畅的中文口语字幕，保留原意和数字，不要额外解释：',
+        CaptionStyle.community => isCs2
+            ? '请将以下文本翻译为生动接地气的中文CS社区解说风格，可自然使用常见CS社区口语，不编造事实、不改动数字，不要额外解释：'
+            : '请将以下文本翻译为轻松生动、接地气的中文口语字幕，不编造事实或改动数字，不要额外解释：',
+      };
+      return '$directive\n$cleanCurrent';
+    }
+    final directive = switch (style) {
+      CaptionStyle.standard =>
+        '参考上面的信息，把下面的文本翻译成简体中文，注意不需要翻译上文，也不要额外解释：',
+      CaptionStyle.natural => isCs2
+          ? '参考上面的信息，把下面的文本翻译为流畅口语化的中文CS2电竞解说字幕，注意不需要翻译上文，保留原意和数字，也不要额外解释：'
+          : '参考上面的信息，把下面的文本翻译为自然流畅的中文口语字幕，注意不需要翻译上文，保留原意和数字，也不要额外解释：',
+      CaptionStyle.community => isCs2
+          ? '参考上面的信息，把下面的文本翻译为生动接地气的中文CS社区解说风格，可自然使用常见CS社区口语，注意不需要翻译上文，不编造事实、不改动数字，也不要额外解释：'
+          : '参考上面的信息，把下面的文本翻译为轻松生动、接地气的中文口语字幕，注意不需要翻译上文，不编造事实或改动数字，也不要额外解释：',
+    };
+    return '${sections.join('\n')}\n$directive\n$cleanCurrent';
+  }
+}
+
+bool isHyMtModelId(String modelId) => modelId.startsWith('hy-mt');
+
+String wrapHyMtChatTemplate(String userPrompt) {
+  final escaped = userPrompt
+      .replaceAll('<｜', '< ｜')
+      .replaceAll('｜>', '｜ >')
+      .replaceAll('<|', '< |')
+      .replaceAll('|>', '| >');
+  return '<｜hy_begin▁of▁sentence｜><｜hy_User｜>$escaped<｜hy_Assistant｜>';
 }
 
 String parseTranslationText(

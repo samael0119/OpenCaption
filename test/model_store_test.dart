@@ -267,4 +267,40 @@ void main() {
     expect(store.ready, isEmpty);
     expect(store.errors['fixture'], contains('所有下载源失败'));
   });
+
+  test(
+    'scanOrphanedModels and cleanupOrphanedModels delete deprecated weights while keeping active models',
+    () async {
+      await importModel(bytes);
+      await File('${temp.path}/source.bin').delete();
+      final orphanFile = File('${temp.path}/ggml-small-q5_1.bin');
+      await orphanFile.writeAsBytes(List<int>.filled(128, 7));
+      final orphanReceipt = File('${temp.path}/ggml-small-q5_1.bin.verified');
+      await orphanReceipt.writeAsString('legacy-receipt');
+      final orphanDir = Directory('${temp.path}/legacy-qwen-dir');
+      await orphanDir.create(recursive: true);
+      await File('${orphanDir.path}/weights.gguf').writeAsBytes(
+        List<int>.filled(256, 9),
+      );
+
+      await store.scanOrphanedModels();
+      expect(store.orphanedCount, 2);
+      expect(
+        store.orphanedBytes,
+        128 + 'legacy-receipt'.length + 256,
+      );
+
+      final freed = await store.cleanupOrphanedModels();
+      expect(freed, 128 + 'legacy-receipt'.length + 256);
+      expect(store.orphanedBytes, 0);
+      expect(store.orphanedCount, 0);
+      expect(await orphanFile.exists(), isFalse);
+      expect(await orphanReceipt.exists(), isFalse);
+      expect(await orphanDir.exists(), isFalse);
+
+      // Active catalog model and its receipt remain untouched.
+      expect(await File(store.path('fixture')).readAsBytes(), bytes);
+      expect(await File('${store.path('fixture')}.verified').exists(), isTrue);
+    },
+  );
 }

@@ -8,6 +8,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 import '../models/model_store.dart';
 import '../platform/engine.g.dart';
 import 'appearance.dart';
+import 'asr_normalizer.dart';
 import 'build_config.dart';
 import 'captions.dart';
 import 'caption_style.dart';
@@ -122,10 +123,57 @@ class SessionController extends ChangeNotifier implements EngineEvents {
     if (initialized) _updateEndToEndHints();
   }
 
+  // Sticky 5-minute match memory for decoupled mode (unlike E2E's short 45s/90s
+  // anti-pollution hint TTL, decoupled mode does not prompt-inject the ASR, so
+  // keeping detected CS2 teams and map alive across a 5-minute match span makes
+  // phonetic normalizers and map-specific callouts stay accurate).
+  static const _decoupledContextTtlMs = 300000;
+  final Map<String, int> _decoupledTeamSeenAt = {};
+  String? _decoupledMap;
+  int _decoupledMapSeenAt = 0;
+
+  List<String> _activeDecoupledTeams(int nowMs) {
+    _decoupledTeamSeenAt.removeWhere(
+      (_, seenAt) => nowMs - seenAt > _decoupledContextTtlMs,
+    );
+    return List.unmodifiable(_decoupledTeamSeenAt.keys);
+  }
+
+  String? _activeDecoupledMap(int nowMs) {
+    if (_decoupledMap != null && nowMs - _decoupledMapSeenAt > _decoupledContextTtlMs) {
+      _decoupledMap = null;
+    }
+    return _manualMap ?? _decoupledMap;
+  }
+
+  void _observeDecoupledMatch(String text, int endMs) {
+    if (corpusProfile != CorpusProfile.cs2) return;
+    final matches = corpus.match(text, limit: 12, profile: corpusProfile);
+    for (final term in matches) {
+      final cat = term['category'];
+      final name = term['english'] as String? ?? '';
+      if (cat == 'team' && name.isNotEmpty) {
+        _decoupledTeamSeenAt[name] = endMs;
+        if (_decoupledTeamSeenAt.length > 3) {
+          final oldest = _decoupledTeamSeenAt.entries.reduce(
+            (a, b) => a.value <= b.value ? a : b,
+          );
+          _decoupledTeamSeenAt.remove(oldest.key);
+        }
+      } else if (cat == 'map' && corpus.isSceneMap(term) && name.isNotEmpty) {
+        _decoupledMap = name;
+        _decoupledMapSeenAt = endMs;
+      }
+    }
+  }
+
   void _resetAssistance({bool clearInjected = true, int floorMs = 0}) {
     _assistanceFloorMs = floorMs;
     _recentEnglish.clear();
     _recentClockMs = _recentFloorMs = floorMs;
+    _decoupledTeamSeenAt.clear();
+    _decoupledMap = null;
+    _decoupledMapSeenAt = 0;
     if (clearInjected) {
       _hintedConcepts.clear();
     }
@@ -155,6 +203,7 @@ class SessionController extends ChangeNotifier implements EngineEvents {
           'sourceArgb': sourceSubtitleColor.argb,
           'translationArgb': translationSubtitleColor.argb,
         });
+        await applyFontSize(explicit: false);
       }
       await _playback.invokeMethod<void>(
         playbackAudio ? 'start' : 'microphone',
@@ -176,14 +225,26 @@ class SessionController extends ChangeNotifier implements EngineEvents {
   );
   final Map<String, int> metrics = {};
   final Map<String, String> _translationPayloads = {};
+  final Map<String, int> _itemOrder = {};
   final Queue<String> _translationQueue = Queue<String>();
-  final List<Completer<void>> _translationWaiters = [];
   String? _activeTranslationId;
+  int _lastOverlayTranslatedOrder = -1;
   late CorpusIndex corpus;
-  TranslationMode mode = TranslationMode.mlKit;
+  CaptionPipeline pipeline = CaptionPipeline.gemmaE2e;
+  TranslationMode mode = TranslationMode.qwen;
   SessionPhase phase = SessionPhase.idle;
-  String asrId = 'small.en-q5',
-      localTranslationId = 'qwen2.5-0.5b-q4',
+  String _e2eModelId = 'gemma-4-e2b-litert';
+  String _decoupledAsrId = 'parakeet-tdt-v3-int8';
+  String get asrId => endToEnd ? _e2eModelId : _decoupledAsrId;
+  set asrId(String value) {
+    if (endToEnd) {
+      _e2eModelId = value;
+    } else {
+      _decoupledAsrId = value;
+    }
+  }
+
+  String localTranslationId = 'hy-mt1.5-1.8b-q4',
       contextHint = '',
       message = '',
       sessionId = '';
@@ -221,13 +282,75 @@ class SessionController extends ChangeNotifier implements EngineEvents {
   bool get running =>
       phase == SessionPhase.listening || phase == SessionPhase.waiting;
   String get backendFlavor => appFlavor ?? 'cascade';
+  bool get supportsPipelineSwitch => backendFlavor == 'gemmaE2E';
   bool get endToEnd =>
-      backendFlavor == 'gemmaE2E' || backendFlavor == 'qwenE2E';
+      backendFlavor == 'qwenE2E' ||
+      (backendFlavor == 'gemmaE2E' && pipeline == CaptionPipeline.gemmaE2e);
+  bool get _needsDecoupledTranslation =>
+      captionTask != 'english' && captionTask != 'chinese';
   String get requiredModelKind => endToEnd ? 'e2e-$backendFlavor' : 'asr';
-  String get selectedAsrLabel =>
-      models.catalog.firstWhere((model) => model.id == asrId).label;
-  ModelSpec get selectedLocalTranslation =>
-      models.catalog.firstWhere((model) => model.id == localTranslationId);
+  bool get activeModelsReady {
+    if (!models.ready.contains(asrId)) return false;
+    if (endToEnd || !_needsDecoupledTranslation) return true;
+    return switch (mode) {
+      TranslationMode.qwen => models.ready.contains(localTranslationId),
+      TranslationMode.mlKit => mlReady,
+      TranslationMode.external => true,
+    };
+  }
+
+  void setPipeline(CaptionPipeline value) {
+    if (!supportsPipelineSwitch || pipeline == value) return;
+    pipeline = value;
+    _ensureValidModelSelections();
+    notifyListeners();
+  }
+
+  void _ensureValidModelSelections() {
+    if (models.catalog.isEmpty) return;
+    final e2eKind = 'e2e-$backendFlavor';
+    if (models.catalog.any((s) => s.kind == e2eKind) &&
+        !models.catalog.any((s) => s.id == _e2eModelId && s.kind == e2eKind)) {
+      _e2eModelId = models.catalog
+          .firstWhere((s) => s.kind == e2eKind)
+          .id;
+    }
+    if (!models.catalog.any(
+      (s) => s.id == _decoupledAsrId && s.kind == 'asr',
+    )) {
+      _decoupledAsrId = models.catalog.any((s) => s.id == 'parakeet-tdt-v3-int8')
+          ? 'parakeet-tdt-v3-int8'
+          : models.catalog.any((s) => s.id == 'sensevoice-small-int8')
+          ? 'sensevoice-small-int8'
+          : models.catalog.firstWhere((s) => s.kind == 'asr').id;
+    }
+    if (!models.catalog.any(
+      (m) =>
+          m.id == localTranslationId &&
+          m.kind == 'translation' &&
+          m.runtimeSupported,
+    )) {
+      localTranslationId =
+          models.catalog.any(
+            (m) => m.id == 'hy-mt1.5-1.8b-q4' && m.runtimeSupported,
+          )
+          ? 'hy-mt1.5-1.8b-q4'
+          : models.catalog
+                .firstWhere((m) => m.kind == 'translation' && m.runtimeSupported)
+                .id;
+    }
+  }
+
+  String get selectedAsrLabel => models.catalog
+      .firstWhere(
+        (model) => model.id == asrId,
+        orElse: () => models.catalog.first,
+      )
+      .label;
+  ModelSpec get selectedLocalTranslation => models.catalog.firstWhere(
+    (model) => model.id == localTranslationId,
+    orElse: () => models.catalog.firstWhere((m) => m.kind == 'translation'),
+  );
   String get translationLabel => endToEnd
       ? switch (captionTask) {
           'english' => '$selectedAsrLabel（仅英文转写）',
@@ -235,9 +358,14 @@ class SessionController extends ChangeNotifier implements EngineEvents {
           'auto_zh' => '$selectedAsrLabel（原文＋中文）',
           _ => '$selectedAsrLabel（中英字幕）',
         }
+      : !_needsDecoupledTranslation
+      ? switch (captionTask) {
+          'chinese' => '$selectedAsrLabel（仅中文转写）',
+          _ => '$selectedAsrLabel（仅英文转写）',
+        }
       : switch (mode) {
           TranslationMode.mlKit => 'ML Kit 英中端侧翻译（无上下文）',
-          TranslationMode.qwen => '${selectedLocalTranslation.label}（术语与上下文）',
+          TranslationMode.qwen => '${selectedLocalTranslation.label}（动态术语）',
           TranslationMode.external =>
             service.model.trim().isEmpty
                 ? '外部兼容 API（尚未配置模型）'
@@ -260,13 +388,34 @@ class SessionController extends ChangeNotifier implements EngineEvents {
 
   Future<void> _initialize() async {
     EngineEvents.setUp(this);
+    _playback.setMethodCallHandler((call) async {
+      if (call.method == 'overlayFontSizeChanged') {
+        final value = (call.arguments as Map?)?['value'];
+        if (value is num) {
+          fontSize = value.toDouble().clamp(14, 36);
+          notifyListeners();
+          unawaited(savePreferences());
+        }
+      }
+      return null;
+    });
     await models.initialize();
     await loadCorpusAssets(rootBundle);
     final prefs = await SharedPreferences.getInstance();
-    fontSize = (prefs.getDouble('fontSize') ?? 24).clamp(20, 36);
+    fontSize = (prefs.getDouble('fontSize') ?? 24).clamp(14, 36);
+    try {
+      final savedOverlaySize = await _playback.invokeMethod<double>(
+        'getOverlayFontSize',
+      );
+      if (savedOverlaySize != null) {
+        fontSize = savedOverlaySize.clamp(14, 36);
+      }
+    } catch (_) {}
     showEnglish = prefs.getBool('showEnglish') ?? true;
     showChinese = prefs.getBool('showChinese') ?? true;
     if (!showEnglish && !showChinese) showChinese = true;
+    playbackAudio = prefs.getBool('playbackAudio') ?? false;
+    contextHint = prefs.getString('contextHint') ?? '';
     corpusProfile = CorpusProfile.fromId(prefs.getString('corpusProfile'));
     // Legacy false was the old default, not evidence of an explicit opt-out.
     if (prefs.getBool('auxiliaryV020Initialized') == true) {
@@ -296,39 +445,33 @@ class SessionController extends ChangeNotifier implements EngineEvents {
         ? savedCaptionTask!
         : 'bilingual';
     theme = prefs.getString('theme') ?? 'system';
+    pipeline = supportsPipelineSwitch
+        ? CaptionPipeline.fromId(prefs.getString('captionPipeline'))
+        : (backendFlavor == 'qwenE2E'
+              ? CaptionPipeline.gemmaE2e
+              : CaptionPipeline.decoupled);
     mode = switch (prefs.getString('translationMode')) {
       'qwen' => TranslationMode.qwen,
+      'mlKit' => TranslationMode.mlKit,
       'external' when externalTranslationEnabled => TranslationMode.external,
-      _ => TranslationMode.mlKit,
+      _ => TranslationMode.qwen,
     };
-    asrId = endToEnd
-        ? (backendFlavor == 'gemmaE2E'
-              ? 'gemma-4-e2b-litert'
-              : 'qwen2.5-omni-3b-mnn')
-        : prefs.getString('asrId') ?? asrId;
-    if (!models.catalog.any(
-      (s) => s.id == asrId && s.kind == requiredModelKind,
-    )) {
-      asrId = endToEnd
-          ? (backendFlavor == 'gemmaE2E'
-                ? 'gemma-4-e2b-litert'
-                : 'qwen2.5-omni-3b-mnn')
-          : 'small.en-q5';
-    }
+    _e2eModelId =
+        prefs.getString('e2eModelId') ??
+        (backendFlavor == 'qwenE2E'
+            ? 'qwen2.5-omni-3b-mnn'
+            : 'gemma-4-e2b-litert');
+    _decoupledAsrId =
+        prefs.getString('decoupledAsrId') ??
+        prefs.getString('asrId') ??
+        'parakeet-tdt-v3-int8';
     localTranslationId =
-        prefs.getString('localTranslationId') ?? localTranslationId;
-    if (!models.catalog.any(
-      (model) =>
-          model.id == localTranslationId &&
-          model.kind == 'translation' &&
-          model.runtimeSupported,
-    )) {
-      localTranslationId = 'qwen2.5-0.5b-q4';
-    }
+        prefs.getString('localTranslationId') ?? 'hy-mt1.5-1.8b-q4';
+    _ensureValidModelSelections();
     // Older builds could persist the external mode. Keep that preference
     // harmless while the feature is hidden from the current product UI.
     if (!externalTranslationEnabled && mode == TranslationMode.external) {
-      mode = TranslationMode.mlKit;
+      mode = TranslationMode.qwen;
     }
     final savedThreads = prefs.getInt('threads');
     threads = const {2, 4, 6, 8}.contains(savedThreads) ? savedThreads! : 4;
@@ -365,6 +508,8 @@ class SessionController extends ChangeNotifier implements EngineEvents {
     await p.setDouble('fontSize', fontSize);
     await p.setBool('showEnglish', showEnglish);
     await p.setBool('showChinese', showChinese);
+    await p.setBool('playbackAudio', playbackAudio);
+    await p.setString('contextHint', contextHint);
     // A transient bad asset is not a user opt-out. Persist their requested
     // selection so a repaired bundle can restore it without another prompt.
     await p.setString('corpusProfile', _corpusProfile.id);
@@ -380,12 +525,15 @@ class SessionController extends ChangeNotifier implements EngineEvents {
     await p.setString('captionStyle', captionStyle.name);
     await p.setBool('communityNicknames', communityNicknames);
     await p.setString('theme', theme);
+    await p.setString('captionPipeline', pipeline.id);
+    await p.setString('e2eModelId', _e2eModelId);
+    await p.setString('decoupledAsrId', _decoupledAsrId);
     await p.setString('asrId', asrId);
     await p.setString('localTranslationId', localTranslationId);
     await p.setString(
       'translationMode',
       !externalTranslationEnabled && mode == TranslationMode.external
-          ? TranslationMode.mlKit.name
+          ? TranslationMode.qwen.name
           : mode.name,
     );
     await p.setInt('threads', threads);
@@ -393,7 +541,9 @@ class SessionController extends ChangeNotifier implements EngineEvents {
     await p.setString('model', service.model);
     await p.setBool('localHttp', service.allowLocalHttp);
     await p.setInt('tokenBudget', service.tokenBudget);
-    await storage.write(key: 'external_api_key', value: service.apiKey);
+    try {
+      await storage.write(key: 'external_api_key', value: service.apiKey);
+    } catch (_) {}
     notifyListeners();
   }
 
@@ -417,6 +567,9 @@ class SessionController extends ChangeNotifier implements EngineEvents {
       metrics['corpus_load_errors'] = (metrics['corpus_load_errors'] ?? 0) + 1;
       message = _corpusFailureNotice;
     }
+    try {
+      await CaptionStyleRenderer.loadNicknames(bundle);
+    } catch (_) {}
     _resetAssistance(floorMs: _audioMs);
     _clearManualScene();
     if (initialized) _updateEndToEndHints();
@@ -427,14 +580,21 @@ class SessionController extends ChangeNotifier implements EngineEvents {
     if (!canConfigure) return;
     if (!models.ready.contains(asrId) ||
         (!endToEnd &&
+            _needsDecoupledTranslation &&
             ((mode == TranslationMode.qwen &&
                     !models.ready.contains(localTranslationId)) ||
                 (mode == TranslationMode.mlKit && !mlReady)))) {
-      message = endToEnd ? '请先准备所选语音模型' : '请先准备所选识别、人声检测与翻译模型';
+      message = endToEnd
+          ? '请先准备所选 Gemma 语音模型'
+          : _needsDecoupledTranslation
+          ? '请先准备所选语音识别与翻译模型'
+          : '请先准备所选语音识别模型';
       notifyListeners();
       return;
     }
-    if (!endToEnd && mode == TranslationMode.external) {
+    if (!endToEnd &&
+        _needsDecoupledTranslation &&
+        mode == TranslationMode.external) {
       try {
         service.endpoint;
       } catch (_) {
@@ -461,7 +621,9 @@ class SessionController extends ChangeNotifier implements EngineEvents {
       final preparation = Stopwatch()..start();
       final verification = Stopwatch()..start();
       await models.verifyForUse(asrId);
-      if (mode == TranslationMode.qwen) {
+      if (!endToEnd &&
+          _needsDecoupledTranslation &&
+          mode == TranslationMode.qwen) {
         await models.verifyForUse(localTranslationId);
       }
       if (e != epoch) return;
@@ -470,15 +632,22 @@ class SessionController extends ChangeNotifier implements EngineEvents {
         EngineConfig(
           asrPath: models.path(asrId),
           vadPath: '',
-          translationPath: !endToEnd && mode == TranslationMode.qwen
+          translationPath:
+              !endToEnd &&
+                  _needsDecoupledTranslation &&
+                  mode == TranslationMode.qwen
               ? models.path(localTranslationId)
               : '',
-          mode: endToEnd ? 'e2e' : mode.name,
+          mode: endToEnd
+              ? 'e2e'
+              : _needsDecoupledTranslation
+              ? mode.name
+              : 'asr_only',
           threads: threads,
           automaticAssist: _nativeAutomaticAssist,
           names: endToEnd
               ? _preparedHints()
-              : corpus.asrPrompt(contextHint, profile: corpusProfile),
+              : corpus.whisperPrompt(contextHint),
         ),
       );
       if (e != epoch) return;
@@ -492,8 +661,10 @@ class SessionController extends ChangeNotifier implements EngineEvents {
       _closedWindows.clear();
       _e2ePreview = null;
       _translationPayloads.clear();
+      _itemOrder.clear();
       _translationQueue.clear();
       _activeTranslationId = null;
+      _lastOverlayTranslatedOrder = -1;
       _recentEnglish.clear();
       metrics.clear();
       metrics['prepare_ms'] = preparationMs;
@@ -539,9 +710,8 @@ class SessionController extends ChangeNotifier implements EngineEvents {
     context.clear();
     notifyListeners();
     await host.pause();
-    await host.drain();
-    if (e != epoch) return;
     await host.cancel();
+    if (e != epoch) return;
     external.cancelAll();
     _translationQueue.clear();
     ledger.cancelEpoch(e);
@@ -578,15 +748,22 @@ class SessionController extends ChangeNotifier implements EngineEvents {
           EngineConfig(
             asrPath: models.path(asrId),
             vadPath: '',
-            translationPath: !endToEnd && mode == TranslationMode.qwen
+            translationPath:
+                !endToEnd &&
+                    _needsDecoupledTranslation &&
+                    mode == TranslationMode.qwen
                 ? models.path(localTranslationId)
                 : '',
-            mode: endToEnd ? 'e2e' : mode.name,
+            mode: endToEnd
+                ? 'e2e'
+                : _needsDecoupledTranslation
+                ? mode.name
+                : 'asr_only',
             threads: threads,
             automaticAssist: _nativeAutomaticAssist,
             names: endToEnd
                 ? _preparedHints()
-                : corpus.asrPrompt(contextHint, profile: corpusProfile),
+                : corpus.whisperPrompt(contextHint),
           ),
         );
         if (e != epoch) return;
@@ -629,9 +806,15 @@ class SessionController extends ChangeNotifier implements EngineEvents {
       level = 0;
       notifyListeners();
       await host.pause();
-      await host.drain();
+      await host.cancel();
+      external.cancelAll();
+      _translationQueue.clear();
+      ledger.cancelEpoch(epoch);
+    } else {
+      await host.cancel();
+      external.cancelAll();
+      _translationQueue.clear();
     }
-    await _waitForTranslations();
     stable.reset();
     context.clear();
     _finishSessionMetrics();
@@ -655,11 +838,12 @@ class SessionController extends ChangeNotifier implements EngineEvents {
     unawaited(host.release().catchError((_) {}));
     ledger.clear();
     _translationPayloads.clear();
+    _itemOrder.clear();
     _translationQueue.clear();
+    _lastOverlayTranslatedOrder = -1;
     _clearManualScene();
     _resetAssistance();
     phase = SessionPhase.idle;
-    contextHint = '';
     message = '';
     metrics.clear();
     notifyListeners();
@@ -671,6 +855,7 @@ class SessionController extends ChangeNotifier implements EngineEvents {
   void _pruneTranslationState() {
     final liveIds = ledger.items.map((item) => item.id).toSet();
     _translationPayloads.removeWhere((id, _) => !liveIds.contains(id));
+    _itemOrder.removeWhere((id, _) => !liveIds.contains(id));
     _translationQueue.removeWhere((id) => !liveIds.contains(id));
     metrics['translation_queue_depth'] = _translationQueue.length;
   }
@@ -715,6 +900,27 @@ class SessionController extends ChangeNotifier implements EngineEvents {
   void retryTranslation(Caption item) {
     final payload = _translationPayloads[item.id];
     if (payload == null || item.epoch != epoch) return;
+    if (item.english.isNotEmpty) {
+      final activeMap = _activeDecoupledMap(item.endMs);
+      final related = corpus.match(
+        item.english,
+        profile: corpusProfile,
+        map: activeMap,
+      );
+      _translationPayloads[item.id] =
+          mode == TranslationMode.qwen && isHyMtModelId(localTranslationId)
+          ? context.hyMtPrompt(
+              item.english,
+              related,
+              contextHint,
+              style: captionStyle,
+              profile: corpusProfile,
+              communityNicknames: communityNicknames,
+              nicknameSeed: item.sequence,
+              activeContext: _activeDecoupledTeams(item.endMs).join(' '),
+            )
+          : context.payload(item.english, related, contextHint);
+    }
     if (!ledger.retry(item.id, item.epoch, DateTime.now())) return;
     _enqueueTranslation(item.id);
     notifyListeners();
@@ -742,7 +948,7 @@ class SessionController extends ChangeNotifier implements EngineEvents {
     if (_revisions.keys.any((w) => w > event.window)) return;
     _revisions[event.window] = event.revision;
     _trimRecognitionState(event.window);
-    final english = stable.accept(
+    final rawEnglish = stable.accept(
       event.window,
       event.text,
       finalResult: event.finalResult,
@@ -751,24 +957,75 @@ class SessionController extends ChangeNotifier implements EngineEvents {
     if (event.finalResult) _closedWindows.add(event.window);
     if (stable.conflict) message = '识别结果发生冲突，已确认字幕保持不变';
     final assistanceChanged = _advanceAssistanceClock(event.endMs);
-    if (english.isNotEmpty) {
+    if (rawEnglish.isNotEmpty) {
+      final english = captionTask == 'chinese'
+          ? rawEnglish
+          : AsrPhoneticNormalizer.normalize(
+              rawEnglish,
+              profile: corpusProfile,
+              activeTeams: _activeDecoupledTeams(event.endMs),
+              contextHint: contextHint,
+            );
+      if (captionTask != 'chinese') {
+        _observeDecoupledMatch(english, event.endMs);
+      }
       final id = '$sessionId-$epoch-${_segment++}';
       final item = ledger.append(
         id: id,
         epoch: epoch,
         startMs: event.startMs,
         endMs: event.endMs,
-        english: english,
+        english: captionTask == 'chinese' ? '' : english,
         now: DateTime.now(),
       )!;
       _pruneTranslationState();
-      final related = corpus.match(english, profile: corpusProfile);
-      final payload = context.payload(english, related, contextHint);
-      _translationPayloads[item.id] = payload;
-      _rememberRecentEnglish(english, event.startMs, event.endMs);
-      _updateEndToEndHints();
-      if (running) context.add(english);
-      _enqueueTranslation(item.id);
+      if (!_needsDecoupledTranslation) {
+        ledger.start(item.id, epoch, DateTime.now());
+        ledger.complete(
+          item.id,
+          epoch,
+          text: captionTask == 'chinese' ? english : '',
+          allowEmpty: true,
+        );
+        if (playbackAudio) {
+          _showOverlay([
+            {'kind': 'source', 'text': english},
+          ]);
+        }
+      } else {
+        final activeMap = _activeDecoupledMap(event.endMs);
+        final related = corpus.match(
+          english,
+          profile: corpusProfile,
+          map: activeMap,
+        );
+        final payload =
+            mode == TranslationMode.qwen && isHyMtModelId(localTranslationId)
+            ? context.hyMtPrompt(
+                english,
+                related,
+                contextHint,
+                style: captionStyle,
+                profile: corpusProfile,
+                communityNicknames: communityNicknames,
+                nicknameSeed: item.sequence,
+                activeContext: _activeDecoupledTeams(event.endMs).join(' '),
+              )
+            : context.payload(english, related, contextHint);
+        _translationPayloads[item.id] = payload;
+        _itemOrder[item.id] = _segment;
+        _rememberRecentEnglish(english, event.startMs, event.endMs);
+        _updateEndToEndHints();
+        if (running) context.add(english);
+        if (playbackAudio &&
+            showEnglish &&
+            (!showChinese || _lastOverlayTranslatedOrder < 0)) {
+          _showOverlay([
+            {'kind': 'source', 'text': english},
+          ]);
+        }
+        _enqueueTranslation(item.id);
+      }
     } else if (assistanceChanged) {
       _updateEndToEndHints();
     }
@@ -999,18 +1256,7 @@ class SessionController extends ChangeNotifier implements EngineEvents {
       _activeTranslationId = null;
     }
     metrics['translation_queue_depth'] = 0;
-    for (final waiter in List<Completer<void>>.of(_translationWaiters)) {
-      if (!waiter.isCompleted) waiter.complete();
-    }
-    _translationWaiters.clear();
     notifyListeners();
-  }
-
-  Future<void> _waitForTranslations() async {
-    if (_activeTranslationId == null && _translationQueue.isEmpty) return;
-    final waiter = Completer<void>();
-    _translationWaiters.add(waiter);
-    await waiter.future;
   }
 
   Future<void> _translate(Caption item, String payload) async {
@@ -1021,25 +1267,83 @@ class SessionController extends ChangeNotifier implements EngineEvents {
           item.id,
           payload,
           service,
-          instruction: translationInstructionFor(corpusProfile),
+          instruction: translationInstructionFor(
+            corpusProfile,
+            style: captionStyle,
+          ),
         )).text;
       } else {
-        // Escape chat control markers inside user data before tokenization.
-        final escaped = payload.replaceAll('<|', '< |').replaceAll('|>', '| >');
-        final prompt =
-            '<|im_start|>system\n/no_think\n${translationInstructionFor(corpusProfile)}<|im_end|>\n'
-            '<|im_start|>user\n$escaped<|im_end|>\n'
-            '<|im_start|>assistant\n';
-        result = await host
-            .translate(item.epoch, item.id, item.english, prompt)
-            .timeout(const Duration(seconds: 45));
+        if (!endToEnd && mode == TranslationMode.qwen && _needsPrepare) {
+          await host.prepare(
+            EngineConfig(
+              asrPath: models.path(asrId),
+              vadPath: '',
+              translationPath: models.path(localTranslationId),
+              mode: mode.name,
+              threads: threads,
+              automaticAssist: _nativeAutomaticAssist,
+              names: corpus.whisperPrompt(contextHint),
+            ),
+          );
+          _needsPrepare = false;
+        }
+        if (isHyMtModelId(localTranslationId)) {
+          final prompt = wrapHyMtChatTemplate(payload);
+          result = await host
+              .translate(item.epoch, item.id, item.english, prompt)
+              .timeout(const Duration(seconds: 45));
+        } else {
+          // Escape chat control markers inside user data before tokenization.
+          final escaped = payload.replaceAll('<|', '< |').replaceAll('|>', '| >');
+          final prompt =
+              '<|im_start|>system\n/no_think\n${translationInstructionFor(corpusProfile, style: captionStyle)}<|im_end|>\n'
+              '<|im_start|>user\n$escaped<|im_end|>\n'
+              '<|im_start|>assistant\n';
+          result = await host
+              .translate(item.epoch, item.id, item.english, prompt)
+              .timeout(const Duration(seconds: 45));
+        }
       }
       if (item.epoch == epoch) {
-        ledger.complete(
-          item.id,
-          item.epoch,
-          text: parseTranslationText(result),
+        final parsed = parseTranslationText(
+          result,
+          allowNumeric: true,
+          preservedIdentifiers: corpus.preservedIdentifiers(
+            profile: corpusProfile,
+          ),
         );
+        final corrected = corpusProfile == CorpusProfile.none
+            ? parsed
+            : corpus.correctChinese(
+                item.english,
+                parsed,
+                profile: corpusProfile,
+                map: assistanceMap ?? _activeDecoupledMap(item.endMs),
+              );
+        final styled = CaptionStyleRenderer.render(
+          english: item.english,
+          chinese: corrected,
+          style: captionStyle,
+          nicknames: communityNicknames,
+          cs2: corpusProfile == CorpusProfile.cs2,
+          nicknameSeed: item.sequence,
+          activeContext:
+              '${_activeDecoupledTeams(item.endMs).join(' ')} $contextHint',
+        );
+        ledger.complete(item.id, item.epoch, text: styled);
+        final order = _itemOrder[item.id] ?? -1;
+        if (playbackAudio && order >= _lastOverlayTranslatedOrder) {
+          _lastOverlayTranslatedOrder = order;
+          final overlayLines = <Map<String, String>>[
+            if (showEnglish && item.english.isNotEmpty)
+              {'kind': 'source', 'text': item.english},
+            if (showChinese && styled.isNotEmpty)
+              {'kind': 'translation', 'text': styled},
+          ];
+          if (overlayLines.isNotEmpty) {
+            _showOverlay(overlayLines);
+          }
+        }
       }
     } catch (e) {
       if (item.epoch == epoch) {
@@ -1057,6 +1361,15 @@ class SessionController extends ChangeNotifier implements EngineEvents {
           }
         } else {
           ledger.complete(item.id, item.epoch, error: code);
+          if (playbackAudio &&
+              showEnglish &&
+              item.english.isNotEmpty &&
+              ledger.items.isNotEmpty &&
+              ledger.items.last.id == item.id) {
+            _showOverlay([
+              {'kind': 'source', 'text': item.english},
+            ]);
+          }
           if (code == 'translation_timeout') {
             external.cancel(item.id);
             unawaited(host.cancelTranslation(item.id).catchError((_) {}));
@@ -1084,7 +1397,12 @@ class SessionController extends ChangeNotifier implements EngineEvents {
   @override
   void interrupted(int epoch, String code) {
     if (epoch != this.epoch || !running) return;
-    _releaseOnPause = true;
+    // Only unload native weights on memory/thermal/background pressure.
+    // User-initiated overlay stop (`playback_stopped`) keeps the loaded
+    // translator warm so retrying an interrupted tail line or resuming is instant.
+    _releaseOnPause = code == 'memory_pressure' ||
+        code == 'thermal' ||
+        code == 'app_background';
     message = switch (code) {
       'app_background' => '应用离开前台，已暂停；返回后手动继续',
       'thermal' => '手机温度过高，已暂停；请降温后继续',
@@ -1275,6 +1593,23 @@ class SessionController extends ChangeNotifier implements EngineEvents {
     }
   }
 
+  void setFontSize(double value) {
+    fontSize = value.clamp(14, 36);
+    notifyListeners();
+    unawaited(applyFontSize(explicit: true));
+  }
+
+  Future<void> applyFontSize({bool explicit = true}) async {
+    try {
+      await _playback.invokeMethod<void>('fontSize', {
+        'value': fontSize.clamp(14, 36),
+        'explicit': explicit,
+      });
+    } on MissingPluginException {
+      // Older/non-Android builds apply the value on the next capture start.
+    }
+  }
+
   Future<void> applySubtitleColors() async {
     try {
       await _playback.invokeMethod<void>('colors', {
@@ -1294,6 +1629,7 @@ class SessionController extends ChangeNotifier implements EngineEvents {
     _ticker?.cancel();
     external.cancelAll();
     EngineEvents.setUp(null);
+    _playback.setMethodCallHandler(null);
     unawaited(host.release().catchError((_) {}));
     models.dispose();
     super.dispose();

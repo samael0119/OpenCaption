@@ -8,6 +8,7 @@ import io.flutter.plugin.common.MethodChannel
 import android.app.Activity
 import android.content.Intent
 import android.graphics.Color
+import android.media.projection.MediaProjectionConfig
 import android.media.projection.MediaProjectionManager
 import android.os.Build
 import android.os.SystemClock
@@ -27,11 +28,23 @@ class MainActivity : FlutterActivity() {
         private set
     override fun configureFlutterEngine(flutterEngine: FlutterEngine) {
         super.configureFlutterEngine(flutterEngine)
+        runCatching {
+            assets.open("flutter_assets/assets/corpora/cs2_player_nicknames.json")
+                .bufferedReader().use { CaptionStyle.loadFromJson(it.readText()) }
+        }
         val messenger = flutterEngine.dartExecutor.binaryMessenger
         captions = CaptionEngine(this, EngineEvents(messenger))
         EngineHost.setUp(messenger, captions)
         PlaybackCaptionService.stopped = { code -> if (playbackSelected) captions?.interrupt(code) }
-        MethodChannel(messenger, "dev.opencaption/playback").setMethodCallHandler { call, result ->
+        val playbackChannel = MethodChannel(messenger, "dev.opencaption/playback")
+        PlaybackCaptionService.onFontSizeChanged = { sp ->
+            runOnUiThread {
+                runCatching {
+                    playbackChannel.invokeMethod("overlayFontSizeChanged", mapOf("value" to sp.toDouble()))
+                }
+            }
+        }
+        playbackChannel.setMethodCallHandler { call, result ->
             when (call.method) {
                 "captionStyle" -> {
                     val style = call.argument<String>("style")
@@ -105,6 +118,20 @@ class MainActivity : FlutterActivity() {
                     PlaybackCaptionService.instance?.setBackgroundOpacity(value)
                     result.success(null)
                 }
+                "fontSize" -> {
+                    val sp = (call.argument<Number>("value")?.toFloat() ?: 20f).coerceIn(14f, 36f)
+                    val explicit = call.argument<Boolean>("explicit") != false
+                    if (explicit) {
+                        PlaybackCaptionService.saveFontSize(this, sp)
+                        PlaybackCaptionService.instance?.setFontSize(sp)
+                    } else {
+                        PlaybackCaptionService.requestedFontSize = sp
+                    }
+                    result.success(null)
+                }
+                "getOverlayFontSize" -> {
+                    result.success(PlaybackCaptionService.savedFontSize(this)?.toDouble())
+                }
                 "colors" -> {
                     val source = call.argument<Number>("sourceArgb")?.toInt()
                         ?: Color.rgb(255, 224, 130)
@@ -165,7 +192,13 @@ class MainActivity : FlutterActivity() {
     private fun requestProjection() {
         if (playbackResult == null) return
         try {
-            startActivityForResult(getSystemService(MediaProjectionManager::class.java).createScreenCaptureIntent(), 702)
+            val manager = getSystemService(MediaProjectionManager::class.java)
+            val intent = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.UPSIDE_DOWN_CAKE) {
+                manager.createScreenCaptureIntent(MediaProjectionConfig.createConfigForDefaultDisplay())
+            } else {
+                manager.createScreenCaptureIntent()
+            }
+            startActivityForResult(intent, 702)
         } catch (error: Exception) {
             playbackResult?.error("projection_unavailable", error.message, null); playbackResult=null
         }
@@ -191,7 +224,7 @@ class MainActivity : FlutterActivity() {
     }
     override fun onDestroy() {
         playbackResult?.error("activity_destroyed", "页面已关闭，请重新授权", null); playbackResult=null
-        PlaybackCaptionService.ready=null; PlaybackCaptionService.stopped=null
+        PlaybackCaptionService.ready=null; PlaybackCaptionService.stopped=null; PlaybackCaptionService.onFontSizeChanged=null
         stopPlayback(); captions?.destroy(); super.onDestroy()
     }
     override fun onRequestPermissionsResult(requestCode: Int, permissions: Array<out String>, grantResults: IntArray) {

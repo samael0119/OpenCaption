@@ -12,6 +12,21 @@ enum CaptionStatus { queued, translating, ready, failed, gap }
 
 enum TranslationMode { mlKit, qwen, external }
 
+enum CaptionPipeline {
+  gemmaE2e('gemma_e2e', '端到端 · Gemma 4'),
+  decoupled('decoupled', '听译分离 · ONNX + HY-MT');
+
+  const CaptionPipeline(this.id, this.label);
+
+  final String id;
+  final String label;
+
+  static CaptionPipeline fromId(String? id) => switch (id) {
+    'decoupled' => CaptionPipeline.decoupled,
+    _ => CaptionPipeline.gemmaE2e,
+  };
+}
+
 class Caption {
   Caption({
     required this.id,

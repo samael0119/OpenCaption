@@ -63,6 +63,19 @@ void main() {
         await tester.pumpAndSettle();
         expect(c.communityNicknames, isFalse);
         expect(c.captionStyle, CaptionStyle.community);
+
+        c.setFontSize(18);
+        await tester.pumpAndSettle();
+        expect(c.fontSize, 18);
+        expect(
+          calls.any(
+            (call) =>
+                call.method == 'fontSize' &&
+                (call.arguments as Map)['value'] == 18.0 &&
+                (call.arguments as Map)['explicit'] == true,
+          ),
+          isTrue,
+        );
         expect(tester.takeException(), isNull);
         await tester.pumpWidget(const SizedBox());
         c.dispose();

@@ -82,3 +82,37 @@ class E2eAudioQueue(private val maxSamples: Int = 80000, private val maxAgeMs: L
 
     @Synchronized fun pendingCount(): Int = if (pending == null) 0 else 1
 }
+
+/** Rejects Whisper greedy repetition loops such as "A main A main A main...". */
+internal fun isRepetitiveAsrHallucination(text: String): Boolean {
+    val words = text.lowercase()
+        .replace(Regex("[^\\p{L}\\p{N}\\s']+"), " ")
+        .trim()
+        .split(Regex("\\s+"))
+        .filter { it.isNotEmpty() }
+    if (words.size < 6) return false
+    for (n in 1..3) {
+        if (words.size < n * 4) continue
+        var runs = 1
+        var i = n
+        while (i + n <= words.size) {
+            var same = true
+            for (k in 0 until n) {
+                if (words[i + k] != words[i - n + k]) { same = false; break }
+            }
+            if (same) {
+                runs++
+                if (runs >= 4) return true
+                i += n
+            } else {
+                runs = 1
+                i++
+            }
+        }
+    }
+    if (words.size >= 10) {
+        val uniqueRatio = words.toSet().size.toDouble() / words.size
+        if (uniqueRatio <= 0.25) return true
+    }
+    return false
+}

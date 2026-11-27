@@ -71,7 +71,7 @@ android {
         create("gemmaE2E") {
             dimension = "engine"
             applicationIdSuffix = ".gemma"
-            manifestPlaceholders["appLabel"] = "OpenCaption · Gemma E2E"
+            manifestPlaceholders["appLabel"] = "OpenCaption"
         }
         create("qwenE2E") {
             dimension = "engine"

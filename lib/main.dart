@@ -12,6 +12,7 @@ import 'core/session_controller.dart';
 import 'core/corpus.dart';
 import 'core/caption_style.dart';
 import 'core/translation.dart';
+import 'models/model_store.dart';
 import 'widgets/caption_transcript.dart';
 import 'widgets/scene_controls.dart';
 
@@ -103,6 +104,7 @@ class _CaptionPaintBox extends RenderProxyBox {
 class _CaptionShellState extends State<CaptionShell> {
   SessionController get c => widget.controller;
   final scroll = ScrollController();
+  final _hintController = TextEditingController();
   bool following = true;
   bool diagnosticsExpanded = false;
   int unread = 0, seen = 0;
@@ -111,11 +113,12 @@ class _CaptionShellState extends State<CaptionShell> {
   @override
   void dispose() {
     scroll.dispose();
+    _hintController.dispose();
     super.dispose();
   }
 
   Future<void> _begin() async {
-    if (c.mode == TranslationMode.external) {
+    if (!c.endToEnd && c.mode == TranslationMode.external) {
       final agreed = await showDialog<bool>(
         context: context,
         builder: (context) => AlertDialog(
@@ -189,42 +192,9 @@ class _CaptionShellState extends State<CaptionShell> {
     );
   }
 
-  Widget _infoHint({
-    required String summary,
-    required String title,
-    required String details,
-  }) => _InfoHint(
-    summary: summary,
-    title: title,
-    onTap: () => unawaited(_showInfo(title, details)),
-  );
-
-  Widget _infoCard({
-    required String summary,
-    required String title,
-    required String details,
-  }) => Card(
-    clipBehavior: Clip.antiAlias,
-    child: InkWell(
-      onTap: () => unawaited(_showInfo(title, details)),
-      child: Padding(
-        padding: const EdgeInsets.all(18),
-        child: Row(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Expanded(
-              child: Text(
-                summary,
-                maxLines: 3,
-                overflow: TextOverflow.ellipsis,
-              ),
-            ),
-            const SizedBox(width: 12),
-            const Icon(Icons.info_outline),
-          ],
-        ),
-      ),
-    ),
+  Future<void> _openModels() => Navigator.push(
+    context,
+    MaterialPageRoute<void>(builder: (_) => ModelsPage(controller: c)),
   );
 
   Future<void> _leave() async {
@@ -292,7 +262,20 @@ class _CaptionShellState extends State<CaptionShell> {
         appBar: AppBar(
           title: const Text('OpenCaption'),
           actions: [
-            if (home && c.phase != SessionPhase.preparing)
+            if (home && c.phase != SessionPhase.preparing) ...[
+              IconButton(
+                tooltip: '使用与隐私说明',
+                onPressed: () => unawaited(
+                  _showInfo(
+                    '离线字幕说明',
+                    '1. 隐私与本地运行：音频默认完全在手机本地处理，不上传服务器；字幕仅保留在本次会话，返回首页后清除。\n\n'
+                        '2. 本设备音频（Android 10+）：授权系统投屏/音频采集后，可切到视频或直播 App 显示悬浮字幕，佩戴耳机也可使用；部分 App、通话或 DRM 内容禁止采集，锁屏可能中断采集。\n\n'
+                        '3. 引擎选择：听译分离（Whisper + HY-MT1.5）响应更快、术语更稳；端到端（Gemma 4）单模型直出，支持流式预览与社区外号风格。'
+                        '${diagnosticsEnabled ? '\n\n4. 测试日志：当前构建会在系统 Downloads 目录生成 opencaption_时间.log。' : ''}',
+                  ),
+                ),
+                icon: const Icon(Icons.info_outline),
+              ),
               IconButton(
                 tooltip: '设置',
                 onPressed: c.initialized
@@ -305,6 +288,7 @@ class _CaptionShellState extends State<CaptionShell> {
                     : null,
                 icon: const Icon(Icons.settings_outlined),
               ),
+            ],
             if (diagnosticsEnabled)
               IconButton(
                 tooltip: '诊断指标',
@@ -349,314 +333,448 @@ class _CaptionShellState extends State<CaptionShell> {
     );
   }
 
-  Widget _home() => ListView(
-    padding: const EdgeInsets.all(24),
-    children: [
-      const SizedBox(height: 20),
-      Text('听懂每一次采访', style: Theme.of(context).textTheme.headlineLarge),
-      const SizedBox(height: 12),
-      const Text('英语 → 简体中文 · 本地离线字幕'),
-      if (c.backendFlavor == 'gemmaE2E')
-        ListTile(
-          contentPadding: EdgeInsets.zero,
-          title: const Text('本设备音频 · 后台悬浮字幕'),
-          subtitle: _infoHint(
-            summary: 'Android 10+ · 插耳机可用 · 点击查看完整说明',
-            title: '本设备音频 · 后台悬浮字幕',
-            details:
-                '开始字幕并完成系统授权后，切换到直播 App 播放。此模式需要 Android 10+；系统弹窗可能称“录屏/投屏权限”，本应用只采集播放音频，不录制画面。佩戴耳机时也可使用，但目标 App 必须允许共享音频；部分 App、通话或 DRM 内容禁止采集，锁屏可能中断采集。',
-          ),
-          trailing: Switch(
-            value: c.playbackAudio,
-            onChanged: c.phase == SessionPhase.preparing
-                ? null
-                : (value) => setState(() => c.playbackAudio = value),
-          ),
-          onTap: c.phase == SessionPhase.preparing
-              ? null
-              : () => setState(() => c.playbackAudio = !c.playbackAudio),
-        ),
-      const SizedBox(height: 24),
-      _infoCard(
-        summary: c.playbackAudio
-            ? '后台模式可采集其它 App 播放音频，插耳机也可用；需系统授权。'
-            : '麦克风模式适合外放声音；耳机内音频无法通过麦克风获取。',
-        title: c.playbackAudio ? '本设备音频模式说明' : '麦克风模式说明',
-        details: c.playbackAudio
-            ? '开始字幕并完成系统授权后，切换到直播 App 播放。此模式需要 Android 10+；系统弹窗可能称“录屏/投屏权限”，本应用只采集播放音频，不录制画面。佩戴耳机时也可使用，但目标 App 必须允许共享音频；部分 App、通话或 DRM 内容禁止采集，锁屏可能中断采集。'
-            : '麦克风模式：将手机放在电脑或电视音箱附近，建议先从约 0.5 米开始。请保持 App 在前台；耳机内的声音无法通过麦克风收取。',
+  Widget _sectionPanel({
+    required BuildContext context,
+    required List<Widget> children,
+  }) {
+    final scheme = Theme.of(context).colorScheme;
+    return Material(
+      color: scheme.surfaceContainerLow,
+      clipBehavior: Clip.antiAlias,
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(16),
+        side: BorderSide(color: scheme.outlineVariant.withValues(alpha: .6)),
       ),
-      const SizedBox(height: 16),
-      _runtimeModels(),
-      if (c.backendFlavor == 'gemmaE2E') ...[
-        const SizedBox(height: 12),
-        DropdownButtonFormField<String>(
-          initialValue: c.captionTask,
-          decoration: InputDecoration(
-            labelText: '语音任务',
-            helper: _infoHint(
-              summary: isTestBuild
-                  ? '共用已下载的 Gemma · 自动语言模式验证中'
-                  : '共用已下载的 Gemma · 点击查看各模式说明',
-              title: '语音任务',
-              details:
-                  '中英字幕：输出英文原文和简体中文译文。\n自动识别语言：识别输入语言，并在可翻译时提供中文和原文。\n仅英文转写：只输出英文原文，不执行翻译。\n仅中文转写：只输出中文转写，不执行翻译。\n所有模式共用当前已下载的 Gemma 模型，音频按顺序处理。',
-            ),
-          ),
-          items: [
-            const DropdownMenuItem(
-              value: 'bilingual',
-              child: Text('英文语音 → 中英字幕（默认）'),
-            ),
-            DropdownMenuItem(
-              value: 'auto_zh',
-              child: Text(
-                isTestBuild ? '自动识别语言 → 中文＋原文（验证中）' : '自动识别语言 → 中文＋原文',
-              ),
-            ),
-            const DropdownMenuItem(
-              value: 'english',
-              child: Text('仅英文转写 · 不执行翻译'),
-            ),
-            const DropdownMenuItem(
-              value: 'chinese',
-              child: Text('仅中文转写 · 不执行翻译'),
-            ),
-          ],
-          onChanged: c.phase == SessionPhase.preparing
-              ? null
-              : (value) {
-                  if (value == null) return;
-                  setState(() => c.captionTask = value);
-                  unawaited(c.savePreferences());
-                },
+      child: Padding(
+        padding: const EdgeInsets.all(16),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: children,
         ),
-      ],
-      const SizedBox(height: 12),
-      ExpansionTile(
-        tilePadding: EdgeInsets.zero,
-        title: const Text('补充上下文'),
-        subtitle: const Text('可选；选择术语库后自动参考字幕线索'),
-        children: [
-          TextField(
-            enabled: c.phase != SessionPhase.preparing,
-            maxLength: 240,
-            decoration: InputDecoration(
-              labelText: '场景或专名补充（可选）',
-              hintText: '如：XXX赛后采访 / XXX比赛，XXX VS XXX',
-              helper: _infoHint(
-                summary: '场景与专名提示 · 命令和无关内容会被忽略',
-                title: '前置上下文提示补充',
-                details:
-                    '可填写赛事、队伍、地图、采访场景或专有名词，例如“XXX比赛，XXX VS XXX”。模型加载后会把它作为不可信的场景数据提供给 Gemma，用于消歧；不会当作指令执行。命令、脚本、提示词注入、控制字符和过长内容会被自动忽略。',
-              ),
-              border: OutlineInputBorder(),
-            ),
-            onChanged: (v) => c.contextHint = v,
-          ),
-        ],
       ),
-      const SizedBox(height: 12),
-      DropdownButtonFormField<CorpusProfile>(
-        initialValue: c.corpusProfile,
-        decoration: InputDecoration(
-          labelText: '术语库',
-          helper: _infoHint(
-            summary: '选库即开启自动辅助 · 无需填写战队或地图',
-            title: '术语库',
-            details:
-                '选择 CS2 后默认开启相关术语检索、场景线索累积和已审核误译纠正。只发送近期相关的少量词条；线索不足保持未知，历史阵容快照不会直接确定当前战队。可在设置中关闭自动辅助。',
-          ),
-        ),
-        items: CorpusProfile.values
-            .map(
-              (profile) =>
-                  DropdownMenuItem(value: profile, child: Text(profile.label)),
-            )
-            .toList(),
-        onChanged: c.phase == SessionPhase.preparing
-            ? null
-            : (value) {
-                if (value == null) return;
-                setState(() => c.corpusProfile = value);
-                unawaited(c.savePreferences());
-              },
-      ),
-      if (c.endToEnd && c.corpusProfile == CorpusProfile.cs2)
-        Padding(
-          padding: const EdgeInsets.only(top: 8),
+    );
+  }
+
+  String _decoupledTranslatorChoice() => switch (c.mode) {
+    TranslationMode.qwen => 'local:${c.localTranslationId}',
+    TranslationMode.mlKit => 'mlKit',
+    TranslationMode.external => 'external',
+  };
+
+  List<DropdownMenuItem<String>> _decoupledTranslatorItems() {
+    final localModels = c.models.catalog.where(
+      (m) => m.kind == 'translation' && m.runtimeSupported,
+    );
+    return [
+      for (final model in localModels)
+        DropdownMenuItem(
+          value: 'local:${model.id}',
           child: Text(
-            c.autoTermHints ? '自动辅助已开启 · 线索不足时保持未知' : '自动辅助已关闭 · 可在设置中开启',
-            style: Theme.of(context).textTheme.bodySmall,
+            model.label,
+            overflow: TextOverflow.ellipsis,
           ),
         ),
-      const SizedBox(height: 12),
-      DropdownButtonFormField<String>(
-        isExpanded: true,
-        initialValue: c.asrId,
-        decoration: InputDecoration(
-          labelText: c.endToEnd ? '端到端语音模型' : '本地识别模型',
-          helper: _infoHint(
-            summary: c.models.ready.contains(c.asrId)
-                ? '已下载 · 本次字幕将使用此模型'
-                : '尚未下载 · 点击查看准备方式',
-            title: c.endToEnd ? '端到端语音模型' : '本地识别模型',
-            details: c.models.ready.contains(c.asrId)
-                ? '模型已下载并通过完整性校验。开始字幕时会按当前设备和模式加载它。'
-                : '请点击“准备与管理模型”，选择模型并等待下载、校验完成。下载期间应用会保持屏幕常亮；模型准备好后可断网运行。',
-          ),
-        ),
-        items: c.models.catalog
-            .where((m) => m.kind == c.requiredModelKind)
-            .map((m) => DropdownMenuItem(value: m.id, child: Text(m.label)))
-            .toList(),
-        onChanged: c.phase == SessionPhase.preparing
-            ? null
-            : (v) async {
-                setState(() => c.asrId = v!);
-                await c.savePreferences();
-              },
+      const DropdownMenuItem(
+        value: 'mlKit',
+        child: Text('ML Kit 端侧翻译（无上下文）', overflow: TextOverflow.ellipsis),
       ),
-      if (!c.endToEnd) ...[
-        const SizedBox(height: 16),
-        DropdownButtonFormField<TranslationMode>(
-          isExpanded: true,
-          initialValue: c.mode,
-          decoration: InputDecoration(
-            labelText: '英译中模型',
-            helper: _infoHint(
-              summary: '只影响已识别英文的翻译 · 不参与收音和英文识别',
-              title: '英译中模型',
-              details:
-                  '此设置只用于级联模式中已经确认的英文，不参与收音、语音活动判断或英文识别。Gemma 端到端模式不会显示此项。',
-            ),
-          ),
-          items: [
-            const DropdownMenuItem(
-              value: TranslationMode.mlKit,
-              child: Text('ML Kit 端侧翻译 · 启动快，不支持上下文'),
-            ),
-            const DropdownMenuItem(
-              value: TranslationMode.qwen,
-              child: Text('本地 GGUF · 支持术语和上下文'),
-            ),
-            if (externalTranslationEnabled)
-              const DropdownMenuItem(
-                value: TranslationMode.external,
-                child: Text('外部兼容 API · 使用自备模型服务'),
-              ),
-          ],
-          onChanged: c.phase == SessionPhase.preparing
-              ? null
-              : (v) async {
-                  setState(() => c.mode = v!);
-                  await c.savePreferences();
-                },
+      if (externalTranslationEnabled)
+        const DropdownMenuItem(
+          value: 'external',
+          child: Text('外部兼容 API', overflow: TextOverflow.ellipsis),
         ),
-        if (c.mode == TranslationMode.qwen) ...[
-          const SizedBox(height: 16),
-          DropdownButtonFormField<String>(
-            isExpanded: true,
-            initialValue: c.localTranslationId,
-            decoration: InputDecoration(
-              labelText: '本地翻译模型',
-              helper: _infoHint(
-                summary: c.models.ready.contains(c.localTranslationId)
-                    ? '已下载 · 本次字幕将使用此模型'
-                    : '尚未下载 · 点击查看准备方式',
-                title: '本地翻译模型',
-                details: c.models.ready.contains(c.localTranslationId)
-                    ? '模型已下载并通过完整性校验。级联模式会在英文识别完成后使用它生成译文。'
-                    : '请点击“准备与管理模型”，选择模型并等待下载、校验完成。',
-              ),
-            ),
-            items: c.models.catalog
-                .where(
-                  (model) =>
-                      model.kind == 'translation' && model.runtimeSupported,
-                )
-                .map(
-                  (model) => DropdownMenuItem(
-                    value: model.id,
-                    child: Text(model.label),
-                  ),
-                )
-                .toList(),
-            onChanged: c.phase == SessionPhase.preparing
-                ? null
-                : (value) async {
-                    setState(() => c.localTranslationId = value!);
-                    await c.savePreferences();
-                  },
-          ),
-        ],
-      ] else ...[
-        const SizedBox(height: 12),
-        _infoHint(
-          summary: '端到端处理 · 单模型串行生成字幕',
-          title: '端到端处理说明',
-          details:
-              'Gemma 端到端模式由同一个模型完成语音理解、英文转写和中文输出，不再启动独立的翻译模型。新的音频窗口按顺序进入队列，避免多个推理任务争抢内存和算力。',
-        ),
-      ],
-      const SizedBox(height: 16),
-      OutlinedButton.icon(
-        onPressed: c.phase == SessionPhase.preparing
-            ? null
-            : () => Navigator.push(
-                context,
-                MaterialPageRoute<void>(
-                  builder: (_) => ModelsPage(controller: c),
+    ];
+  }
+
+  Widget _home() {
+    final theme = Theme.of(context);
+    final scheme = theme.colorScheme;
+    final busy = c.phase == SessionPhase.preparing;
+    final ready = c.activeModelsReady;
+    final needsMt =
+        !c.endToEnd && c.captionTask != 'english' && c.captionTask != 'chinese';
+    final translatorItems = _decoupledTranslatorItems();
+    final currentTranslator = _decoupledTranslatorChoice();
+    final selectedTranslator = translatorItems.any(
+      (item) => item.value == currentTranslator,
+    )
+        ? currentTranslator
+        : translatorItems.first.value!;
+    return Column(
+      children: [
+        Expanded(
+          child: ListView(
+            padding: const EdgeInsets.fromLTRB(20, 12, 20, 20),
+            children: [
+              Text(
+                '离线实时字幕',
+                style: theme.textTheme.headlineMedium?.copyWith(
+                  fontWeight: FontWeight.w600,
                 ),
               ),
-        icon: const Icon(Icons.download_outlined),
-        label: const Text('准备与管理模型'),
-      ),
-      const SizedBox(height: 16),
-      _infoHint(
-        summary: isTestBuild ? '测试评测版 · 点击查看运行说明' : '本地离线字幕 · 点击查看隐私说明',
-        title: isTestBuild ? '测试评测版说明' : '本地离线字幕与隐私',
-        details: isTestBuild
-            ? '当前为测试评测版，模型组合仍需持续验证离线质量、延迟、功耗和长时间稳定性。若遇到异常，请保留 Downloads 目录中的最新日志。'
-            : '音频默认只在设备本地处理，不上传服务器；字幕只保留在当前会话，返回首页后会清除。后台模式还受目标 App、系统授权、锁屏和 DRM 限制。',
-      ),
-      if (c.message.isNotEmpty)
-        Padding(
-          padding: const EdgeInsets.symmetric(vertical: 12),
-          child: _infoHint(
-            summary: c.message,
-            title: '当前状态',
-            details: c.message,
+              const SizedBox(height: 4),
+              Text(
+                '本地推理 · 音频不上传',
+                style: theme.textTheme.bodyMedium?.copyWith(
+                  color: scheme.onSurfaceVariant,
+                ),
+              ),
+              const SizedBox(height: 16),
+              if (c.supportsPipelineSwitch) ...[
+                SegmentedButton<CaptionPipeline>(
+                  showSelectedIcon: false,
+                  segments: const [
+                    ButtonSegment(
+                      value: CaptionPipeline.decoupled,
+                      icon: Icon(Icons.tune, size: 18),
+                      label: Text('听译分离'),
+                    ),
+                    ButtonSegment(
+                      value: CaptionPipeline.gemmaE2e,
+                      icon: Icon(Icons.auto_awesome, size: 18),
+                      label: Text('端到端 Gemma'),
+                    ),
+                  ],
+                  selected: {c.pipeline},
+                  onSelectionChanged: busy
+                      ? null
+                      : (selected) async {
+                          c.setPipeline(selected.first);
+                          await c.savePreferences();
+                        },
+                ),
+                const SizedBox(height: 8),
+                Text(
+                  c.endToEnd
+                      ? 'Gemma 4 单模型直接听译，保留完整端到端流程'
+                      : '极速 ONNX 语音识别 + HY-MT1.5 动态术语翻译，更快更稳',
+                  style: theme.textTheme.bodySmall?.copyWith(
+                    color: scheme.onSurfaceVariant,
+                  ),
+                ),
+                const SizedBox(height: 12),
+              ],
+              _sectionPanel(
+                context: context,
+                children: [
+                  Row(
+                    children: [
+                      Icon(
+                        ready
+                            ? Icons.check_circle_outline
+                            : Icons.download_for_offline_outlined,
+                        size: 18,
+                        color: ready ? scheme.primary : scheme.error,
+                      ),
+                      const SizedBox(width: 8),
+                      Expanded(
+                        child: Text(
+                          ready ? '模型已就绪' : '所选模型尚未下载',
+                          style: theme.textTheme.titleSmall?.copyWith(
+                            color: ready ? scheme.primary : scheme.error,
+                          ),
+                        ),
+                      ),
+                      TextButton(
+                        onPressed: busy ? null : _openModels,
+                        style: TextButton.styleFrom(
+                          visualDensity: VisualDensity.compact,
+                        ),
+                        child: const Text('管理模型'),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 8),
+                  DropdownButtonFormField<String>(
+                    isExpanded: true,
+                    initialValue: c.asrId,
+                    key: ValueKey('asr-${c.requiredModelKind}-${c.asrId}'),
+                    decoration: InputDecoration(
+                      labelText: c.endToEnd ? '端到端语音模型' : '语音识别模型',
+                      isDense: true,
+                      border: const OutlineInputBorder(),
+                    ),
+                    items: c.models.catalog
+                        .where((m) => m.kind == c.requiredModelKind)
+                        .map(
+                          (m) => DropdownMenuItem(
+                            value: m.id,
+                            child: Text(
+                              m.label,
+                              overflow: TextOverflow.ellipsis,
+                            ),
+                          ),
+                        )
+                        .toList(),
+                    onChanged: busy
+                        ? null
+                        : (v) async {
+                            if (v == null) return;
+                            setState(() => c.asrId = v);
+                            await c.savePreferences();
+                          },
+                  ),
+                  if (needsMt) ...[
+                    const SizedBox(height: 12),
+                    DropdownButtonFormField<String>(
+                      isExpanded: true,
+                      initialValue: selectedTranslator,
+                      key: ValueKey('mt-$selectedTranslator'),
+                      decoration: const InputDecoration(
+                        labelText: '文本翻译模型',
+                        isDense: true,
+                        border: OutlineInputBorder(),
+                      ),
+                      items: translatorItems,
+                      onChanged: busy
+                          ? null
+                          : (value) async {
+                              if (value == null) return;
+                              setState(() {
+                                if (value == 'mlKit') {
+                                  c.mode = TranslationMode.mlKit;
+                                } else if (value == 'external') {
+                                  c.mode = TranslationMode.external;
+                                } else if (value.startsWith('local:')) {
+                                  c.mode = TranslationMode.qwen;
+                                  c.localTranslationId = value.substring(6);
+                                }
+                              });
+                              await c.savePreferences();
+                            },
+                    ),
+                  ],
+                ],
+              ),
+              const SizedBox(height: 12),
+              _sectionPanel(
+                context: context,
+                children: [
+                  if (c.backendFlavor == 'gemmaE2E') ...[
+                    Row(
+                      children: [
+                        Text('收音来源', style: theme.textTheme.titleSmall),
+                        const SizedBox(width: 8),
+                        Expanded(
+                          child: Text(
+                            c.playbackAudio ? '插耳机可用 · 悬浮窗' : '外放收音 · 前台',
+                            textAlign: TextAlign.end,
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                            style: theme.textTheme.bodySmall?.copyWith(
+                              color: scheme.onSurfaceVariant,
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 8),
+                    SegmentedButton<bool>(
+                      showSelectedIcon: false,
+                      segments: const [
+                        ButtonSegment(
+                          value: false,
+                          icon: Icon(Icons.mic_none, size: 18),
+                          label: Text('麦克风'),
+                        ),
+                        ButtonSegment(
+                          value: true,
+                          icon: Icon(Icons.hearing_outlined, size: 18),
+                          label: Text('本设备音频'),
+                        ),
+                      ],
+                      selected: {c.playbackAudio},
+                      onSelectionChanged: busy
+                          ? null
+                          : (selected) {
+                              setState(() => c.playbackAudio = selected.first);
+                              unawaited(c.savePreferences());
+                            },
+                    ),
+                    const SizedBox(height: 14),
+                  ],
+                  if (c.backendFlavor == 'gemmaE2E') ...[
+                    DropdownButtonFormField<String>(
+                      isExpanded: true,
+                      initialValue: c.captionTask,
+                      key: ValueKey('task-${c.captionTask}'),
+                      decoration: const InputDecoration(
+                        labelText: '语言任务',
+                        isDense: true,
+                        border: OutlineInputBorder(),
+                      ),
+                      items: const [
+                        DropdownMenuItem(
+                          value: 'bilingual',
+                          child: Text('英文语音 → 中英字幕'),
+                        ),
+                        DropdownMenuItem(
+                          value: 'auto_zh',
+                          child: Text('自动识别语言 → 中文＋原文'),
+                        ),
+                        DropdownMenuItem(
+                          value: 'english',
+                          child: Text('仅英文转写'),
+                        ),
+                        DropdownMenuItem(
+                          value: 'chinese',
+                          child: Text('仅中文转写'),
+                        ),
+                      ],
+                      onChanged: busy
+                          ? null
+                          : (value) {
+                              if (value == null) return;
+                              setState(() => c.captionTask = value);
+                              unawaited(c.savePreferences());
+                            },
+                    ),
+                    const SizedBox(height: 12),
+                  ],
+                  DropdownButtonFormField<CorpusProfile>(
+                    isExpanded: true,
+                    initialValue: c.corpusProfile,
+                    key: ValueKey('corpus-${c.corpusProfile.id}'),
+                    decoration: const InputDecoration(
+                      labelText: '领域术语',
+                      isDense: true,
+                      border: OutlineInputBorder(),
+                    ),
+                    items: CorpusProfile.values
+                        .map(
+                          (profile) => DropdownMenuItem(
+                            value: profile,
+                            child: Text(profile.label),
+                          ),
+                        )
+                        .toList(),
+                    onChanged: busy
+                        ? null
+                        : (value) {
+                            if (value == null) return;
+                            setState(() => c.corpusProfile = value);
+                            unawaited(c.savePreferences());
+                          },
+                  ),
+                  const SizedBox(height: 4),
+                  Theme(
+                    data: theme.copyWith(dividerColor: Colors.transparent),
+                    child: ExpansionTile(
+                      tilePadding: EdgeInsets.zero,
+                      childrenPadding: const EdgeInsets.only(top: 6),
+                      dense: true,
+                      title: Text(
+                        c.contextHint.trim().isEmpty
+                            ? '赛前上下文 / 专名提示（可选）'
+                            : '已填写上下文提示',
+                        style: theme.textTheme.bodyMedium?.copyWith(
+                          color: scheme.onSurfaceVariant,
+                        ),
+                      ),
+                      children: [
+                        Builder(
+                          builder: (context) {
+                            if (_hintController.text != c.contextHint) {
+                              _hintController.value = TextEditingValue(
+                                text: c.contextHint,
+                                selection: TextSelection.collapsed(
+                                  offset: c.contextHint.length,
+                                ),
+                              );
+                            }
+                            return TextField(
+                              controller: _hintController,
+                              enabled: !busy,
+                              maxLength: 240,
+                              decoration: const InputDecoration(
+                                hintText: '如：donk, sh1ro, NiKo, re-smoke=补烟',
+                                isDense: true,
+                                border: OutlineInputBorder(),
+                              ),
+                              onChanged: (v) {
+                                c.contextHint = v;
+                                unawaited(c.savePreferences());
+                              },
+                            );
+                          },
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
+              ),
+            ],
           ),
         ),
-      if (c.message.contains('权限'))
-        TextButton(
-          onPressed: c.host.openAppSettings,
-          child: const Text('去系统设置'),
-        ),
-      const SizedBox(height: 20),
-      FilledButton.icon(
-        onPressed: c.phase == SessionPhase.preparing ? null : _begin,
-        icon: const Icon(Icons.mic),
-        label: Padding(
-          padding: const EdgeInsets.all(14),
-          child: Text(c.phase == SessionPhase.preparing ? '正在准备…' : '开始字幕'),
-        ),
-      ),
-      if (diagnosticsEnabled)
-        Padding(
-          padding: const EdgeInsets.only(top: 8),
-          child: _infoHint(
-            summary: '测试版会生成运行日志 · 点击查看保存位置',
-            title: '测试日志',
-            details:
-                '测试版会在系统 Downloads 目录生成 opencaption_时间.log。若出现闪退、无字幕或长时间等待，请保留最新日志并记录对应的音频片段。正式版不会显示这条提示。',
+        Container(
+          padding: const EdgeInsets.fromLTRB(20, 10, 20, 16),
+          decoration: BoxDecoration(
+            color: scheme.surface,
+            border: Border(
+              top: BorderSide(color: scheme.outlineVariant.withValues(alpha: .5)),
+            ),
+          ),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              if (c.message.isNotEmpty) ...[
+                Container(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 12,
+                    vertical: 8,
+                  ),
+                  decoration: BoxDecoration(
+                    color: scheme.errorContainer.withValues(alpha: .7),
+                    borderRadius: BorderRadius.circular(10),
+                  ),
+                  child: Row(
+                    children: [
+                      Expanded(
+                        child: Text(
+                          c.message,
+                          style: theme.textTheme.bodySmall?.copyWith(
+                            color: scheme.onErrorContainer,
+                          ),
+                        ),
+                      ),
+                      if (c.message.contains('权限'))
+                        TextButton(
+                          onPressed: c.host.openAppSettings,
+                          child: const Text('去设置'),
+                        )
+                      else if (c.message.contains('准备所选'))
+                        TextButton(
+                          onPressed: busy ? null : _openModels,
+                          child: const Text('去下载'),
+                        ),
+                    ],
+                  ),
+                ),
+                const SizedBox(height: 10),
+              ],
+              FilledButton.icon(
+                onPressed: busy ? null : _begin,
+                icon: Icon(c.playbackAudio ? Icons.hearing : Icons.mic),
+                label: Padding(
+                  padding: const EdgeInsets.symmetric(vertical: 14),
+                  child: Text(
+                    busy
+                        ? '正在准备模型…'
+                        : c.playbackAudio
+                        ? '开始悬浮字幕'
+                        : '开始字幕',
+                  ),
+                ),
+              ),
+              if (busy)
+                TextButton(onPressed: c.end, child: const Text('取消准备')),
+            ],
           ),
         ),
-      if (c.phase == SessionPhase.preparing)
-        TextButton(onPressed: c.end, child: const Text('取消准备')),
-    ],
-  );
+      ],
+    );
+  }
 
   String _phaseLabel() => switch (c.phase) {
     SessionPhase.listening => '收音中 · ${c.playbackAudio ? '本设备音频' : '麦克风'}',
@@ -1147,52 +1265,6 @@ class _CaptionShellState extends State<CaptionShell> {
   );
 }
 
-class _InfoHint extends StatelessWidget {
-  const _InfoHint({
-    required this.summary,
-    required this.title,
-    required this.onTap,
-  });
-
-  final String summary;
-  final String title;
-  final VoidCallback onTap;
-
-  @override
-  Widget build(BuildContext context) {
-    final color = Theme.of(context).colorScheme.onSurfaceVariant;
-    return Semantics(
-      button: true,
-      label: '$title，点击查看完整说明',
-      child: InkWell(
-        onTap: onTap,
-        borderRadius: BorderRadius.circular(6),
-        child: Padding(
-          padding: const EdgeInsets.symmetric(vertical: 2),
-          child: Row(
-            children: [
-              Icon(Icons.info_outline, size: 15, color: color),
-              const SizedBox(width: 4),
-              Expanded(
-                child: Text(
-                  summary,
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                  style: Theme.of(
-                    context,
-                  ).textTheme.bodySmall?.copyWith(color: color),
-                ),
-              ),
-              const SizedBox(width: 2),
-              Icon(Icons.chevron_right, size: 16, color: color),
-            ],
-          ),
-        ),
-      ),
-    );
-  }
-}
-
 class ModelsPage extends StatefulWidget {
   const ModelsPage({super.key, required this.controller});
   final SessionController controller;
@@ -1205,6 +1277,7 @@ class _ModelsPageState extends State<ModelsPage> {
   bool mlBusy = false;
   String mlMessage = '';
   int _awakeOperations = 0;
+  late CaptionPipeline _tab = c.pipeline;
   SessionController get c => widget.controller;
 
   Future<T> _whileKeepingScreenOn<T>(Future<T> Function() operation) async {
@@ -1238,190 +1311,320 @@ class _ModelsPageState extends State<ModelsPage> {
       }
       c.mlReady = await c.host.mlKitReady();
     } catch (_) {
-      mlMessage = '语言包操作失败，请检查网络后重试；也可准备 Qwen 离线组合';
+      mlMessage = '语言包操作失败，请检查网络后重试；推荐使用 HY-MT1.5 本地离线翻译模型';
     }
     if (mounted) setState(() => mlBusy = false);
   }
 
-  @override
-  Widget build(BuildContext context) => Scaffold(
-    appBar: AppBar(title: const Text('模型准备')),
-    body: AnimatedBuilder(
-      animation: c.models,
-      builder: (context, _) => ListView(
-        padding: const EdgeInsets.all(20),
-        children: [
-          Text(
-            c.endToEnd
-                ? '模型准备好后可断网运行。实时字幕优先选择 Gemma 4 E2B；E4B 更偏向质量优先。下载优先使用魔搭国内源，不可用时自动切换备用源。'
-                : '模型准备好后可断网运行。下载源会按优先级测速，并自动切换可用备用源。',
-          ),
-          const SizedBox(height: 16),
-          DropdownButtonFormField<String>(
-            initialValue: c.asrId,
-            decoration: const InputDecoration(labelText: '本地识别候选'),
-            items: c.models.catalog
-                .where((m) => m.kind == c.requiredModelKind)
-                .map(
-                  (m) => DropdownMenuItem(
-                    value: m.id,
-                    child: Text(m.recommended ? '${m.label} · 推荐' : m.label),
-                  ),
-                )
-                .toList(),
-            onChanged: (v) async {
-              setState(() => c.asrId = v!);
-              await c.savePreferences();
-            },
-          ),
-          const SizedBox(height: 16),
-          ...c.models.catalog
-              .where(
-                (m) => c.endToEnd
-                    ? m.kind == c.requiredModelKind
-                    : !m.kind.startsWith('e2e-'),
-              )
-              .map((m) {
-                final busy = c.models.progress.containsKey(m.id),
-                    ready = c.models.ready.contains(m.id);
-                final selected =
-                    m.id == c.asrId ||
-                    (m.id == c.localTranslationId &&
-                        c.mode == TranslationMode.qwen);
-                return Card(
-                  child: Padding(
-                    padding: const EdgeInsets.all(16),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          m.label,
-                          style: Theme.of(context).textTheme.titleMedium,
-                        ),
-                        Text(
-                          '${(m.size / 1000000).toStringAsFixed(1)} MB · ${ready ? '已准备' : '未准备'}',
-                        ),
-                        if (m.description.isNotEmpty)
-                          Text(
-                            m.description,
-                            style: Theme.of(context).textTheme.bodyMedium,
-                          ),
-                        if (!m.runtimeSupported)
-                          Text(
-                            m.unavailableReason,
-                            style: TextStyle(
-                              color: Theme.of(context).colorScheme.error,
-                            ),
-                          ),
-                        if (m.recommended)
-                          const Chip(label: Text('优先推荐 · 实时首选')),
-                        if (selected)
-                          Chip(
-                            label: Text(m.kind == 'asr' ? '当前识别模型' : '当前翻译模型'),
-                          ),
-                        if (busy)
-                          LinearProgressIndicator(
-                            value: c.models.progress[m.id],
-                          ),
-                        if (c.models.states[m.id] != null)
-                          Text(c.models.states[m.id]!),
-                        if (c.models.activeSources[m.id] != null)
-                          Text('来源：${c.models.activeSources[m.id]}'),
-                        if (c.models.errors[m.id] != null)
-                          Text(c.models.errors[m.id]!),
-                        Wrap(
-                          spacing: 8,
-                          children: [
-                            TextButton(
-                              onPressed: !m.runtimeSupported
-                                  ? null
-                                  : busy
-                                  ? () => c.models.cancel(m.id)
-                                  : () => _installModel(m.id),
-                              child: Text(
-                                busy
-                                    ? '取消'
-                                    : ready
-                                    ? '重新下载'
-                                    : '下载',
-                              ),
-                            ),
-                            TextButton(
-                              onPressed: !m.runtimeSupported || busy
-                                  ? null
-                                  : () async {
-                                      final file = await openFile(
-                                        acceptedTypeGroups: [
-                                          const XTypeGroup(
-                                            label: '模型',
-                                            extensions: [
-                                              'bin',
-                                              'gguf',
-                                              'litertlm',
-                                            ],
-                                          ),
-                                        ],
-                                      );
-                                      if (file != null) {
-                                        await _installModel(
-                                          m.id,
-                                          importPath: file.path,
-                                        );
-                                      }
-                                    },
-                              child: const Text('导入'),
-                            ),
-                            if (ready)
-                              TextButton(
-                                onPressed: busy
-                                    ? null
-                                    : () => c.models.delete(m.id),
-                                child: const Text('删除'),
-                              ),
-                          ],
-                        ),
-                      ],
-                    ),
-                  ),
-                );
-              }),
-          if (!c.endToEnd)
-            Card(
-              child: Padding(
-                padding: const EdgeInsets.all(16),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text('ML Kit 英中翻译 · ${c.mlReady ? '已准备' : '未准备'}'),
-                    const Text(
-                      'Google 端侧 SDK 的语言包由 SDK 自行下载，应用无法替换下载源。国内网络若下载失败，建议使用上方 Qwen 本地翻译模型。',
-                    ),
-                    if (mlBusy) const LinearProgressIndicator(),
-                    if (mlMessage.isNotEmpty) Text(mlMessage),
-                    Wrap(
-                      children: [
-                        TextButton(
-                          onPressed: mlBusy ? null : () => _ml(false),
-                          child: const Text('Wi-Fi 下载语言包'),
-                        ),
-                        if (c.mlReady)
-                          TextButton(
-                            onPressed: mlBusy ? null : () => _ml(true),
-                            child: const Text('删除语言包'),
-                          ),
-                      ],
-                    ),
-                    const Text('翻译由 Google 提供。'),
-                    if (c.mode == TranslationMode.mlKit)
-                      const Chip(label: Text('当前翻译模型')),
-                  ],
+  Widget _modelCard(ModelSpec m) {
+    final theme = Theme.of(context);
+    final scheme = theme.colorScheme;
+    final busy = c.models.progress.containsKey(m.id);
+    final ready = c.models.ready.contains(m.id);
+    final selected =
+        m.id == c.asrId ||
+        (!c.endToEnd &&
+            m.id == c.localTranslationId &&
+            c.mode == TranslationMode.qwen);
+    return Card(
+      margin: const EdgeInsets.only(bottom: 12),
+      elevation: 0,
+      color: scheme.surfaceContainerLow,
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(14),
+        side: BorderSide(
+          color: selected
+              ? scheme.primary.withValues(alpha: .7)
+              : scheme.outlineVariant.withValues(alpha: .5),
+        ),
+      ),
+      child: Padding(
+        padding: const EdgeInsets.all(14),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Expanded(
+                  child: Text(m.label, style: theme.textTheme.titleMedium),
                 ),
+                const SizedBox(width: 8),
+                Text(
+                  ready ? '已就绪' : '未下载',
+                  style: theme.textTheme.labelMedium?.copyWith(
+                    color: ready ? scheme.primary : scheme.onSurfaceVariant,
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 4),
+            Text(
+              '${(m.size / 1000000).toStringAsFixed(1)} MB',
+              style: theme.textTheme.bodySmall?.copyWith(
+                color: scheme.onSurfaceVariant,
               ),
             ),
-        ],
+            if (m.description.isNotEmpty) ...[
+              const SizedBox(height: 6),
+              Text(m.description, style: theme.textTheme.bodySmall),
+            ],
+            if (!m.runtimeSupported) ...[
+              const SizedBox(height: 6),
+              Text(
+                m.unavailableReason,
+                style: theme.textTheme.bodySmall?.copyWith(color: scheme.error),
+              ),
+            ],
+            if (m.recommended || selected) ...[
+              const SizedBox(height: 8),
+              Wrap(
+                spacing: 6,
+                runSpacing: 6,
+                children: [
+                  if (m.recommended)
+                    const Chip(
+                      label: Text('推荐'),
+                      visualDensity: VisualDensity.compact,
+                    ),
+                  if (selected)
+                    Chip(
+                      label: Text(
+                        m.kind == 'translation' ? '当前翻译模型' : '当前识别模型',
+                      ),
+                      visualDensity: VisualDensity.compact,
+                    ),
+                ],
+              ),
+            ],
+            if (busy) ...[
+              const SizedBox(height: 8),
+              LinearProgressIndicator(value: c.models.progress[m.id]),
+            ],
+            if (c.models.states[m.id] != null) ...[
+              const SizedBox(height: 4),
+              Text(c.models.states[m.id]!, style: theme.textTheme.bodySmall),
+            ],
+            if (c.models.activeSources[m.id] != null)
+              Text(
+                '来源：${c.models.activeSources[m.id]}',
+                style: theme.textTheme.bodySmall?.copyWith(
+                  color: scheme.onSurfaceVariant,
+                ),
+              ),
+            if (c.models.errors[m.id] != null)
+              Text(
+                c.models.errors[m.id]!,
+                style: theme.textTheme.bodySmall?.copyWith(color: scheme.error),
+              ),
+            const SizedBox(height: 6),
+            Wrap(
+              spacing: 8,
+              children: [
+                TextButton(
+                  onPressed: !m.runtimeSupported
+                      ? null
+                      : busy
+                      ? () => c.models.cancel(m.id)
+                      : () => _installModel(m.id),
+                  child: Text(
+                    busy
+                        ? '取消'
+                        : ready
+                        ? '重新下载'
+                        : '下载',
+                  ),
+                ),
+                if (m.parts.isEmpty)
+                  TextButton(
+                    onPressed: !m.runtimeSupported || busy
+                        ? null
+                        : () async {
+                            final file = await openFile(
+                              acceptedTypeGroups: [
+                                const XTypeGroup(
+                                  label: '模型',
+                                  extensions: ['bin', 'gguf', 'litertlm'],
+                                ),
+                              ],
+                            );
+                            if (file != null) {
+                              await _installModel(m.id, importPath: file.path);
+                            }
+                          },
+                    child: const Text('手动导入'),
+                  ),
+                if (ready)
+                  TextButton(
+                    onPressed: busy ? null : () => c.models.delete(m.id),
+                    child: const Text('删除'),
+                  ),
+              ],
+            ),
+          ],
+        ),
       ),
-    ),
-  );
+    );
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final showE2e = c.supportsPipelineSwitch
+        ? _tab == CaptionPipeline.gemmaE2e
+        : c.endToEnd;
+    final e2eModels = c.models.catalog.where(
+      (m) => m.kind == 'e2e-${c.backendFlavor}',
+    );
+    final asrModels = c.models.catalog.where((m) => m.kind == 'asr');
+    final mtModels = c.models.catalog.where(
+      (m) => m.kind == 'translation' && m.runtimeSupported,
+    );
+    final theme = Theme.of(context);
+    return Scaffold(
+      appBar: AppBar(title: const Text('模型管理')),
+      body: AnimatedBuilder(
+        animation: c.models,
+        builder: (context, _) => ListView(
+          padding: const EdgeInsets.all(20),
+          children: [
+            Text(
+              '模型下载并校验后可完全断网运行，优先使用国内镜像源，下载期间屏幕保持常亮。',
+              style: theme.textTheme.bodyMedium?.copyWith(
+                color: theme.colorScheme.onSurfaceVariant,
+              ),
+            ),
+            if (c.models.orphanedBytes > 0) ...[
+              const SizedBox(height: 12),
+              Card(
+                elevation: 0,
+                color: theme.colorScheme.secondaryContainer.withValues(alpha: .55),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(14),
+                ),
+                child: Padding(
+                  padding: const EdgeInsets.all(14),
+                  child: Row(
+                    children: [
+                      Icon(
+                        Icons.cleaning_services_outlined,
+                        color: theme.colorScheme.onSecondaryContainer,
+                      ),
+                      const SizedBox(width: 12),
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              '发现 ${c.models.orphanedCount} 项旧版废弃模型',
+                              style: theme.textTheme.titleSmall?.copyWith(
+                                color: theme.colorScheme.onSecondaryContainer,
+                              ),
+                            ),
+                            const SizedBox(height: 2),
+                            Text(
+                              '可释放 ${(c.models.orphanedBytes / (1024 * 1024)).toStringAsFixed(1)} MB，不影响当前在用模型',
+                              style: theme.textTheme.bodySmall?.copyWith(
+                                color: theme.colorScheme.onSecondaryContainer,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                      const SizedBox(width: 8),
+                      FilledButton.tonal(
+                        onPressed: c.models.busy
+                            ? null
+                            : () async {
+                                final freed = await c.models
+                                    .cleanupOrphanedModels();
+                                if (!context.mounted) return;
+                                final mb = (freed / (1024 * 1024))
+                                    .toStringAsFixed(1);
+                                ScaffoldMessenger.of(context).showSnackBar(
+                                  SnackBar(content: Text('已清理旧版废弃模型，释放 $mb MB')),
+                                );
+                              },
+                        child: const Text('一键清理'),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+            ],
+            if (c.supportsPipelineSwitch) ...[
+              const SizedBox(height: 16),
+              SegmentedButton<CaptionPipeline>(
+                showSelectedIcon: false,
+                segments: const [
+                  ButtonSegment(
+                    value: CaptionPipeline.decoupled,
+                    label: Text('听译分离模型'),
+                  ),
+                  ButtonSegment(
+                    value: CaptionPipeline.gemmaE2e,
+                    label: Text('端到端模型'),
+                  ),
+                ],
+                selected: {_tab},
+                onSelectionChanged: (selected) =>
+                    setState(() => _tab = selected.first),
+              ),
+            ],
+            const SizedBox(height: 16),
+            if (showE2e) ...[
+              Text('Gemma 4 端到端语音模型', style: theme.textTheme.titleSmall),
+              const SizedBox(height: 8),
+              ...e2eModels.map(_modelCard),
+            ] else ...[
+              Text('1. 语音识别模型（ONNX 极速）', style: theme.textTheme.titleSmall),
+              const SizedBox(height: 8),
+              ...asrModels.map(_modelCard),
+              const SizedBox(height: 8),
+              Text('2. 文本翻译模型（本地 GGUF）', style: theme.textTheme.titleSmall),
+              const SizedBox(height: 8),
+              ...mtModels.map(_modelCard),
+              Card(
+                elevation: 0,
+                color: theme.colorScheme.surfaceContainerLow,
+                child: Padding(
+                  padding: const EdgeInsets.all(14),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        'ML Kit 英中端侧翻译 · ${c.mlReady ? '已就绪' : '未准备'}',
+                        style: theme.textTheme.titleMedium,
+                      ),
+                      const SizedBox(height: 4),
+                      Text(
+                        'Google 端侧语言包由 SDK 自行下载，无上下文支持。国内网络若失败，推荐使用上方 HY-MT1.5 1.8B。',
+                        style: theme.textTheme.bodySmall,
+                      ),
+                      if (mlBusy) const LinearProgressIndicator(),
+                      if (mlMessage.isNotEmpty) Text(mlMessage),
+                      Wrap(
+                        children: [
+                          TextButton(
+                            onPressed: mlBusy ? null : () => _ml(false),
+                            child: const Text('Wi-Fi 下载语言包'),
+                          ),
+                          if (c.mlReady)
+                            TextButton(
+                              onPressed: mlBusy ? null : () => _ml(true),
+                              child: const Text('删除语言包'),
+                            ),
+                        ],
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+            ],
+          ],
+        ),
+      ),
+    );
+  }
 }
 
 class SettingsPage extends StatefulWidget {
@@ -1459,20 +1662,27 @@ class _SettingsPageState extends State<SettingsPage> {
   @override
   Widget build(BuildContext context) => Scaffold(
     appBar: AppBar(title: const Text('设置')),
-    body: ListView(
-      padding: const EdgeInsets.all(24),
-      children: [
-        Text('字幕字号 ${c.fontSize.round()}'),
+    body: AnimatedBuilder(
+      animation: c,
+      builder: (context, _) => ListView(
+        padding: const EdgeInsets.all(24),
+        children: [
+          Text('字幕字号 ${c.fontSize.round()}（应用内与悬浮窗同步）'),
         Slider(
-          value: c.fontSize,
-          min: 20,
+          value: c.fontSize.clamp(14, 36),
+          min: 14,
           max: 36,
-          divisions: 16,
+          divisions: 22,
+          label: '${c.fontSize.round()}',
           onChanged: (v) {
-            setState(() => c.fontSize = v);
+            setState(() => c.setFontSize(v));
+          },
+          onChangeEnd: (_) {
+            unawaited(c.savePreferences());
           },
         ),
         DropdownButtonFormField<String>(
+          key: ValueKey('display-${c.showEnglish}-${c.showChinese}'),
           initialValue: c.showEnglish
               ? (c.showChinese ? 'both' : 'english')
               : 'chinese',
@@ -1482,14 +1692,18 @@ class _SettingsPageState extends State<SettingsPage> {
             DropdownMenuItem(value: 'english', child: Text('仅原文 / 英文')),
             DropdownMenuItem(value: 'chinese', child: Text('仅中文')),
           ],
-          onChanged: (value) => setState(() {
-            c.showEnglish = value != 'chinese';
-            c.showChinese = value != 'english';
-          }),
+          onChanged: (value) {
+            setState(() {
+              c.showEnglish = value != 'chinese';
+              c.showChinese = value != 'english';
+            });
+            unawaited(c.savePreferences());
+          },
         ),
         if (c.backendFlavor == 'gemmaE2E') ...[
           const SizedBox(height: 16),
           DropdownButtonFormField<CaptionStyle>(
+            key: ValueKey('captionStyle-${c.captionStyle.name}'),
             initialValue: c.captionStyle,
             isExpanded: true,
             decoration: InputDecoration(
@@ -1639,6 +1853,9 @@ class _SettingsPageState extends State<SettingsPage> {
               setState(() => c.overlayBackgroundOpacity = value);
               unawaited(c.applyOverlayOpacity());
             },
+            onChangeEnd: (_) {
+              unawaited(c.savePreferences());
+            },
           ),
           const Text('仅影响后台悬浮字幕面板；越低越透明，文字仍保持高对比度。'),
         ],
@@ -1768,11 +1985,12 @@ class _SettingsPageState extends State<SettingsPage> {
           onPressed: () => showLicensePage(
             context: context,
             applicationName: 'OpenCaption',
-            applicationVersion: isTestBuild ? '0.1.1 测试评测版' : '0.1.1',
+            applicationVersion: isTestBuild ? '0.2.0 测试评测版' : '0.2.0',
           ),
           child: const Text('开源许可'),
         ),
-      ],
+        ],
+      ),
     ),
   );
 }

@@ -3,7 +3,7 @@ package dev.opencaption.opencaption
 class NativeEngine {
     companion object { init { System.loadLibrary("opencaption") } }
     external fun load(asrPath: String, vadPath: String, llmPath: String, threads: Int, logFd: Int)
-    external fun transcribe(samples: FloatArray, hints: String): String
+    external fun transcribe(samples: FloatArray, hints: String, language: String): String
     external fun lastNoSpeechProbability(): Double
     external fun lastAverageTokenProbability(): Double
     external fun voiceProbability(samples: FloatArray): Double

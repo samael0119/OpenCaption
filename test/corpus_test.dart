@@ -152,8 +152,8 @@ void main() {
   test('bundled CS2 corpus manifest loads the normalized pack', () async {
     final corpus = await CorpusIndex.load(rootBundle);
 
-    expect(corpus.packCount, 2);
-    expect(corpus.packCountFor(CorpusProfile.cs2), 2);
+    expect(corpus.packCount, 3);
+    expect(corpus.packCountFor(CorpusProfile.cs2), 3);
     // Context-preserving entries are validated below; raw counts are not quality.
     expect(corpus.termCount, greaterThanOrEqualTo(481));
     expect(

@@ -23,6 +23,16 @@ set(BUILD_SHARED_LIBS OFF CACHE BOOL "" FORCE)
 set(GGML_NATIVE OFF CACHE BOOL "" FORCE)
 set(GGML_OPENMP OFF CACHE BOOL "" FORCE)
 set(GGML_CPU_ALL_VARIANTS OFF CACHE BOOL "" FORCE)
+# Keep ARM64 experimental weight repacking (q4_K_8x8) off for predictable
+# reference dotprod behavior on Q4_K, while keeping llamafile tinyBLAS ON so
+# Whisper's FP16/F32 encoder runs with fast ARM64 NEON GEMM kernels.
+set(GGML_CPU_REPACK OFF CACHE BOOL "" FORCE)
+set(GGML_LLAMAFILE ON CACHE BOOL "" FORCE)
+if(ANDROID AND CMAKE_ANDROID_ARCH_ABI STREQUAL "arm64-v8a")
+  # Android 10+ arm64 devices support ARMv8.2 fp16+dotprod; without this flag
+  # NDK defaults to 2013 ARMv8.0 baseline, making CPU inference 3-4x slower.
+  set(GGML_CPU_ARM_ARCH "armv8.2-a+fp16+dotprod" CACHE STRING "" FORCE)
+endif()
 set(GGML_VULKAN ON CACHE BOOL "" FORCE)
 if(ANDROID)
   set(Vulkan_GLSLC_EXECUTABLE

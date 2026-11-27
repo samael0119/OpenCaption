@@ -130,6 +130,7 @@ class CaptionEngine(private val activity: MainActivity, private val events: Engi
         emptySet()
     }
     private var translator: Translator? = null
+    private var onnxAsr: OnnxAsrBackend? = null
     private var permission: ((Result<Boolean>) -> Unit)? = null
     private val mlModel = TranslateRemoteModel.Builder(TranslateLanguage.CHINESE).build()
     private val modelManager = RemoteModelManager.getInstance()
@@ -172,6 +173,7 @@ class CaptionEngine(private val activity: MainActivity, private val events: Engi
                 activeJob = job
                 native.setCancelled(false)
                 native.setTranslationCancelled(false)
+                onnxAsr?.setCancelled(false)
                 try {
                     job.run()
                 } catch (error: Throwable) {
@@ -229,42 +231,69 @@ class CaptionEngine(private val activity: MainActivity, private val events: Engi
                 sessionLog.write("prepare_begin")
                 captureThread?.join()
                 engineLock.write {
-                    native.release(); e2eBackend?.close(); boundaryVad?.close(); boundaryVad = null
-                    translator?.close(); translator = null
-                    prepared = false
-                    this.config = config
-                    hintState = HintState(sanitizeHintData(config.names), config.automaticAssist == true)
-                    if (config.mode == "e2e") {
+                    val previous = this.config
+                    val canReuse = prepared && previous != null &&
+                        previous.mode == config.mode &&
+                        previous.asrPath == config.asrPath &&
+                        previous.vadPath == config.vadPath &&
+                        previous.translationPath == config.translationPath &&
+                        previous.threads == config.threads
+                    if (canReuse) {
+                        this.config = config
+                        hintState = HintState(sanitizeHintData(config.names), config.automaticAssist == true)
+                        if (config.mode == "e2e") {
+                            e2eBackend?.setHints(liveE2eHints)
+                        }
+                        sessionLog.write("prepare_reused mode=${config.mode} threads=${config.threads}")
+                    } else {
+                        native.release(); onnxAsr?.close(); onnxAsr = null
+                        e2eBackend?.close(); boundaryVad?.close(); boundaryVad = null
+                        translator?.close(); translator = null
+                        prepared = false
+                        this.config = config
+                        hintState = HintState(sanitizeHintData(config.names), config.automaticAssist == true)
                         boundaryVad = try {
                             activity.assets.open("vad/silero_v6_2_1.onnx").use { SileroBoundaryVad(it.readBytes()) }
                         } catch (failure: Exception) {
-                            sessionLog.write("boundary_vad_unavailable fallback=fixed_5000", failure)
+                            sessionLog.write("boundary_vad_unavailable fallback=fixed_or_energy", failure)
                             null
                         }
-                        checkNotNull(e2eBackend) { "e2e_backend_missing" }.also {
-                            it.load(config.asrPath, config.threads.toInt())
-                            // Make the context ready before capture starts. The
-                            // first audio window will use this system hint; no
-                            // extra dummy inference is performed.
-                            it.setHints(liveE2eHints)
-                            sessionLog.write("e2e_context_ready chars=${liveE2eHints.length} ignored=${if (liveE2eHints.isEmpty()) 1 else 0}")
-                            sessionLog.write("e2e_runtime ${it.runtimeInfo()}")
+                        if (config.mode == "e2e") {
+                            checkNotNull(e2eBackend) { "e2e_backend_missing" }.also {
+                                it.load(config.asrPath, config.threads.toInt())
+                                // Make the context ready before capture starts. The
+                                // first audio window will use this system hint; no
+                                // extra dummy inference is performed.
+                                it.setHints(liveE2eHints)
+                                sessionLog.write("e2e_context_ready chars=${liveE2eHints.length} ignored=${if (liveE2eHints.isEmpty()) 1 else 0}")
+                                sessionLog.write("e2e_runtime ${it.runtimeInfo()}")
+                            }
+                        } else {
+                            val llmPath = if (config.mode == "qwen") config.translationPath else ""
+                            if (OnnxAsrFactory.isOnnxAsrPath(config.asrPath)) {
+                                sessionLog.write("onnx_asr_load_begin path=${File(config.asrPath).name} threads=${config.threads}")
+                                onnxAsr = OnnxAsrFactory.load(config.asrPath, config.threads.toInt())
+                                sessionLog.write("onnx_asr_load_ok kind=${onnxAsr?.kind}")
+                                if (llmPath.isNotEmpty() || config.vadPath.isNotEmpty()) {
+                                    native.load("", config.vadPath, llmPath, config.threads.toInt(), sessionLog.fd)
+                                }
+                            } else {
+                                native.load(
+                                    config.asrPath,
+                                    config.vadPath,
+                                    llmPath,
+                                    config.threads.toInt(),
+                                    sessionLog.fd,
+                                )
+                            }
                         }
-                    } else {
-                        native.load(
-                            config.asrPath,
-                            config.vadPath,
-                            if (config.mode == "qwen") config.translationPath else "",
-                            config.threads.toInt(),
-                            sessionLog.fd,
-                        )
-                    }
-                    if (config.mode == "mlKit") {
-                        sessionLog.write("mlkit_prepare_begin")
-                        if (!Tasks.await(modelManager.isModelDownloaded(mlModel))) throw IllegalStateException("mlkit_missing")
-                        translator = Translation.getClient(TranslatorOptions.Builder()
-                            .setSourceLanguage(TranslateLanguage.ENGLISH).setTargetLanguage(TranslateLanguage.CHINESE).build())
-                        sessionLog.write("mlkit_prepare_ok")
+                        if (config.mode == "mlKit") {
+                            sessionLog.write("mlkit_prepare_begin")
+                            if (!Tasks.await(modelManager.isModelDownloaded(mlModel))) throw IllegalStateException("mlkit_missing")
+                            translator = Translation.getClient(TranslatorOptions.Builder()
+                                .setSourceLanguage(TranslateLanguage.ENGLISH).setTargetLanguage(TranslateLanguage.CHINESE).build())
+                            sessionLog.write("mlkit_prepare_ok")
+                        }
                     }
                 }
                 prepared = true
@@ -272,7 +301,8 @@ class CaptionEngine(private val activity: MainActivity, private val events: Engi
                 post { callback(Result.success(Unit)) }
             } catch (error: Throwable) {
                 sessionLog.write("prepare_failed", error)
-                engineLock.write { native.release(); e2eBackend?.close(); boundaryVad?.close(); boundaryVad = null
+                engineLock.write { native.release(); onnxAsr?.close(); onnxAsr = null
+                    e2eBackend?.close(); boundaryVad?.close(); boundaryVad = null
                     translator?.close(); translator = null }
                 post { callback(Result.failure(error("model_prepare_failed"))) }
             }
@@ -292,7 +322,7 @@ class CaptionEngine(private val activity: MainActivity, private val events: Engi
         sessionLog.write("audio_min_buffer=$minimum")
         check(minimum > 0) { "audio_format_unsupported" }
         val e2e = config?.mode == "e2e"
-        val audioSource = if (e2e) MediaRecorder.AudioSource.VOICE_RECOGNITION else MediaRecorder.AudioSource.MIC
+        val audioSource = MediaRecorder.AudioSource.VOICE_RECOGNITION
         val builder = AudioRecord.Builder()
         val playback = activity.playbackSelected
         if (playback) {
@@ -310,7 +340,7 @@ class CaptionEngine(private val activity: MainActivity, private val events: Engi
             record.release(); throw IllegalStateException("audio_format_unsupported")
         }
         recorder = record
-        noiseSuppressor = if (!playback && e2e && NoiseSuppressor.isAvailable()) {
+        noiseSuppressor = if (!playback && NoiseSuppressor.isAvailable()) {
             try {
                 NoiseSuppressor.create(record.audioSessionId)?.also { it.enabled = true }
             } catch (error: Throwable) {
@@ -328,7 +358,7 @@ class CaptionEngine(private val activity: MainActivity, private val events: Engi
             record.release(); recorder=null
             throw failure
         }
-        sessionLog.write("audio_start_ok source=${if (playback) "PLAYBACK_CAPTURE" else if (e2e) "VOICE_RECOGNITION" else "MIC"} session=${record.audioSessionId} sample_rate=${record.sampleRate} noise_suppressor=${noiseSuppressor?.enabled == true} background=${PlaybackCaptionService.active}")
+        sessionLog.write("audio_start_ok mode=${config?.mode} source=${if (playback) "PLAYBACK_CAPTURE" else "VOICE_RECOGNITION"} session=${record.audioSessionId} sample_rate=${record.sampleRate} noise_suppressor=${noiseSuppressor?.enabled == true} background=${PlaybackCaptionService.active}")
         PlaybackCaptionService.instance?.update("正在采集本设备音频…")
         activity.window.addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON)
         captureThread = Thread({ capture(record, epoch, captureStartMs) }, "caption-audio").also { it.start() }
@@ -339,18 +369,21 @@ class CaptionEngine(private val activity: MainActivity, private val events: Engi
         val pcm = ShortArray(320)
         val buffer = AudioBuffer()
         val e2e = config?.mode == "e2e"
+        var vadAvailable = boundaryVad != null
         // VAD only locates boundaries: every sample remains owned by exactly
         // one window, including weak/uncertain speech and the final short tail.
-        val segmenter = if (e2e) null else EnergySegmenter()
-        val signalGate = if (e2e) null else AudioSignalGate()
+        val useDecoupledVad = !e2e && vadAvailable
+        val segmenter = if (e2e || useDecoupledVad) null else EnergySegmenter()
+        val signalGate = if (e2e || useDecoupledVad) null else AudioSignalGate()
         val e2eSegmenter = if (e2e) E2eSegmenter() else null
-        var vadAvailable = boundaryVad != null
+        val decoupledVadSegmenter = if (useDecoupledVad) E2eSegmenter(silenceSamples = 6080, maximumSamples = 83200) else null
         var window = 0L; var meterAt = 0L
         var e2eStart = 0L
+        var segMaxVadProb = 0.0; var segPeakRms = 0.0
         var levelLogAt = 0L; var peakRms = 0.0
         var firstFrame = true
         var silentFrames = 0
-        sessionLog.write("capture_begin epoch=$e capture_start_elapsed_ms=$captureStartMs segmentation=${if (e2e && vadAvailable) "vad_pause" else if (e2e) "fixed_fallback" else "pause_boundaries"} frame_ms=20 silence_ms=600 maximum_ms=5000 e2e_overlap_ms=0")
+        sessionLog.write("capture_begin epoch=$e capture_start_elapsed_ms=$captureStartMs segmentation=${if (e2e && vadAvailable) "vad_pause" else if (e2e) "fixed_fallback" else if (useDecoupledVad) "decoupled_vad_380ms_5200ms" else "pause_boundaries"} frame_ms=20")
         fun submitBoundary(boundary: E2eSegmenter.Boundary) {
             val cutAt = if (BuildConfig.DIAGNOSTICS_ENABLED) SystemClock.elapsedRealtime() else 0L
             val snapshot = buffer.slice(boundary.start, boundary.end)
@@ -363,6 +396,23 @@ class CaptionEngine(private val activity: MainActivity, private val events: Engi
                 sessionLog.write("segment_submit window=$window reason=e2e_${boundary.reason} samples=${snapshot.size}")
                 submitEndToEnd(e, window, boundary, snapshot, cutAt)
             }
+        }
+        fun submitDecoupledBoundary(boundary: E2eSegmenter.Boundary, isTail: Boolean = false) {
+            val snapshot = buffer.slice(boundary.start, boundary.end)
+            val maxProb = segMaxVadProb
+            val maxRms = segPeakRms
+            segMaxVadProb = 0.0
+            segPeakRms = 0.0
+            if (isExactDigitalSilence(snapshot) || (isTail && snapshot.size < 4800)) return
+            if ((vadAvailable && maxProb < 0.25) || maxRms < 0.003) {
+                sessionLog.write("segment_skip reason=decoupled_silence max_vad=$maxProb max_rms=$maxRms samples=${snapshot.size}")
+                return
+            }
+            window++
+            val begin = boundary.start / 16
+            val end = boundary.end / 16
+            sessionLog.write("segment_submit window=$window reason=decoupled_${boundary.reason} max_vad=$maxProb samples=${snapshot.size}")
+            submitAsr(e, window, 1, begin, end, snapshot, true)
         }
         try {
             while (recording.get()) {
@@ -384,11 +434,24 @@ class CaptionEngine(private val activity: MainActivity, private val events: Engi
                     sessionLog.write("playback_zero_audio duration_ms=${silentFrames * 20} possible_policy_block=true")
                     post { PlaybackCaptionService.instance?.update("未收到播放音频：请开始播放；目标 App 也可能禁止音频采集。") }
                 }
+                val probability = if ((e2e || useDecoupledVad) && vadAvailable) try {
+                    boundaryVad?.observe(floats)
+                } catch (failure: Exception) {
+                    vadAvailable = false
+                    sessionLog.write("boundary_vad_failed fallback=fixed", failure)
+                    null
+                } else null
+                if (useDecoupledVad) {
+                    if (probability != null && probability.isFinite()) {
+                        segMaxVadProb = maxOf(segMaxVadProb, probability)
+                    }
+                    segPeakRms = maxOf(segPeakRms, rms)
+                }
                 val gatedSpeech = signalGate?.update(floats, rms) ?: true
                 val update = segmenter?.update(buffer.total, buffer.oldest, count, rms, gatedSpeech)
                 // E2E capture is continuous; the gate is meter-only and must
                 // never make the UI claim that recording has stopped.
-                val speech = if (e2e) true else update?.speech ?: gatedSpeech
+                val speech = if (e2e) true else if (useDecoupledVad) ((probability ?: 0.0) >= 0.35 || rms >= 0.008) else (update?.speech ?: gatedSpeech)
                 peakRms = maxOf(peakRms, rms)
                 if (firstFrame) {
                     firstFrame = false
@@ -414,14 +477,9 @@ class CaptionEngine(private val activity: MainActivity, private val events: Engi
                     submitAsr(e, window, 1, begin, end, snapshot, true)
                 }
                 if (e2e) {
-                    val probability = if (vadAvailable) try {
-                        boundaryVad?.observe(floats)
-                    } catch (failure: Exception) {
-                        vadAvailable = false
-                        sessionLog.write("boundary_vad_failed fallback=fixed_5000", failure)
-                        null
-                    } else null
                     e2eSegmenter?.update(buffer.total, probability)?.let(::submitBoundary)
+                } else if (useDecoupledVad) {
+                    decoupledVadSegmenter?.update(buffer.total, probability)?.let { submitDecoupledBoundary(it) }
                 }
                 if (!recording.get()) break
             }
@@ -433,6 +491,8 @@ class CaptionEngine(private val activity: MainActivity, private val events: Engi
                 e2eSegmenter?.flush(buffer.total)?.let(::submitBoundary)
             } else if (e2e && buffer.total > e2eStart) {
                 reportE2eGap(e, e2eStart / 16, buffer.total / 16, "pause_tail")
+            } else if (useDecoupledVad && !discardE2eOnPause.get()) {
+                decoupledVadSegmenter?.flush(buffer.total)?.let { submitDecoupledBoundary(it, isTail = true) }
             }
             try { record.stop() } catch (_: Throwable) {}
             noiseSuppressor?.release(); noiseSuppressor = null
@@ -444,26 +504,44 @@ class CaptionEngine(private val activity: MainActivity, private val events: Engi
     private fun submitAsr(e: Long, window: Long, revision: Long, start: Long, end: Long,
         pcm: FloatArray, finalResult: Boolean) {
         queue.filter { it.priority == 4 && it.epoch == e }.forEach { queue.remove(it) }
-        if (queue.count { it.epoch == e && it.id.startsWith("asr-") } >= 8) {
-            post { events.gap(e, start, end) {} }; return
+        // Keep at most 1 pending decoupled ASR window (latest replaces stale) and
+        // never preempt an in-flight translation so bilingual output stays alive.
+        queue.filter { it.epoch == e && it.id.startsWith("asr-") }.forEach { stale ->
+            if (queue.remove(stale)) stale.dropped()
         }
-        activeJob?.takeIf { it.priority == 3 }?.let {
-            preemptedIds.add(it.id)
-            native.setTranslationCancelled(true)
-            sessionLog.write("translation_preempt_requested id=${it.id}")
+        val language = when (activity.captionTask) {
+            "chinese" -> "zh"
+            "auto_zh" -> "auto"
+            else -> "en"
         }
-        enqueue("asr-$window-$revision", e, priority = if (finalResult) 1 else 4,
+        enqueue("asr-$window-$revision", e, priority = if (finalResult) 2 else 4,
             dropped = { if (finalResult) post { events.gap(e, start, end) {} } }) {
             val began = SystemClock.elapsedRealtime()
             var outputCharacters = 0
             try {
-                sessionLog.write("asr_begin samples=${pcm.size} final=$finalResult")
-                val text = engineLock.read { native.transcribe(pcm, config?.names ?: "") }
-                val noSpeech = native.lastNoSpeechProbability()
-                val tokenProbability = native.lastAverageTokenProbability()
-                sessionLog.write("asr_confidence no_speech=$noSpeech avg_token=$tokenProbability")
-                if (text.isBlank() || noSpeech >= 0.65 || tokenProbability < 0.16) {
-                    sessionLog.write("asr_filtered_noise characters=${text.length}")
+                val onnx = onnxAsr
+                sessionLog.write("asr_begin backend=${onnx?.kind ?: "whisper"} samples=${pcm.size} final=$finalResult lang=$language")
+                val text = if (onnx != null) {
+                    engineLock.read { onnx.transcribe(pcm, language) }
+                } else {
+                    engineLock.read { native.transcribe(pcm, config?.names ?: "", language) }
+                }
+                if (onnx == null) {
+                    val noSpeech = native.lastNoSpeechProbability()
+                    val tokenProbability = native.lastAverageTokenProbability()
+                    sessionLog.write("asr_confidence no_speech=$noSpeech avg_token=$tokenProbability")
+                    if (text.isBlank() || noSpeech >= 0.75 || tokenProbability < 0.14) {
+                        sessionLog.write("asr_filtered_noise characters=${text.length}")
+                        report("asr_filtered_noise")
+                        return@enqueue
+                    }
+                } else if (text.isBlank()) {
+                    sessionLog.write("asr_filtered_noise characters=0")
+                    report("asr_filtered_noise")
+                    return@enqueue
+                }
+                if (isRepetitiveAsrHallucination(text)) {
+                    sessionLog.write("asr_filtered_repetition text=${text.replace(Regex("[\\r\\n]+"), " ").take(160)}")
                     report("asr_filtered_noise")
                     return@enqueue
                 }
@@ -673,6 +751,7 @@ class CaptionEngine(private val activity: MainActivity, private val events: Engi
     override fun pause() {
         sessionLog.write("pause")
         recording.set(false)
+        discardE2eOnPause.set(true)
         pendingE2eAudio.clear(epoch)?.let { reportE2eGap(it.epoch, it.startMs, it.endMs, "pause_pending") }
         val activeE2e = activeJob?.id?.startsWith("e2e-") == true
         val pendingE2e = queue.any { it.epoch == epoch && it.id.startsWith("e2e-") }
@@ -709,7 +788,7 @@ class CaptionEngine(private val activity: MainActivity, private val events: Engi
     }
     override fun cancel() {
         sessionLog.write("cancel")
-        accepting = false; native.setCancelled(true); native.setTranslationCancelled(true); e2eBackend?.cancel()
+        accepting = false; native.setCancelled(true); native.setTranslationCancelled(true); onnxAsr?.setCancelled(true); e2eBackend?.cancel()
         pendingE2eAudio.clear(epoch)?.let { reportE2eGap(it.epoch, it.startMs, it.endMs, "cancelled") }
         queue.filter { it.epoch >= 0 }.forEach { if (queue.remove(it)) it.dropped() }
     }
@@ -718,7 +797,8 @@ class CaptionEngine(private val activity: MainActivity, private val events: Engi
         pause(); cancel(); prepared = false
         enqueue("release", -1, priority = 0, requiresAccepting = false) {
             captureThread?.join()
-            engineLock.write { native.release(); e2eBackend?.close(); boundaryVad?.close(); boundaryVad = null
+            engineLock.write { native.release(); onnxAsr?.close(); onnxAsr = null
+                e2eBackend?.close(); boundaryVad?.close(); boundaryVad = null
                 translator?.close(); translator = null }
             sessionLog.write("session_release_ok")
             sessionLog.close()
@@ -732,7 +812,7 @@ class CaptionEngine(private val activity: MainActivity, private val events: Engi
             reply(Result.failure(error("translation_queue_full")))
             return
         }
-        enqueue(id, epoch, priority = 3, requiresAccepting = false,
+        enqueue(id, epoch, priority = 1, requiresAccepting = false,
             dropped = { reply(Result.failure(error("cancelled"))) }) {
             val began = SystemClock.elapsedRealtime()
             var outputCharacters = 0
@@ -761,7 +841,7 @@ class CaptionEngine(private val activity: MainActivity, private val events: Engi
         }
     }
     override fun cancelTranslation(id: String) {
-        if (activeJob?.id == id && activeJob?.priority == 3) {
+        if (activeJob?.id == id && activeJob?.id?.startsWith("asr-") != true) {
             cancelledIds.add(id)
             native.setTranslationCancelled(true)
         }

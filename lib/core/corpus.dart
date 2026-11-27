@@ -377,6 +377,26 @@ class CorpusIndex {
         : prompt.substring(0, maximumCharacters);
   }
 
+  /// Concise, punctuation-clean Whisper initial prompt. Avoids colon-labeled
+  /// metadata headers or raw term dumps that cause Whisper turbo decoder loops.
+  String whisperPrompt(String contextHint, {int maximumCharacters = 120}) {
+    final clean = sanitizeContext(
+      contextHint,
+      maximumCharacters: maximumCharacters,
+    );
+    if (clean.isEmpty) return '';
+    final tokens = clean
+        .split(RegExp(r'[,，、;；\n]+'))
+        .map((s) => s.trim())
+        .where((s) => s.isNotEmpty)
+        .toList();
+    if (tokens.isEmpty) return '';
+    final joined = tokens.join(', ');
+    return joined.length <= maximumCharacters
+        ? joined
+        : joined.substring(0, maximumCharacters);
+  }
+
   /// Build a small, bounded hint string.  Recent hints are only included when
   /// explicitly enabled and require repeated/high-priority matches; arbitrary
   /// model output is never added to the glossary.

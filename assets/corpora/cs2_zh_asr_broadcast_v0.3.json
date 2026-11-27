@@ -1,0 +1,545 @@
+{
+  "schema_version": 1,
+  "id": "cs2-zh-asr-broadcast",
+  "domain": "counter-strike-2",
+  "display_name": "CS2 解说高频术语、近音纠偏与战队/选手保护词表",
+  "version": "0.3.0",
+  "language_pair": "en-US -> zh-CN",
+  "provenance": {
+    "creation_method": "Curated from real CS2 English broadcast logs and official HLTV/BLAST/PerfectWorld glossaries.",
+    "project_material_license": "PolyForm-Noncommercial-1.0.0"
+  },
+  "terms": [
+    {
+      "id": "asr-cs2-ct-side",
+      "english": "CT side",
+      "aliases": ["CT-side", "on CT side", "CTs"],
+      "chinese": "CT方",
+      "category": "game_state",
+      "priority": 9,
+      "preserve": false,
+      "wrong_targets": ["城市方面", "城市一侧", "城市端"],
+      "correction_sources": ["ct side", "ct-side"]
+    },
+    {
+      "id": "asr-cs2-t-side",
+      "english": "T side",
+      "aliases": ["T-side", "on T side"],
+      "chinese": "T方",
+      "category": "game_state",
+      "priority": 9,
+      "preserve": false,
+      "wrong_targets": ["T型道路", "T侧"],
+      "correction_sources": ["t side", "t-side"]
+    },
+    {
+      "id": "asr-cs2-resmoke",
+      "english": "re-smoke",
+      "aliases": ["resmoke", "re smoke", "re-smokes", "re-smoking"],
+      "chinese": "补烟",
+      "category": "utility",
+      "priority": 9,
+      "preserve": false,
+      "wrong_targets": ["那种烟雾", "重新吸烟", "再次冒烟"],
+      "correction_sources": ["re-smoke", "resmoke", "re smoke"]
+    },
+    {
+      "id": "asr-cs2-util",
+      "english": "util",
+      "aliases": ["extra util", "full util"],
+      "chinese": "道具",
+      "category": "utility",
+      "priority": 9,
+      "preserve": false,
+      "wrong_targets": ["U值", "乌尔夫", "效用"],
+      "correction_sources": ["util", "extra util", "full util"]
+    },
+    {
+      "id": "asr-cs2-awp",
+      "english": "AWP",
+      "aliases": ["AWPs", "big green", "the big green", "AWPer"],
+      "chinese": "大狙",
+      "category": "weapon",
+      "priority": 9,
+      "preserve": false,
+      "wrong_targets": ["绿色的大狺", "大狺", "绿色的大狗", "OPS"],
+      "correction_sources": ["awp", "awps", "big green"]
+    },
+    {
+      "id": "asr-cs2-double-awp",
+      "english": "double AWP",
+      "aliases": ["double awp setup", "double AWPs"],
+      "chinese": "双狙",
+      "category": "tactic",
+      "priority": 10,
+      "preserve": false,
+      "wrong_targets": ["第二个球", "双球"],
+      "correction_sources": ["double awp"]
+    },
+    {
+      "id": "asr-cs2-one-for-one",
+      "english": "one for one",
+      "aliases": ["1 for 1", "one-for-one"],
+      "chinese": "一换一",
+      "category": "combat",
+      "priority": 9,
+      "preserve": false,
+      "wrong_targets": ["每对情侣之间都要进行一次这样的仪式", "每对情侣", "一对一"],
+      "correction_sources": ["one for one", "1 for 1"]
+    },
+    {
+      "id": "asr-cs2-two-man-hold",
+      "english": "two-man hold",
+      "aliases": ["two man hold", "2-man hold"],
+      "chinese": "双人防守",
+      "category": "tactic",
+      "priority": 9,
+      "preserve": false,
+      "wrong_targets": ["两个井眼", "两个沙井"],
+      "correction_sources": ["two-man hold", "two man hold"]
+    },
+    {
+      "id": "asr-cs2-pistol-round",
+      "english": "pistol round",
+      "aliases": ["pistol rounds"],
+      "chinese": "手枪局",
+      "category": "economy",
+      "priority": 9,
+      "preserve": false,
+      "wrong_targets": ["手枪射击阶段", "手枪回合"],
+      "correction_sources": ["pistol round"]
+    },
+    {
+      "id": "asr-cs2-bonus-round",
+      "english": "bonus round",
+      "aliases": ["bonus play", "bonus"],
+      "chinese": "奖励局",
+      "category": "economy",
+      "priority": 8,
+      "preserve": false,
+      "wrong_targets": ["额外的补充", "额外奖励"],
+      "correction_sources": ["bonus round", "bonus play"]
+    },
+    {
+      "id": "asr-cs2-default-hold",
+      "english": "holding default",
+      "aliases": ["holding this default", "this default", "play default", "slow default", "default setup"],
+      "chinese": "默认控图",
+      "category": "tactic",
+      "priority": 9,
+      "preserve": false,
+      "wrong_targets": ["处于默认状态", "默认状态"],
+      "correction_sources": ["holding default", "holding this default", "this default", "play default", "default setup"]
+    },
+    {
+      "id": "asr-cs2-free-kill",
+      "english": "free kill",
+      "aliases": ["free frag", "free kills"],
+      "chinese": "白拿人头",
+      "category": "combat",
+      "priority": 8,
+      "preserve": false,
+      "wrong_targets": ["自由杀戮", "免费杀戮"],
+      "correction_sources": ["free kill", "free frag"]
+    },
+    {
+      "id": "asr-cs2-a-split",
+      "english": "A split",
+      "aliases": ["split A"],
+      "chinese": "A点夹击",
+      "category": "tactic",
+      "priority": 9,
+      "preserve": false
+    },
+    {
+      "id": "asr-cs2-b-split",
+      "english": "B split",
+      "aliases": ["split B"],
+      "chinese": "B点夹击",
+      "category": "tactic",
+      "priority": 9,
+      "preserve": false
+    },
+    {
+      "id": "asr-cs2-main-callout",
+      "english": "Main",
+      "aliases": ["A Main", "out towards Main", "through Main"],
+      "chinese": "A大",
+      "category": "callout",
+      "priority": 8,
+      "preserve": false,
+      "wrong_targets": ["缅因州"],
+      "correction_sources": ["main", "a main", "b main"]
+    },
+    {
+      "id": "asr-cs2-a-side",
+      "english": "A site",
+      "aliases": ["A side", "A-site", "A-side"],
+      "chinese": "A点",
+      "category": "callout",
+      "priority": 8,
+      "preserve": false,
+      "wrong_targets": ["A侧"],
+      "correction_sources": ["a site", "a side"]
+    },
+    {
+      "id": "asr-cs2-b-side",
+      "english": "B site",
+      "aliases": ["B side", "B-site", "B-side"],
+      "chinese": "B点",
+      "category": "callout",
+      "priority": 8,
+      "preserve": false,
+      "wrong_targets": ["B侧"],
+      "correction_sources": ["b site", "b side"]
+    },
+    {
+      "id": "asr-cs2-mid-lurk",
+      "english": "mid lurk",
+      "aliases": ["mid lurks", "lurk mid", "lurker", "lurking"],
+      "chinese": "自由人摸排",
+      "category": "role",
+      "priority": 9,
+      "preserve": false,
+      "wrong_targets": ["中路角色的法术", "中路法术"],
+      "correction_sources": ["mid lurk", "mid lurks"]
+    },
+    {
+      "id": "asr-cs2-earshot",
+      "english": "earshot",
+      "aliases": ["within earshot"],
+      "chinese": "脚步声范围内",
+      "category": "combat",
+      "priority": 8,
+      "preserve": false,
+      "wrong_targets": ["听力范围内"],
+      "correction_sources": ["earshot"]
+    },
+    {
+      "id": "asr-cs2-layup",
+      "english": "layup",
+      "aliases": ["a layup"],
+      "chinese": "稳拿的分",
+      "category": "broadcast",
+      "priority": 8,
+      "preserve": false,
+      "wrong_targets": ["平击战术"],
+      "correction_sources": ["layup"]
+    },
+    {
+      "id": "asr-cs2-play-for-info",
+      "english": "play for info",
+      "aliases": ["for info", "info play"],
+      "chinese": "探信息",
+      "category": "tactic",
+      "priority": 8,
+      "preserve": false
+    },
+    {
+      "id": "asr-cs2-b-flank",
+      "english": "B flank",
+      "aliases": ["flank", "flanking"],
+      "chinese": "B点绕后",
+      "category": "tactic",
+      "priority": 8,
+      "preserve": false
+    },
+    {
+      "id": "asr-cs2-cut-off",
+      "english": "get cut off",
+      "aliases": ["cut off", "cutting off"],
+      "chinese": "被断后",
+      "category": "tactic",
+      "priority": 8,
+      "preserve": false
+    },
+    {
+      "id": "asr-cs2-run-down",
+      "english": "run him down",
+      "aliases": ["charging him down", "run them down"],
+      "chinese": "强抓追杀",
+      "category": "combat",
+      "priority": 8,
+      "preserve": false
+    },
+    {
+      "id": "asr-cs2-water",
+      "english": "water",
+      "aliases": ["down in water"],
+      "chinese": "水道",
+      "category": "callout",
+      "priority": 7,
+      "preserve": false
+    },
+    {
+      "id": "asr-cs2-team-spirit",
+      "english": "Spirit",
+      "aliases": ["Team Spirit"],
+      "chinese": "Spirit",
+      "category": "team",
+      "priority": 10,
+      "preserve": true,
+      "wrong_targets": ["斯皮里特", "精神队", "团队精神"],
+      "correction_sources": ["spirit", "team spirit"]
+    },
+    {
+      "id": "asr-cs2-team-falcons",
+      "english": "Falcons",
+      "aliases": ["Team Falcons"],
+      "chinese": "Falcons",
+      "category": "team",
+      "priority": 10,
+      "preserve": true,
+      "wrong_targets": ["猎鹰队", "猎鹰们", "猎鹰"],
+      "correction_sources": ["falcons", "team falcons"]
+    },
+    {
+      "id": "asr-cs2-team-vitality",
+      "english": "Vitality",
+      "aliases": ["Team Vitality"],
+      "chinese": "Vitality",
+      "category": "team",
+      "priority": 10,
+      "preserve": true,
+      "wrong_targets": ["活力队"],
+      "correction_sources": ["vitality", "team vitality"]
+    },
+    {
+      "id": "asr-cs2-team-faze",
+      "english": "FaZe",
+      "aliases": ["FaZe Clan"],
+      "chinese": "FaZe",
+      "category": "team",
+      "priority": 10,
+      "preserve": true,
+      "wrong_targets": ["菲兹"],
+      "correction_sources": ["faze"]
+    },
+    {
+      "id": "asr-cs2-team-navi",
+      "english": "Natus Vincere",
+      "aliases": ["Na'Vi", "NAVI"],
+      "chinese": "NAVI",
+      "category": "team",
+      "priority": 10,
+      "preserve": true,
+      "wrong_targets": ["纳维"],
+      "correction_sources": ["navi", "natus vincere"]
+    },
+    {
+      "id": "asr-cs2-team-mouz",
+      "english": "MOUZ",
+      "aliases": ["mousesports"],
+      "chinese": "MOUZ",
+      "category": "team",
+      "priority": 10,
+      "preserve": true,
+      "wrong_targets": ["老鼠队"],
+      "correction_sources": ["mouz"]
+    },
+    {
+      "id": "asr-cs2-team-furia",
+      "english": "FURIA",
+      "aliases": [],
+      "chinese": "FURIA",
+      "category": "team",
+      "priority": 10,
+      "preserve": true,
+      "wrong_targets": ["狂怒队"],
+      "correction_sources": ["furia"]
+    },
+    {
+      "id": "asr-cs2-player-karrigan",
+      "english": "karrigan",
+      "aliases": [],
+      "chinese": "karrigan",
+      "category": "player",
+      "priority": 10,
+      "preserve": true,
+      "wrong_targets": ["卡里根", "卡拉甘", "卡里ган", "凯瑞甘"],
+      "correction_sources": ["karrigan"]
+    },
+    {
+      "id": "asr-cs2-player-sh1ro",
+      "english": "sh1ro",
+      "aliases": [],
+      "chinese": "sh1ro",
+      "category": "player",
+      "priority": 10,
+      "preserve": true,
+      "wrong_targets": ["希罗", "希拉·霍尔", "希拉"],
+      "correction_sources": ["sh1ro"]
+    },
+    {
+      "id": "asr-cs2-player-m0nesy",
+      "english": "m0NESY",
+      "aliases": [],
+      "chinese": "m0NESY",
+      "category": "player",
+      "priority": 10,
+      "preserve": true,
+      "wrong_targets": ["莫内西", "莫内塞", "莫尼斯", "修道院"],
+      "correction_sources": ["m0nesy"]
+    },
+    {
+      "id": "asr-cs2-player-zont1x",
+      "english": "zont1x",
+      "aliases": [],
+      "chinese": "zont1x",
+      "category": "player",
+      "priority": 10,
+      "preserve": true,
+      "wrong_targets": ["佐尼奇", "宗蒂克斯"],
+      "correction_sources": ["zont1x"]
+    },
+    {
+      "id": "asr-cs2-player-magixx",
+      "english": "magixx",
+      "aliases": [],
+      "chinese": "magixx",
+      "category": "player",
+      "priority": 10,
+      "preserve": true,
+      "wrong_targets": ["马吉克斯"],
+      "correction_sources": ["magixx"]
+    },
+    {
+      "id": "asr-cs2-player-teses",
+      "english": "TeSeS",
+      "aliases": [],
+      "chinese": "TeSeS",
+      "category": "player",
+      "priority": 10,
+      "preserve": true,
+      "wrong_targets": ["特塞斯"],
+      "correction_sources": ["teses"]
+    },
+    {
+      "id": "asr-cs2-player-niko",
+      "english": "NiKo",
+      "aliases": [],
+      "chinese": "NiKo",
+      "category": "player",
+      "priority": 10,
+      "preserve": true,
+      "wrong_targets": ["尼科"],
+      "correction_sources": ["niko"]
+    },
+    {
+      "id": "asr-cs2-player-zywoo",
+      "english": "ZywOo",
+      "aliases": [],
+      "chinese": "ZywOo",
+      "category": "player",
+      "priority": 10,
+      "preserve": true,
+      "wrong_targets": ["载物", "齐伍"],
+      "correction_sources": ["zywoo"]
+    },
+    {
+      "id": "asr-cs2-player-kyousuke",
+      "english": "kyousuke",
+      "aliases": [],
+      "chinese": "kyousuke",
+      "category": "player",
+      "priority": 10,
+      "preserve": true,
+      "wrong_targets": ["小林", "京介"],
+      "correction_sources": ["kyousuke"]
+    },
+    {
+      "id": "asr-cs2-player-kyxsan",
+      "english": "kyxsan",
+      "aliases": [],
+      "chinese": "kyxsan",
+      "category": "player",
+      "priority": 10,
+      "preserve": true,
+      "wrong_targets": ["基克桑"],
+      "correction_sources": ["kyxsan"]
+    },
+    {
+      "id": "asr-cs2-player-chopper",
+      "english": "chopper",
+      "aliases": [],
+      "chinese": "chopper",
+      "category": "player",
+      "priority": 10,
+      "preserve": true,
+      "wrong_targets": ["乔珀", "直升机"],
+      "correction_sources": ["chopper"]
+    },
+    {
+      "id": "asr-cs2-jump-spot",
+      "english": "jump spot",
+      "aliases": ["jump spotting", "jump-spot"],
+      "chinese": "跳看",
+      "category": "tactic",
+      "priority": 8,
+      "preserve": false
+    },
+    {
+      "id": "asr-cs2-team-flash",
+      "english": "team flash",
+      "aliases": ["team flashed", "team-flash"],
+      "chinese": "闪白队友",
+      "category": "utility",
+      "priority": 8,
+      "preserve": false
+    },
+    {
+      "id": "asr-cs2-half-buy",
+      "english": "half buy",
+      "aliases": ["half-buy"],
+      "chinese": "半起",
+      "category": "economy",
+      "priority": 8,
+      "preserve": false
+    },
+    {
+      "id": "asr-cs2-fake-defuse",
+      "english": "fake defuse",
+      "aliases": ["faking the defuse", "fake the defuse"],
+      "chinese": "假拆",
+      "category": "tactic",
+      "priority": 9,
+      "preserve": false
+    },
+    {
+      "id": "asr-cs2-tactical-timeout",
+      "english": "tactical timeout",
+      "aliases": ["tac pause", "tactical pause"],
+      "chinese": "战术暂停",
+      "category": "broadcast",
+      "priority": 8,
+      "preserve": false
+    },
+    {
+      "id": "asr-cs2-technical-pause",
+      "english": "technical pause",
+      "aliases": ["tech pause", "technical timeout"],
+      "chinese": "技术暂停",
+      "category": "broadcast",
+      "priority": 8,
+      "preserve": false
+    },
+    {
+      "id": "asr-cs2-full-blind",
+      "english": "full blind",
+      "aliases": ["fully blind", "completely blind"],
+      "chinese": "全白",
+      "category": "utility",
+      "priority": 9,
+      "preserve": false
+    },
+    {
+      "id": "asr-cs2-triple-kill",
+      "english": "triple kill",
+      "aliases": ["3k", "three kills"],
+      "chinese": "三杀",
+      "category": "combat",
+      "priority": 9,
+      "preserve": false
+    }
+  ]
+}

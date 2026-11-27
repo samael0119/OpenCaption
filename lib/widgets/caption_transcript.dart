@@ -61,7 +61,7 @@ class CaptionTranscript extends StatelessWidget {
             Text(
               source,
               style: TextStyle(
-                fontSize: secondary ? math.max(16, fontSize * .72) : fontSize,
+                fontSize: secondary ? math.max(12, fontSize * .78) : fontSize,
                 height: 1.5,
                 color: sourceForeground,
                 fontWeight: FontWeight.w400,

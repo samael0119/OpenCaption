@@ -94,145 +94,223 @@
     "releaseApproved": false
   },
   {
-    "id": "small.en-q5",
-    "file": "ggml-small.en-q5_1.bin",
-    "label": "英语识别 · small.en Q5（质量优先，推荐）",
-    "description": "英文专用：英语识别质量优先；不适合中文或多语言输入。",
+    "id": "parakeet-tdt-v3-int8",
+    "file": "parakeet-tdt-v3-int8",
+    "label": "Parakeet-TDT 0.6B v3 INT8 · 英文/欧语主力（推荐）",
+    "description": "NVIDIA NeMo ONNX 极速英文识别（639 MB，支持 25 种欧洲语言，不支持中文识别）：英文准确率最高、手机 CPU 约 0.3 秒出字，搭配 HY-MT1.5 端到端约 1.5 秒。",
+    "recommended": true,
     "kind": "asr",
-    "size": 190098681,
-    "sha256": "bfdff4894dcb76bbf647d56263ea2a96645423f1669176f4844a1bf8e478ad30",
+    "size": 670576784,
+    "sha256": "1afbe69c1ffdabee94755f42e4daf1d93549131a3da11356bda84fcef0f2c479",
     "sources": [
-      {
-        "id": "modelscope",
-        "label": "魔搭国内源",
-        "url": "https://www.modelscope.cn/api/v1/models/cjc1887415157/whisper.cpp/repo?Revision=ac12dbec310c2fd6e67398e808c40d80210ce4d0&FilePath=ggml-small.en-q5_1.bin"
-      },
       {
         "id": "hf-mirror",
         "label": "HF Mirror",
-        "url": "https://hf-mirror.com/ggerganov/whisper.cpp/resolve/5359861c739e955e79d9a303bcbc70fb988958b1/ggml-small.en-q5_1.bin"
+        "priority": 10,
+        "url": "https://hf-mirror.com/csukuangfj/sherpa-onnx-nemo-parakeet-tdt-0.6b-v3-int8"
       },
       {
         "id": "huggingface",
         "label": "Hugging Face",
-        "url": "https://huggingface.co/ggerganov/whisper.cpp/resolve/5359861c739e955e79d9a303bcbc70fb988958b1/ggml-small.en-q5_1.bin"
+        "priority": 20,
+        "url": "https://huggingface.co/csukuangfj/sherpa-onnx-nemo-parakeet-tdt-0.6b-v3-int8"
+      }
+    ],
+    "files": [
+      {
+        "file": "encoder.int8.onnx",
+        "size": 652282294,
+        "sha256": "1afbe69c1ffdabee94755f42e4daf1d93549131a3da11356bda84fcef0f2c479",
+        "sources": [
+          {
+            "id": "hf-mirror",
+            "label": "HF Mirror",
+            "priority": 10,
+            "url": "https://hf-mirror.com/csukuangfj/sherpa-onnx-nemo-parakeet-tdt-0.6b-v3-int8/resolve/main/encoder.int8.onnx"
+          },
+          {
+            "id": "huggingface",
+            "label": "Hugging Face",
+            "priority": 20,
+            "url": "https://huggingface.co/csukuangfj/sherpa-onnx-nemo-parakeet-tdt-0.6b-v3-int8/resolve/main/encoder.int8.onnx"
+          }
+        ]
+      },
+      {
+        "file": "decoder.int8.onnx",
+        "size": 11845274,
+        "sha256": "0222a86147299d4dee90edf95b6d13827edb42ad8b7c9cf0b2582f030937c0b5",
+        "sources": [
+          {
+            "id": "hf-mirror",
+            "label": "HF Mirror",
+            "priority": 10,
+            "url": "https://hf-mirror.com/csukuangfj/sherpa-onnx-nemo-parakeet-tdt-0.6b-v3-int8/resolve/main/decoder.int8.onnx"
+          },
+          {
+            "id": "huggingface",
+            "label": "Hugging Face",
+            "priority": 20,
+            "url": "https://huggingface.co/csukuangfj/sherpa-onnx-nemo-parakeet-tdt-0.6b-v3-int8/resolve/main/decoder.int8.onnx"
+          }
+        ]
+      },
+      {
+        "file": "joiner.int8.onnx",
+        "size": 6355277,
+        "sha256": "cbd02f3696e9944970111fb439d9c3fd365a80374565f13f2b9c7007d253fc98",
+        "sources": [
+          {
+            "id": "hf-mirror",
+            "label": "HF Mirror",
+            "priority": 10,
+            "url": "https://hf-mirror.com/csukuangfj/sherpa-onnx-nemo-parakeet-tdt-0.6b-v3-int8/resolve/main/joiner.int8.onnx"
+          },
+          {
+            "id": "huggingface",
+            "label": "Hugging Face",
+            "priority": 20,
+            "url": "https://huggingface.co/csukuangfj/sherpa-onnx-nemo-parakeet-tdt-0.6b-v3-int8/resolve/main/joiner.int8.onnx"
+          }
+        ]
+      },
+      {
+        "file": "tokens.txt",
+        "size": 93939,
+        "sha256": "d58544679ea4bc6ac563d1f545eb7d474bd6cfa467f0a6e2c1dc1c7d37e3c35d",
+        "sources": [
+          {
+            "id": "hf-mirror",
+            "label": "HF Mirror",
+            "priority": 10,
+            "url": "https://hf-mirror.com/csukuangfj/sherpa-onnx-nemo-parakeet-tdt-0.6b-v3-int8/resolve/main/tokens.txt"
+          },
+          {
+            "id": "huggingface",
+            "label": "Hugging Face",
+            "priority": 20,
+            "url": "https://huggingface.co/csukuangfj/sherpa-onnx-nemo-parakeet-tdt-0.6b-v3-int8/resolve/main/tokens.txt"
+          }
+        ]
       }
     ],
     "releaseApproved": false
   },
   {
-    "id": "base.en-q5",
-    "file": "ggml-base.en-q5_1.bin",
-    "label": "英语识别 · base.en Q5（速度对照）",
-    "description": "英文专用速度档：模型更小、响应更快，适合性能/延迟对照；质量低于 small.en。",
+    "id": "sensevoice-small-int8",
+    "file": "sensevoice-small-int8",
+    "label": "SenseVoice Small INT8 · 中英日韩粤多语言",
+    "description": "ONNX 非定长极速识别（228 MB，支持中/英/日/韩/粤）：魔搭国内秒下，手机 CPU 识别仅需约 0.1–0.2 秒，低发热不卡视频。",
     "kind": "asr",
-    "size": 59721011,
-    "sha256": "4baf70dd0d7c4247ba2b81fafd9c01005ac77c2f9ef064e00dcf195d0e2fdd2f",
+    "size": 239549735,
+    "sha256": "c71f0ce00bec95b07744e116345e33d8cbbe08cef896382cf907bf4b51a2cd51",
     "sources": [
       {
         "id": "modelscope",
         "label": "魔搭国内源",
-        "url": "https://www.modelscope.cn/api/v1/models/cjc1887415157/whisper.cpp/repo?Revision=ac12dbec310c2fd6e67398e808c40d80210ce4d0&FilePath=ggml-base.en-q5_1.bin"
+        "priority": 0,
+        "url": "https://www.modelscope.cn/models/pengzhendong/sherpa-onnx-sense-voice-zh-en-ja-ko-yue"
       },
       {
         "id": "hf-mirror",
         "label": "HF Mirror",
-        "url": "https://hf-mirror.com/ggerganov/whisper.cpp/resolve/5359861c739e955e79d9a303bcbc70fb988958b1/ggml-base.en-q5_1.bin"
+        "priority": 10,
+        "url": "https://hf-mirror.com/csukuangfj/sherpa-onnx-sense-voice-zh-en-ja-ko-yue-2024-07-17"
+      }
+    ],
+    "files": [
+      {
+        "file": "model.int8.onnx",
+        "size": 239233841,
+        "sha256": "c71f0ce00bec95b07744e116345e33d8cbbe08cef896382cf907bf4b51a2cd51",
+        "sources": [
+          {
+            "id": "modelscope",
+            "label": "魔搭国内源",
+            "priority": 0,
+            "url": "https://www.modelscope.cn/api/v1/models/pengzhendong/sherpa-onnx-sense-voice-zh-en-ja-ko-yue/repo?Revision=master&FilePath=model.int8.onnx"
+          },
+          {
+            "id": "modelscope-alt",
+            "label": "魔搭备用源",
+            "priority": 5,
+            "url": "https://www.modelscope.cn/api/v1/models/mariolux/sherpa-onnx-sense-voice-zh-en-ja-ko-yue-2024-07-17/repo?Revision=master&FilePath=model.int8.onnx"
+          },
+          {
+            "id": "hf-mirror",
+            "label": "HF Mirror",
+            "priority": 10,
+            "url": "https://hf-mirror.com/csukuangfj/sherpa-onnx-sense-voice-zh-en-ja-ko-yue-2024-07-17/resolve/main/model.int8.onnx"
+          },
+          {
+            "id": "huggingface",
+            "label": "Hugging Face",
+            "priority": 20,
+            "url": "https://huggingface.co/csukuangfj/sherpa-onnx-sense-voice-zh-en-ja-ko-yue-2024-07-17/resolve/main/model.int8.onnx"
+          }
+        ]
       },
       {
-        "id": "huggingface",
-        "label": "Hugging Face",
-        "url": "https://huggingface.co/ggerganov/whisper.cpp/resolve/5359861c739e955e79d9a303bcbc70fb988958b1/ggml-base.en-q5_1.bin"
+        "file": "tokens.txt",
+        "size": 315894,
+        "sha256": "f449eb28dc567533d7fa59be34e2abca8784f771850c78a47fb731a31429a1dc",
+        "sources": [
+          {
+            "id": "modelscope",
+            "label": "魔搭国内源",
+            "priority": 0,
+            "url": "https://www.modelscope.cn/api/v1/models/pengzhendong/sherpa-onnx-sense-voice-zh-en-ja-ko-yue/repo?Revision=master&FilePath=tokens.txt"
+          },
+          {
+            "id": "modelscope-alt",
+            "label": "魔搭备用源",
+            "priority": 5,
+            "url": "https://www.modelscope.cn/api/v1/models/mariolux/sherpa-onnx-sense-voice-zh-en-ja-ko-yue-2024-07-17/repo?Revision=master&FilePath=tokens.txt"
+          },
+          {
+            "id": "hf-mirror",
+            "label": "HF Mirror",
+            "priority": 10,
+            "url": "https://hf-mirror.com/csukuangfj/sherpa-onnx-sense-voice-zh-en-ja-ko-yue-2024-07-17/resolve/main/tokens.txt"
+          },
+          {
+            "id": "huggingface",
+            "label": "Hugging Face",
+            "priority": 20,
+            "url": "https://huggingface.co/csukuangfj/sherpa-onnx-sense-voice-zh-en-ja-ko-yue-2024-07-17/resolve/main/tokens.txt"
+          }
+        ]
       }
     ],
     "releaseApproved": false
   },
   {
-    "id": "qwen2.5-0.5b-q4",
-    "file": "qwen2.5-0.5b-instruct-q4_k_m.gguf",
-    "label": "Qwen2.5 0.5B Q4_K_M",
-    "description": "轻量本地翻译：适合英文→中文日常字幕，内存占用相对低。",
+    "id": "hy-mt1.5-1.8b-q4",
+    "file": "HY-MT1.5-1.8B-Q4_K_M.gguf",
+    "label": "HY-MT1.5 1.8B Q4 · 腾讯混元翻译（推荐）",
+    "description": "专用端侧翻译模型（1.08 GB）：支持动态术语注入与上下文衔接，简体中文字幕最稳定自然，听译分离模式唯一主力翻译。",
+    "recommended": true,
     "kind": "translation",
-    "size": 491400032,
-    "sha256": "74a4da8c9fdbcd15bd1f6d01d621410d31c6fc00986f5eb687824e7b93d7a9db",
-    "sources": [
-      {
-        "id": "hf-mirror",
-        "label": "HF Mirror",
-        "url": "https://hf-mirror.com/Qwen/Qwen2.5-0.5B-Instruct-GGUF/resolve/9217f5db79a29953eb74d5343926648285ec7e67/qwen2.5-0.5b-instruct-q4_k_m.gguf"
-      },
-      {
-        "id": "huggingface",
-        "label": "Hugging Face",
-        "url": "https://huggingface.co/Qwen/Qwen2.5-0.5B-Instruct-GGUF/resolve/9217f5db79a29953eb74d5343926648285ec7e67/qwen2.5-0.5b-instruct-q4_k_m.gguf"
-      }
-    ],
-    "releaseApproved": false
-  },
-  {
-    "id": "qwen3.5-0.8b-q4",
-    "file": "Qwen3.5-0.8B-Q4_0.gguf",
-    "label": "Qwen3.5 0.8B Q4_0",
-    "description": "通用本地翻译实验：上下文能力更强，但内存和速度需要按设备评估。",
-    "kind": "translation",
-    "size": 563036064,
-    "sha256": "57d1997790d1744fba5b40a7317df71ea5e2acee28c47e78f0cce39c0703f8cf",
-    "sources": [
-      {
-        "id": "hf-mirror",
-        "label": "HF Mirror",
-        "url": "https://hf-mirror.com/ggml-org/Qwen3.5-0.8B-GGUF/resolve/8fea620810c4afa23dd6443f999a48574c1611a3/Qwen3.5-0.8B-Q4_0.gguf"
-      },
-      {
-        "id": "huggingface",
-        "label": "Hugging Face",
-        "url": "https://huggingface.co/ggml-org/Qwen3.5-0.8B-GGUF/resolve/8fea620810c4afa23dd6443f999a48574c1611a3/Qwen3.5-0.8B-Q4_0.gguf"
-      }
-    ],
-    "releaseApproved": false
-  },
-  {
-    "id": "nllb-600m-q4",
-    "file": "nllb-200-distilled-600M-q4_k_m.gguf",
-    "label": "NLLB-200 distilled 600M Q4_K_M",
-    "description": "多语言翻译候选：覆盖语言更广；当前运行时未支持，暂不可下载。",
-    "kind": "translation",
-    "size": 789315200,
-    "sha256": "b4a6de63b5ddffc299e67ab079eb598c60400aa1fca75ad8e3eca2bcf653439e",
-    "sources": [
-      {
-        "id": "huggingface",
-        "label": "Hugging Face",
-        "url": "https://huggingface.co/keisuke-miyako/nllb-200-distilled-600M-gguf-q4_k_m/resolve/c2a05a11c95e3be0ecf99c1ff937edb97b723efa/nllb-200-distilled-600M-q4_k_m.gguf"
-      }
-    ],
-    "runtimeSupported": false,
-    "unavailableReason": "当前 llama.cpp 尚未合入 NLLB encoder-decoder 推理，暂不可下载或选择",
-    "releaseApproved": false
-  },
-  {
-    "id": "silero-v6",
-    "file": "ggml-silero-v6.2.0.bin",
-    "label": "人声检测 · Silero 6.2（兼容问题，暂未启用）",
-    "description": "人声检测辅助模型：用于区分语音与静音；当前兼容性问题，暂未启用。",
-    "kind": "vad",
-    "size": 885098,
-    "sha256": "2aa269b785eeb53a82983a20501ddf7c1d9c48e33ab63a41391ac6c9f7fb6987",
+    "size": 1133080512,
+    "sha256": "4383ac0c3c8e476de98ff979c2a3f069f8c4fb385e7860cf2d28da896cc477c7",
     "sources": [
       {
         "id": "modelscope",
-        "label": "魔搭国内源",
-        "url": "https://www.modelscope.cn/api/v1/models/ggml-org/whisper-vad/repo?Revision=a862d97b76bc27d0f6355e16d93bed7dd809d277&FilePath=ggml-silero-v6.2.0.bin"
+        "label": "魔搭官方源",
+        "priority": 0,
+        "url": "https://www.modelscope.cn/api/v1/models/Tencent-Hunyuan/HY-MT1.5-1.8B-GGUF/repo?Revision=master&FilePath=HY-MT1.5-1.8B-Q4_K_M.gguf"
       },
       {
         "id": "hf-mirror",
         "label": "HF Mirror",
-        "url": "https://hf-mirror.com/ggml-org/whisper-vad/resolve/9ffd54a1e1ee413ddf265af9913beaf518d1639b/ggml-silero-v6.2.0.bin"
+        "priority": 10,
+        "url": "https://hf-mirror.com/tencent/HY-MT1.5-1.8B-GGUF/resolve/main/HY-MT1.5-1.8B-Q4_K_M.gguf"
       },
       {
         "id": "huggingface",
         "label": "Hugging Face",
-        "url": "https://huggingface.co/ggml-org/whisper-vad/resolve/9ffd54a1e1ee413ddf265af9913beaf518d1639b/ggml-silero-v6.2.0.bin"
+        "priority": 20,
+        "url": "https://huggingface.co/tencent/HY-MT1.5-1.8B-GGUF/resolve/main/HY-MT1.5-1.8B-Q4_K_M.gguf"
       }
     ],
     "releaseApproved": false

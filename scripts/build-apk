@@ -53,4 +53,11 @@ if [[ "$actual_signer" != "$expected_signer" ]]; then
   exit 1
 fi
 echo "Verified APK signer $actual_signer"
-echo "$apk"
+version_raw="$(sed -n 's/^version:[[:space:]]*//p' "$project_root/pubspec.yaml" | head -n 1 | tr -d '\r')"
+if [[ -n "$version_raw" && "$flavor" == "gemmaE2E" ]]; then
+  friendly_apk="$project_root/build/app/outputs/flutter-apk/OpenCaption-v${version_raw}-${build_mode}.apk"
+  cp -f "$apk" "$friendly_apk"
+  echo "$friendly_apk"
+else
+  echo "$apk"
+fi
