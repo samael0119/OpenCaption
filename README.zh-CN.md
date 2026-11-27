@@ -16,14 +16,19 @@
   <tr>
     <td align="center"><img src="docs/images/home.jpg" alt="OpenCaption 首页" width="260"></td>
     <td align="center"><img src="docs/images/models.jpg" alt="离线模型管理" width="260"></td>
-    <td align="center"><img src="docs/images/captions.jpg" alt="实时双语字幕与诊断" width="260"></td>
+    <td align="center"><img src="docs/images/captions.jpg" alt="实时双语字幕" width="260"></td>
   </tr>
   <tr>
-    <td align="center">会话设置</td>
-    <td align="center">离线模型</td>
-    <td align="center">实时字幕</td>
+    <td align="center">双管线首页配置</td>
+    <td align="center">离线模型管理</td>
+    <td align="center">实时双语字幕与 CS2 外号</td>
   </tr>
 </table>
+
+<p align="center">
+  <img src="docs/images/overlay.jpg" alt="横屏观赛悬浮双语字幕效果" width="780"><br>
+  <sub>横屏播放音频捕获：底部双行滚动中英悬浮字幕实拍</sub>
+</p>
 
 ## 双管线与推荐模型
 

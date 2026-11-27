@@ -17,14 +17,19 @@ OpenCaption is a local-first Android app for real-time bilingual captions. It co
   <tr>
     <td align="center"><img src="docs/images/home.jpg" alt="OpenCaption home screen" width="260"></td>
     <td align="center"><img src="docs/images/models.jpg" alt="Offline model management" width="260"></td>
-    <td align="center"><img src="docs/images/captions.jpg" alt="Live bilingual captions and diagnostics" width="260"></td>
+    <td align="center"><img src="docs/images/captions.jpg" alt="Live bilingual captions" width="260"></td>
   </tr>
   <tr>
-    <td align="center">Session setup</td>
-    <td align="center">Offline models</td>
-    <td align="center">Live captions</td>
+    <td align="center">Dual-pipeline home setup</td>
+    <td align="center">Offline model manager</td>
+    <td align="center">Bilingual captions &amp; CS2 nicknames</td>
   </tr>
 </table>
+
+<p align="center">
+  <img src="docs/images/overlay.jpg" alt="Floating bilingual overlay during live CS2 playback" width="780"><br>
+  <sub>2-line rolling floating caption overlay over live landscape playback</sub>
+</p>
 
 ## What it does
 
